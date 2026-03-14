@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#334155"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <linearGradient id="road" x1="0%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" style="stop-color:#475569"/>
+      <stop offset="100%" style="stop-color:#64748b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#sky)"/>
+  <!-- Simple mountain shapes -->
+  <path d="M0 1080 L0 600 L400 1080 Z" fill="#334155"/>
+  <path d="M0 1080 L400 400 L900 1080 Z" fill="#1e293b"/>
+  <path d="M1920 1080 L1920 500 L1400 1080 Z" fill="#334155"/>
+  <path d="M1920 1080 L1400 450 L700 1080 Z" fill="#1e293b"/>
+  <!-- Road silhouette -->
+  <path d="M-50 1080 L400 700 L960 500 L1520 700 L1970 1080 Z" fill="url(#road)" opacity="0.6"/>
+  <text x="960" y="540" font-family="system-ui,sans-serif" font-size="24" fill="#94a3b8" text-anchor="middle">Replace with hero-bg.jpg (Faroe Islands, road, car)</text>
+</svg>
