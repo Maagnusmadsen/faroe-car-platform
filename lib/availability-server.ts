@@ -67,7 +67,7 @@ export async function getUnavailableCarIdsForRange(
     }),
     prisma.booking.findMany({
       where: {
-        status: { in: BOOKING_STATUSES_BLOCKING as BlockingBookingStatus[] },
+        status: { in: [...BOOKING_STATUSES_BLOCKING] },
         car: { deletedAt: null },
         OR: [{ startDate: { lte: end }, endDate: { gte: start } }],
       },
@@ -136,7 +136,7 @@ export async function isCarAvailableForRangeServer(
     tx.booking.findMany({
       where: {
         carId,
-        status: { in: BOOKING_STATUSES_BLOCKING as BlockingBookingStatus[] },
+        status: { in: [...BOOKING_STATUSES_BLOCKING] },
         ...(opts?.ignoreBookingId ? { id: { not: opts.ignoreBookingId } } : {}),
         OR: [{ startDate: { lte: end }, endDate: { gte: start } }],
       },

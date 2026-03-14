@@ -11,8 +11,8 @@ import en from "@/locales/en.json";
 import { getNested } from "@/lib/i18n";
 
 interface LanguageContextValue {
-  locale: "en";
-  setLocale: (locale: "en") => void;
+  locale: "en" | "fo";
+  setLocale: (locale: "en" | "fo") => void;
   t: (key: string) => string;
 }
 

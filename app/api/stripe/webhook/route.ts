@@ -14,7 +14,6 @@ import Stripe from "stripe";
 import { env } from "@/config/env";
 import { getStripeClient } from "@/payments";
 import { prisma } from "@/db";
-import { HttpStatus } from "@/lib/utils/errors";
 import { notifyBookingConfirmed, notifyPaymentReceived } from "@/lib/notifications-server";
 
 export async function POST(request: NextRequest) {
@@ -119,7 +118,7 @@ export async function POST(request: NextRequest) {
         break;
     }
 
-    return new Response("ok", { status: HttpStatus.OK ?? 200 });
+    return new Response("ok", { status: 200 });
   } catch (err) {
     // Log error; respond 200 to avoid repeated retries if we can't handle it gracefully.
     console.error("Stripe webhook error", err);

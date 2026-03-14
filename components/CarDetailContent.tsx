@@ -22,6 +22,8 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
   const [bookingMessage, setBookingMessage] = useState<string | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [claiming, setClaiming] = useState(false);
+  const [claimDone, setClaimDone] = useState(false);
   const [reviews, setReviews] = useState<{ id: string; rating: number; body: string | null; createdAt: string; reviewer: { name: string | null } }[]>([]);
   const name = car.title?.trim() || `${car.brand} ${car.model}`;
 
@@ -246,9 +248,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
               </p>
               {availability && (
                 <p className="mt-2 text-xs text-slate-500">
-                  {t("rent.minRentalDays", {
-                    days: availability.minRentalDays,
-                  })}
+                  {t("rent.minRentalDays").replace("{days}", String(availability.minRentalDays))}
                 </p>
               )}
             </div>
@@ -289,10 +289,9 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
               )}
               {availability && (
                 <p className="text-xs text-slate-500">
-                  {t("rent.availabilitySummary", {
-                    notice: availability.minNoticeDays,
-                    window: availability.advanceBookingDays,
-                  })}
+                  {t("rent.availabilitySummary")
+                    .replace("{notice}", String(availability.minNoticeDays))
+                    .replace("{window}", String(availability.advanceBookingDays))}
                 </p>
               )}
               {bookingState === "success" && (
@@ -365,7 +364,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                         key={f.key}
                         className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
                       >
-                        {t(`rent.feature.${f.key}`, f.key)}
+                        {t(`rent.feature.${f.key}`)}
                       </span>
                     ))}
                   </div>
@@ -380,9 +379,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                   <li>{t("rent.policyInsuranceNote")}</li>
                   {availability && (
                     <li>
-                      {t("rent.policyMinDays", {
-                        days: availability.minRentalDays,
-                      })}
+                      {t("rent.policyMinDays").replace("{days}", String(availability.minRentalDays))}
                     </li>
                   )}
                   <li>{t("rent.policyDriverRequirements")}</li>
@@ -486,15 +483,12 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                     {t("rent.availabilityOverview")}
                   </h2>
                   <p className="mt-2 text-xs text-slate-600">
-                    {t("rent.availabilitySummary", {
-                      notice: availability.minNoticeDays,
-                      window: availability.advanceBookingDays,
-                    })}
+                    {t("rent.availabilitySummary")
+                      .replace("{notice}", String(availability.minNoticeDays))
+                      .replace("{window}", String(availability.advanceBookingDays))}
                   </p>
                   <p className="mt-2 text-xs text-slate-500">
-                    {t("rent.blockedDatesCount", {
-                      count: availability.blockedDates.length,
-                    })}
+                    {t("rent.blockedDatesCount").replace("{count}", String(availability.blockedDates.length))}
                   </p>
                 </section>
               )}

@@ -100,7 +100,7 @@ export async function searchListings(
     );
   }
 
-  const where: Parameters<typeof prisma.carListing.findMany>[0]["where"] = {
+  const where: import("@prisma/client").Prisma.CarListingWhereInput = {
     status: "ACTIVE",
     deletedAt: null,
     ...(unavailableIds.size > 0 ? { id: { notIn: [...unavailableIds] } } : {}),
@@ -127,7 +127,7 @@ export async function searchListings(
   if (params.is4x4 !== undefined && params.is4x4 !== null) where.is4x4 = params.is4x4;
   if (params.airportPickup === true) where.airportPickup = true;
 
-  const orderBy: Parameters<typeof prisma.carListing.findMany>[0]["orderBy"] =
+  const orderBy: import("@prisma/client").Prisma.CarListingOrderByWithRelationInput | import("@prisma/client").Prisma.CarListingOrderByWithRelationInput[] =
     sort === "newest"
       ? { createdAt: "desc" }
       : sort === "price-asc"

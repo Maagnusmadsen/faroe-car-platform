@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
       account: accountId,
       refresh_url: refreshUrl,
       return_url: returnUrl,
+      type: "account_onboarding",
     });
 
     return jsonSuccess({ url: accountLink.url });

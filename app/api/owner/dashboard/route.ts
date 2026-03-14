@@ -23,7 +23,7 @@ export async function GET() {
             deletedAt: null,
             OR: [
               { ownerId },
-              { owner: { email: { equals: ownerEmail, mode: "insensitive" }, deletedAt: null } },
+              { owner: { email: { equals: ownerEmail, mode: "insensitive" as const }, deletedAt: null } },
             ],
           }
         : { ownerId, deletedAt: null };

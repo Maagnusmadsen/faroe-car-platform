@@ -16,7 +16,7 @@ export async function logAdminAction(input: AuditPayload) {
       action: input.action,
       entityType: input.entityType,
       entityId: input.entityId ?? null,
-      payload: input.payload ?? null,
+      ...(input.payload !== undefined && input.payload !== null && { payload: input.payload as object }),
       ipAddress: input.ipAddress ?? null,
     },
   });

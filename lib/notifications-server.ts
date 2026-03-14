@@ -1,5 +1,5 @@
 import { prisma } from "@/db";
-import type { NotificationType } from "@prisma/client";
+import type { NotificationType, Prisma } from "@prisma/client";
 
 interface NotificationPayload {
   userId: string;
@@ -16,7 +16,7 @@ export async function createNotification(input: NotificationPayload) {
       type: input.type,
       title: input.title,
       body: input.body ?? null,
-      data: input.data ?? null,
+      ...(input.data !== undefined && input.data !== null && { data: input.data as Prisma.InputJsonValue }),
     },
   });
 }
