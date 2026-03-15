@@ -84,18 +84,17 @@ export async function createBookingWithAvailabilityCheck(input: {
         },
       });
 
-      // Ensure a conversation exists for this booking (no-op if already created)
-      await ensureConversationForBooking(booking.id);
-
-      // Notify owner about new booking request
-      await notifyBookingCreated(car.ownerId, booking.id, carId);
-
-      return booking;
+      return { booking, ownerId: car.ownerId, carId };
     },
     {
       isolationLevel: "Serializable",
     }
-  );
+  ).then(async ({ booking, ownerId, carId }) => {
+    // After transaction is committed, create conversation and notify (so they see the booking)
+    await ensureConversationForBooking(booking.id);
+    await notifyBookingCreated(ownerId, booking.id, carId);
+    return booking;
+  });
 }
 
 export async function createBookingForListing(input: {
