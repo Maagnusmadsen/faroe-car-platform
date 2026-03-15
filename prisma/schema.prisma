@@ -150,6 +150,9 @@ model UserProfile {
   // Role-specific info (owner listing page, renter booking context)
   ownerNote            String?            @db.Text
   renterNote           String?            @db.Text
+  // Renter verification: age + driving licence
+  dateOfBirth          DateTime?          // for 18+ check; required when requesting renter approval
+  licenseImageUrl      String?            // URL of uploaded licence image (front or combined)
   // Future identity verification
   verificationStatus   VerificationStatus @default(UNVERIFIED)
   createdAt            DateTime           @default(now())

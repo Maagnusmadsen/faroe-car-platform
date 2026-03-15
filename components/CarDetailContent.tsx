@@ -25,6 +25,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
   const [claiming, setClaiming] = useState(false);
   const [claimDone, setClaimDone] = useState(false);
   const [reviews, setReviews] = useState<{ id: string; rating: number; comment: string | null; createdAt: string; reviewer: { name: string | null } }[]>([]);
+  const [renterVerificationStatus, setRenterVerificationStatus] = useState<"UNVERIFIED" | "PENDING" | "VERIFIED" | null>(null);
   const name = car.title?.trim() || `${car.brand} ${car.model}`;
 
   const photos = car.images && car.images.length > 0 ? car.images : [car.imageUrl];
@@ -58,6 +59,22 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
     };
     loadFavorite();
   }, [sessionUser, car.id]);
+
+  useEffect(() => {
+    if (!sessionUser || isOwner) return;
+    let cancelled = false;
+    fetch("/api/profile")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (cancelled) return;
+        const status = json?.data?.verificationStatus as "UNVERIFIED" | "PENDING" | "VERIFIED" | undefined;
+        setRenterVerificationStatus(status ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setRenterVerificationStatus(null);
+      });
+    return () => { cancelled = true; };
+  }, [sessionUser, isOwner]);
 
   useEffect(() => {
     let cancelled = false;
@@ -101,7 +118,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
     try {
       const res = await fetch(`/api/listings/${car.id}`, { method: "DELETE" });
       if (res.ok) {
-        router.push("/my-listings");
+        router.push("/bookings?tab=listings");
         return;
       }
       const json = await res.json().catch(() => ({}));
@@ -163,7 +180,11 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         setBookingState("error");
-        setBookingMessage(json?.error ?? t("rent.bookingError"));
+        if (json?.code === "RENTER_NOT_VERIFIED") {
+          setBookingMessage(t("rent.renterNotApproved"));
+        } else {
+          setBookingMessage(json?.error ?? t("rent.bookingError"));
+        }
         return;
       }
       const bookingId = json?.data?.id as string | undefined;
@@ -273,6 +294,16 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                     </button>
                   </div>
                 </div>
+              ) : renterVerificationStatus !== null && renterVerificationStatus !== "VERIFIED" ? (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-4">
+                  <p className="text-sm font-medium text-amber-800">{t("rent.renterNotApproved")}</p>
+                  <Link
+                    href="/renter-approval"
+                    className="mt-3 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+                  >
+                    {t("rent.getApprovedFirst")}
+                  </Link>
+                </div>
               ) : (
                 <button
                   type="button"
@@ -286,6 +317,14 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                       ? t("rent.loading")
                       : t("rent.requestToBook")}
                 </button>
+              )}
+              {bookingMessage && bookingState === "error" && (
+                <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2">
+                  <p className="text-sm text-amber-800">{bookingMessage}</p>
+                  <Link href="/renter-approval" className="mt-2 inline-block text-sm font-medium text-emerald-600 hover:underline">
+                    {t("rent.getApprovedFirst")}
+                  </Link>
+                </div>
               )}
               {availability && (
                 <p className="text-xs text-slate-500">
@@ -301,9 +340,6 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                     {t("rent.viewMyBookings")}
                   </Link>
                 </p>
-              )}
-              {bookingMessage && bookingState !== "success" && (
-                <p className="text-xs text-red-600">{bookingMessage}</p>
               )}
             </div>
           </div>
@@ -383,6 +419,11 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                     </li>
                   )}
                   <li>{t("rent.policyDriverRequirements")}</li>
+                  <li>
+                    <Link href="/cancellation" className="text-emerald-600 hover:underline">
+                      {t("rent.policyCancellationLink")}
+                    </Link>
+                  </li>
                 </ul>
               </section>
             </div>

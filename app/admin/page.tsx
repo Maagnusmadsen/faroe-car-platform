@@ -15,6 +15,7 @@ type UserRow = {
   name: string | null;
   role: string;
   createdAt: string;
+  verificationStatus?: string;
 };
 
 type ListingRow = {
@@ -73,6 +74,7 @@ export default function AdminPage() {
   }>({ items: [], total: 0, page: 1, pageSize: 20 });
   const [loading, setLoading] = useState(true);
   const [updatingListingId, setUpdatingListingId] = useState<string | null>(null);
+  const [updatingVerificationUserId, setUpdatingVerificationUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async () => {
@@ -152,6 +154,30 @@ export default function AdminPage() {
     }
   }
 
+  async function approveRenter(userId: string) {
+    setUpdatingVerificationUserId(userId);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/verification`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ verificationStatus: "VERIFIED" }),
+      });
+      if (res.ok) {
+        setUsers((prev) =>
+          prev.map((u) => (u.id === userId ? { ...u, verificationStatus: "VERIFIED" } : u))
+        );
+      } else {
+        const json = await res.json().catch(() => ({}));
+        setError(json?.error ?? "Failed to approve");
+      }
+    } catch {
+      setError("Failed to approve");
+    } finally {
+      setUpdatingVerificationUserId(null);
+    }
+  }
+
   if (authStatus === "loading" || !user) {
     return (
       <main className="min-h-screen bg-slate-50">
@@ -207,7 +233,9 @@ export default function AdminPage() {
                   <th className="px-4 py-3 font-medium text-slate-700">Email</th>
                   <th className="px-4 py-3 font-medium text-slate-700">Name</th>
                   <th className="px-4 py-3 font-medium text-slate-700">Role</th>
+                  <th className="px-4 py-3 font-medium text-slate-700">Renter status</th>
                   <th className="px-4 py-3 font-medium text-slate-700">Joined</th>
+                  <th className="px-4 py-3 font-medium text-slate-700">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -224,8 +252,33 @@ export default function AdminPage() {
                         {u.role}
                       </span>
                     </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                          u.verificationStatus === "VERIFIED"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : u.verificationStatus === "PENDING"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-slate-100 text-slate-600"
+                        }`}
+                      >
+                        {u.verificationStatus ?? "UNVERIFIED"}
+                      </span>
+                    </td>
                     <td className="px-4 py-3 text-slate-500">
                       {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {u.verificationStatus === "PENDING" && (
+                        <button
+                          type="button"
+                          onClick={() => approveRenter(u.id)}
+                          disabled={updatingVerificationUserId === u.id}
+                          className="rounded-lg bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+                        >
+                          {updatingVerificationUserId === u.id ? "…" : "Approve renter"}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

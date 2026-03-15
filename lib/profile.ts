@@ -36,6 +36,8 @@ export interface ProfileWithUser {
   postalCode: string | null;
   ownerNote: string | null;
   renterNote: string | null;
+  dateOfBirth: Date | null;
+  licenseImageUrl: string | null;
   verificationStatus: VerificationStatus;
   completionPercent: number;
   createdAt: Date;
@@ -87,6 +89,8 @@ export async function getProfileByUserId(userId: string): Promise<ProfileWithUse
     postalCode: profile?.postalCode ?? null,
     ownerNote: profile?.ownerNote ?? null,
     renterNote: profile?.renterNote ?? null,
+    dateOfBirth: profile?.dateOfBirth ?? null,
+    licenseImageUrl: profile?.licenseImageUrl ?? null,
     verificationStatus: profile?.verificationStatus ?? "UNVERIFIED",
     completionPercent: computeCompletion(
       { name: user.name, image: user.image },
@@ -158,4 +162,81 @@ export async function getCurrentUserProfile(): Promise<ProfileWithUser | null> {
   const session = await getSession();
   if (!session?.user?.id) return null;
   return getProfileByUserId(session.user.id);
+}
+
+/** Check if date of birth is at least 18 years ago. */
+export function isAtLeast18(dateOfBirth: Date): boolean {
+  const today = new Date();
+  const age = today.getFullYear() - dateOfBirth.getFullYear();
+  const monthDiff = today.getMonth() - dateOfBirth.getMonth();
+  const dayDiff = today.getDate() - dateOfBirth.getDate();
+  if (age > 18) return true;
+  if (age < 18) return false;
+  if (monthDiff > 0) return true;
+  if (monthDiff < 0) return false;
+  return dayDiff >= 0;
+}
+
+/**
+ * Submit renter verification: save date of birth (must be 18+), optional licence number and image URL, set status to PENDING.
+ * Caller must ensure the userId is the authenticated user and has uploaded the licence image (if provided).
+ */
+export async function submitRenterVerification(
+  userId: string,
+  input: { dateOfBirth: Date; driverLicenseNumber?: string | null; licenseImageUrl?: string | null }
+): Promise<ProfileWithUser | null> {
+  if (!isAtLeast18(input.dateOfBirth)) {
+    const err = new Error("You must be at least 18 years old to rent a car.") as Error & { statusCode?: number; code?: string };
+    err.statusCode = 400;
+    err.code = "UNDER_18";
+    throw err;
+  }
+  const user = await prisma.user.findFirst({
+    where: { id: userId, deletedAt: null },
+    include: { profile: true },
+  });
+  if (!user) return null;
+  const update: {
+    dateOfBirth: Date;
+    verificationStatus: "PENDING";
+    driverLicenseNumber?: string | null;
+    licenseImageUrl?: string | null;
+  } = {
+    dateOfBirth: input.dateOfBirth,
+    verificationStatus: "PENDING",
+  };
+  if (input.driverLicenseNumber !== undefined) update.driverLicenseNumber = input.driverLicenseNumber;
+  if (input.licenseImageUrl !== undefined) update.licenseImageUrl = input.licenseImageUrl;
+  if (user.profile) {
+    await prisma.userProfile.update({
+      where: { userId },
+      data: update,
+    });
+  } else {
+    await prisma.userProfile.create({
+      data: { userId, ...update },
+    });
+  }
+  return getProfileByUserId(userId);
+}
+
+/**
+ * Set renter approval request: move from UNVERIFIED to PENDING (no DOB/licence – legacy or simple request).
+ * Used when user only clicks "Request approval" without submitting the form.
+ * Caller must ensure the userId is the authenticated user.
+ */
+export async function requestRenterApproval(userId: string): Promise<ProfileWithUser | null> {
+  const user = await prisma.user.findFirst({
+    where: { id: userId, deletedAt: null },
+    include: { profile: true },
+  });
+  if (!user?.profile) return null;
+  if (user.profile.verificationStatus !== "UNVERIFIED") {
+    return getProfileByUserId(userId);
+  }
+  await prisma.userProfile.update({
+    where: { userId },
+    data: { verificationStatus: "PENDING" },
+  });
+  return getProfileByUserId(userId);
 }

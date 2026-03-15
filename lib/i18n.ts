@@ -1,4 +1,4 @@
-export type Locale = "en" | "fo";
+export type Locale = "en";
 
 export function getNested(obj: object, path: string): string {
   const keys = path.split(".");

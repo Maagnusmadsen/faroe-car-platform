@@ -22,11 +22,19 @@ export async function GET() {
         name: true,
         role: true,
         createdAt: true,
+        profile: {
+          select: { verificationStatus: true },
+        },
       },
       take: 100,
     });
 
-    return jsonSuccess(users);
+    const usersWithVerification = users.map(({ profile, ...u }) => ({
+      ...u,
+      verificationStatus: profile?.verificationStatus ?? "UNVERIFIED",
+    }));
+
+    return jsonSuccess(usersWithVerification);
   } catch (err) {
     const e = err as Error & { statusCode?: number };
     if (e.statusCode === 401) {

@@ -21,25 +21,37 @@ export default function Footer() {
 
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
             <Link
-              href="#about"
+              href="/about"
               className="text-slate-600 transition-colors hover:text-slate-900"
             >
               {t("footer.about")}
             </Link>
             <Link
-              href="#how-it-works"
+              href="/how-it-works"
               className="text-slate-600 transition-colors hover:text-slate-900"
             >
               {t("footer.howItWorks")}
             </Link>
             <Link
-              href="#contact"
+              href="/faq"
+              className="text-slate-600 transition-colors hover:text-slate-900"
+            >
+              {t("footer.faq")}
+            </Link>
+            <Link
+              href="/contact"
               className="text-slate-600 transition-colors hover:text-slate-900"
             >
               {t("footer.contact")}
             </Link>
             <Link
-              href="#terms"
+              href="/cancellation"
+              className="text-slate-600 transition-colors hover:text-slate-900"
+            >
+              {t("footer.cancellation")}
+            </Link>
+            <Link
+              href="/terms"
               className="text-slate-600 transition-colors hover:text-slate-900"
             >
               {t("footer.termsPrivacy")}

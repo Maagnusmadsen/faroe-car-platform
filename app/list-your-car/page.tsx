@@ -87,6 +87,29 @@ export default function ListYourCarPage() {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section className="border-t border-slate-200 bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+            {t("list.testimonialsTitle")}
+          </h2>
+          <div className="mt-12 grid gap-8 sm:grid-cols-3">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-slate-700 italic">&ldquo;{t("list.testimonial1Quote")}&rdquo;</p>
+              <p className="mt-4 text-sm font-medium text-slate-900">— {t("list.testimonial1Name")}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-slate-700 italic">&ldquo;{t("list.testimonial2Quote")}&rdquo;</p>
+              <p className="mt-4 text-sm font-medium text-slate-900">— {t("list.testimonial2Name")}</p>
+            </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="text-slate-700 italic">&ldquo;{t("list.testimonial3Quote")}&rdquo;</p>
+              <p className="mt-4 text-sm font-medium text-slate-900">— {t("list.testimonial3Name")}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Listing wizard */}
       <section
         id="listing-form"

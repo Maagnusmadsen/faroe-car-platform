@@ -196,6 +196,44 @@ export default function RentACarPage() {
         onSearch={handleSearch}
       />
 
+      {/* How it works */}
+      <section className="border-t border-slate-200 bg-white px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="text-center text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+            {t("rent.howTitle")}
+          </h2>
+          <div className="mt-8 grid gap-6 sm:grid-cols-3">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 text-center">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-base font-bold text-emerald-700">
+                1
+              </span>
+              <h3 className="mt-3 text-base font-semibold text-slate-900">
+                {t("rent.howStep1Title")}
+              </h3>
+              <p className="mt-1.5 text-sm text-slate-600">{t("rent.howStep1Text")}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 text-center">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-base font-bold text-emerald-700">
+                2
+              </span>
+              <h3 className="mt-3 text-base font-semibold text-slate-900">
+                {t("rent.howStep2Title")}
+              </h3>
+              <p className="mt-1.5 text-sm text-slate-600">{t("rent.howStep2Text")}</p>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 text-center">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-base font-bold text-emerald-700">
+                3
+              </span>
+              <h3 className="mt-3 text-base font-semibold text-slate-900">
+                {t("rent.howStep3Title")}
+              </h3>
+              <p className="mt-1.5 text-sm text-slate-600">{t("rent.howStep3Text")}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <FilterBar

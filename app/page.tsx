@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function HomePage() {
@@ -150,6 +151,8 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      <Footer />
     </main>
   );
 }

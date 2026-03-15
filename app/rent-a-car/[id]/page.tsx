@@ -83,7 +83,7 @@ export default function CarDetailPage() {
               Browse cars
             </Link>
             <Link
-              href="/my-listings"
+              href="/bookings?tab=listings"
               className="rounded-xl border border-slate-300 bg-white px-6 py-3 font-medium text-slate-700 hover:bg-slate-50"
             >
               My listings

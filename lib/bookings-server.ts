@@ -10,6 +10,7 @@ import { AppError, HttpStatus } from "@/lib/utils/errors";
 import { calculatePricingForListing } from "@/lib/pricing";
 import { ensureConversationForBooking } from "@/lib/messaging-server";
 import { notifyBookingCreated } from "@/lib/notifications-server";
+import { getProfileByUserId } from "@/lib/profile";
 
 /**
  * Create a booking while enforcing availability inside a serializable transaction.
@@ -103,6 +104,15 @@ export async function createBookingForListing(input: {
   startDate: string;
   endDate: string;
 }) {
+  const renterProfile = await getProfileByUserId(input.renterId);
+  if (renterProfile?.verificationStatus !== "VERIFIED") {
+    throw new AppError(
+      "You need to be approved as a renter before you can book a car. Please complete renter approval first.",
+      HttpStatus.FORBIDDEN,
+      "RENTER_NOT_VERIFIED"
+    );
+  }
+
   const pricing = await calculatePricingForListing(
     input.listingId,
     input.startDate,

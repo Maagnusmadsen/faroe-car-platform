@@ -11,8 +11,7 @@ import en from "@/locales/en.json";
 import { getNested } from "@/lib/i18n";
 
 interface LanguageContextValue {
-  locale: "en" | "fo";
-  setLocale: (locale: "en" | "fo") => void;
+  locale: "en";
   t: (key: string) => string;
 }
 
@@ -37,7 +36,6 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     <LanguageContext.Provider
       value={{
         locale: "en",
-        setLocale: () => {},
         t,
       }}
     >

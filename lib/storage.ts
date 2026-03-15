@@ -35,6 +35,12 @@ export function generateImageKey(listingId: string, contentType: string): string
   return `listings/${listingId}/${randomUUID()}.${ext}`;
 }
 
+/** Key for renter verification licence upload (private; only admin/owner should view). */
+export function generateVerificationLicenseKey(userId: string, contentType: string): string {
+  const ext = getExtension(contentType);
+  return `verification/${userId}/${randomUUID()}.${ext}`;
+}
+
 export interface StorageDriver {
   upload(buffer: Buffer, key: string, contentType: string): Promise<string>;
   delete(key: string): Promise<void>;

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/context/LanguageContext";
 
 type BookingItem = {
   id: string;
@@ -46,10 +47,42 @@ const STATUS_LABELS: Record<string, string> = {
   DISPUTED: "Disputed",
 };
 
-export default function BookingsPage() {
+type ListingRow = {
+  id: string;
+  title: string | null;
+  listingType: string;
+  brand: string;
+  model: string;
+  status: string;
+  pricePerDay: { toString(): string };
+  town: string;
+  island: string;
+  reviewCount: number;
+  ratingAvg: { toString(): string } | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+function friendlyConnectError(raw: string | undefined): string {
+  if (!raw) return "Could not start payment setup.";
+  if (/connect|signed up/i.test(raw)) return "Payment setup is being configured. Please try again in a moment.";
+  return raw;
+}
+
+function BookingsContent() {
+  const { t } = useLanguage();
   const { user, status: authStatus } = useAuth();
   const router = useRouter();
-  const [tab, setTab] = useState<"renter" | "owner">("renter");
+  const searchParams = useSearchParams();
+  const paymentSuccess = searchParams.get("payment") === "success";
+  const paymentCancelled = searchParams.get("payment") === "cancelled";
+  const stripeSuccess = searchParams.get("stripe") === "success";
+  const publishedParam = searchParams.get("published") === "1";
+
+  const tabParam = searchParams.get("tab");
+  const initialTab = tabParam === "listings" ? "listings" : tabParam === "owner" ? "owner" : "renter";
+  const [tab, setTab] = useState<"renter" | "owner" | "listings">(initialTab);
+
   const [items, setItems] = useState<BookingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -59,12 +92,32 @@ export default function BookingsPage() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [listings, setListings] = useState<ListingRow[]>([]);
+  const [listingsLoading, setListingsLoading] = useState(true);
+  const [stripeConnected, setStripeConnected] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [connectLoading, setConnectLoading] = useState(false);
+
+  const setTabAndUrl = (newTab: "renter" | "owner" | "listings") => {
+    setTab(newTab);
+    setError(null);
+    const url = newTab === "renter" ? "/bookings" : `/bookings?tab=${newTab}`;
+    router.replace(url, { scroll: false });
+  };
+
+  useEffect(() => {
+    if (tabParam === "listings" && tab !== "listings") setTab("listings");
+    if (tabParam === "owner" && tab !== "owner") setTab("owner");
+    if (!tabParam && tab !== "renter") setTab("renter");
+  }, [tabParam]);
+
   useEffect(() => {
     if (authStatus === "unauthenticated") {
       router.replace("/login?callbackUrl=/bookings");
       return;
     }
     if (authStatus !== "authenticated" || !user) return;
+    if (tab === "listings") return;
 
     let cancelled = false;
     setLoading(true);
@@ -84,6 +137,66 @@ export default function BookingsPage() {
       cancelled = true;
     };
   }, [authStatus, user, tab, router]);
+
+  const fetchListings = useCallback(() => {
+    if (authStatus !== "authenticated" || !user) return;
+    setError(null);
+    setListingsLoading(true);
+    fetch("/api/owner/dashboard")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        setListings(json?.data?.listings ?? []);
+        setStripeConnected(!!json?.data?.stripeConnected);
+      })
+      .catch(() => setError("Failed to load listings"))
+      .finally(() => setListingsLoading(false));
+  }, [authStatus, user]);
+
+  useEffect(() => {
+    if (authStatus !== "authenticated" || !user || tab !== "listings") return;
+    fetchListings();
+  }, [tab, authStatus, user, fetchListings]);
+
+  useEffect(() => {
+    if (tab === "listings" && authStatus === "authenticated" && user) {
+      const onFocus = () => fetchListings();
+      window.addEventListener("focus", onFocus);
+      return () => window.removeEventListener("focus", onFocus);
+    }
+  }, [tab, authStatus, user, fetchListings]);
+
+  async function handleDeleteListing(id: string) {
+    if (!confirm("Delete this listing? This cannot be undone.")) return;
+    setDeletingId(id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/listings/${id}`, { method: "DELETE" });
+      if (res.ok) setListings((prev) => prev.filter((l) => l.id !== id));
+      else setError("Failed to delete listing");
+    } catch {
+      setError("Failed to delete listing");
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  async function handleConnectStripe() {
+    setError(null);
+    setConnectLoading(true);
+    try {
+      const res = await fetch("/api/stripe/connect/onboard", { method: "POST" });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json?.data?.url) {
+        window.location.href = json.data.url;
+        return;
+      }
+      setError(friendlyConnectError(json?.error));
+    } catch {
+      setError("Could not start payment setup.");
+    } finally {
+      setConnectLoading(false);
+    }
+  }
 
   async function updateStatus(bookingId: string, newStatus: string) {
     setUpdatingId(bookingId);
@@ -194,32 +307,91 @@ export default function BookingsPage() {
     <main className="min-h-screen bg-slate-50">
       <Navbar />
       <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-bold text-slate-900">Bookings</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t("bookings.pageTitle")}</h1>
 
         <div className="mt-6 flex gap-2 border-b border-slate-200">
           <button
             type="button"
-            onClick={() => setTab("renter")}
+            onClick={() => setTabAndUrl("renter")}
             className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
               tab === "renter"
                 ? "border-emerald-600 text-emerald-600"
                 : "border-transparent text-slate-600 hover:text-slate-900"
             }`}
           >
-            My requests
+            {t("bookings.tabMyRequests")}
           </button>
           <button
             type="button"
-            onClick={() => setTab("owner")}
+            onClick={() => setTabAndUrl("owner")}
             className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
               tab === "owner"
                 ? "border-emerald-600 text-emerald-600"
                 : "border-transparent text-slate-600 hover:text-slate-900"
             }`}
           >
-            Incoming requests
+            {t("bookings.tabIncoming")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setTabAndUrl("listings")}
+            className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+              tab === "listings"
+                ? "border-emerald-600 text-emerald-600"
+                : "border-transparent text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            {t("bookings.tabMyListings")}
           </button>
         </div>
+
+        {tab !== "listings" && (
+          <p className="mt-3 text-sm text-slate-600">
+            <Link href="/cancellation" className="text-emerald-600 hover:underline">
+              {t("cancellation.needToCancel")} {t("cancellation.linkText")}
+            </Link>
+          </p>
+        )}
+
+        {paymentSuccess && (
+          <div
+            className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6"
+            role="alert"
+            aria-live="polite"
+          >
+            <div className="flex items-start gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-2xl text-white" aria-hidden>
+                ✓
+              </span>
+              <div>
+                <h2 className="text-xl font-bold text-emerald-900">
+                  {t("rent.bookingConfirmedTitle")}
+                </h2>
+                <p className="mt-2 text-emerald-800">
+                  {t("rent.bookingConfirmedMessage")}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => router.replace("/bookings", { scroll: false })}
+                  className="mt-4 text-sm font-medium text-emerald-700 underline hover:no-underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {paymentCancelled && !paymentSuccess && (
+          <div
+            className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4"
+            role="status"
+          >
+            <p className="text-sm text-amber-800">
+              {t("rent.paymentCancelled")}
+            </p>
+          </div>
+        )}
 
         {error && (
           <p className="mt-4 text-sm text-red-600" role="alert">
@@ -227,21 +399,124 @@ export default function BookingsPage() {
           </p>
         )}
 
-        {loading ? (
-          <p className="mt-8 text-slate-500">Loading bookings…</p>
-        ) : items.length === 0 ? (
-          <p className="mt-8 text-slate-600">
-            {tab === "renter"
-              ? "You have no booking requests. "
-              : "No incoming requests. "}
-            {tab === "renter" && (
-              <Link href="/rent-a-car" className="text-emerald-600 hover:underline">
-                Browse cars
-              </Link>
+        {tab === "listings" && (
+          <>
+            {stripeSuccess && (
+              <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800" role="status">
+                Bank account connected. You can now receive payouts when someone books your car.
+              </p>
             )}
-          </p>
-        ) : (
-          <ul className="mt-8 space-y-4">
+            {publishedParam && !stripeSuccess && (
+              <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800" role="status">
+                Your listing is live. Connect your bank below to get paid when someone books.
+              </p>
+            )}
+            {!stripeConnected && listings.length > 0 && (
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-sky-200 bg-sky-50 p-4">
+                <p className="text-sm text-sky-800">
+                  Get paid when someone books – connect your bank (about 1 min).
+                </p>
+                <button
+                  type="button"
+                  onClick={handleConnectStripe}
+                  disabled={connectLoading}
+                  className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+                >
+                  {connectLoading ? "Redirecting…" : "Connect with Stripe"}
+                </button>
+              </div>
+            )}
+            {stripeConnected && listings.length > 0 && (
+              <p className="mt-4 text-sm text-emerald-600">
+                Bank connected – you can receive payouts from bookings.
+              </p>
+            )}
+            {listingsLoading ? (
+              <p className="mt-8 text-slate-500">Loading your listings…</p>
+            ) : listings.length === 0 ? (
+              <p className="mt-8 text-slate-600">{t("bookings.noListings")}</p>
+            ) : (
+              <ul className="mt-8 space-y-4">
+                {listings.map((listing) => {
+                  const displayName =
+                    listing.title?.trim() ||
+                    (listing.status === "DRAFT" ? "Untitled draft" : `${listing.brand} ${listing.model}`);
+                  const typeLabel = listing.listingType === "ride_share" ? "Ride share" : "Car rental";
+                  const priceDisplay =
+                    listing.status === "DRAFT" && Number(listing.pricePerDay) === 0
+                      ? "—"
+                      : `${Number(listing.pricePerDay).toFixed(0)} DKK/day`;
+                  return (
+                    <li
+                      key={listing.id}
+                      className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-slate-900">{displayName}</p>
+                        <p className="text-sm text-slate-500">
+                          {typeLabel} · {listing.town}, {listing.island} · {priceDisplay} ·{" "}
+                          <span
+                            className={
+                              listing.status === "ACTIVE"
+                                ? "text-emerald-600"
+                                : listing.status === "DRAFT"
+                                  ? "text-amber-600"
+                                  : "text-slate-500"
+                            }
+                          >
+                            {listing.status}
+                          </span>
+                        </p>
+                      </div>
+                      <div className="flex flex-shrink-0 items-center gap-2">
+                        {listing.status === "ACTIVE" && (
+                          <Link
+                            href={`/rent-a-car/${listing.id}`}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                          >
+                            View
+                          </Link>
+                        )}
+                        <Link
+                          href={`/list-your-car?draft=${listing.id}`}
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteListing(listing.id)}
+                          disabled={deletingId === listing.id}
+                          className="rounded-lg border border-red-200 bg-white px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        >
+                          {deletingId === listing.id ? "Deleting…" : "Delete"}
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
+        )}
+
+        {tab !== "listings" && (
+          <>
+            {loading ? (
+              <p className="mt-8 text-slate-500">Loading bookings…</p>
+            ) : items.length === 0 ? (
+              <p className="mt-8 text-slate-600">
+                {tab === "renter"
+                  ? t("bookings.noRequestsRenter")
+                  : t("bookings.noRequestsOwner")}{" "}
+                {tab === "renter" && (
+                  <Link href="/rent-a-car" className="text-emerald-600 hover:underline">
+                    {t("bookings.browseCars")}
+                  </Link>
+                )}
+              </p>
+            ) : (
+              <ul className="mt-8 space-y-4">
             {items.map((booking) => {
               const carName =
                 booking.car.title?.trim() ||
@@ -445,9 +720,19 @@ export default function BookingsPage() {
               );
             })}
           </ul>
+            )}
+          </>
         )}
       </div>
       <Footer />
     </main>
+  );
+}
+
+export default function BookingsPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-slate-50">Loading…</div>}>
+      <BookingsContent />
+    </Suspense>
   );
 }

@@ -324,7 +324,7 @@ export default function ListingWizard() {
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Link
-            href="/my-listings?published=1"
+            href="/bookings?tab=listings&published=1"
             className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             {t("list.viewMyListings")}

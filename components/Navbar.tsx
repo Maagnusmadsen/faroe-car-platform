@@ -65,7 +65,36 @@ export default function Navbar({ variant = "light" }: NavbarProps) {
 function NavLinks({ variant }: { variant: Variant }) {
   const { t } = useLanguage();
   const { user, status, signOut } = useAuth();
+  // Default false: only show "Your earnings" after API confirms hasListings === true
+  const [hasListings, setHasListings] = useState(false);
   const isTransparent = variant === "transparent";
+
+  useEffect(() => {
+    if (status !== "authenticated" || !user) {
+      setHasListings(false);
+      return;
+    }
+    const aborter = new AbortController();
+    fetch(`/api/owner/has-listings?_=${Date.now()}`, { cache: "no-store", signal: aborter.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        setHasListings(Boolean(json?.data?.hasListings));
+      })
+      .catch(() => setHasListings(false));
+    return () => aborter.abort();
+  }, [status, user]);
+
+  useEffect(() => {
+    if (status !== "authenticated" || !user) return;
+    const onFocus = () => {
+      fetch(`/api/owner/has-listings?_=${Date.now()}`, { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((json) => setHasListings(Boolean(json?.data?.hasListings)))
+        .catch(() => setHasListings(false));
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [status, user]);
 
   const linkClass = `text-sm font-medium ${
     isTransparent
@@ -91,11 +120,13 @@ function NavLinks({ variant }: { variant: Variant }) {
       ) : user ? (
         <>
           <Link href="/bookings" className={linkClass}>
-            Bookings
+            {t("nav.bookingsAndListings")}
           </Link>
-          <Link href="/my-listings" className={linkClass}>
-            My listings
-          </Link>
+          {hasListings === true && (
+            <Link href="/owner/dashboard" className={linkClass}>
+              {t("ownerDashboard.title")}
+            </Link>
+          )}
           {user.role === "ADMIN" && (
             <Link href="/admin" className={linkClass}>
               Admin
