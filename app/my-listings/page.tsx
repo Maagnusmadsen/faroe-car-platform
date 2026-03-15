@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -29,7 +29,7 @@ function friendlyConnectError(raw: string | undefined): string {
   return raw;
 }
 
-export default function MyListingsPage() {
+function MyListingsContent() {
   const { user, status } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -249,5 +249,23 @@ export default function MyListingsPage() {
       </div>
       <Footer />
     </main>
+  );
+}
+
+export default function MyListingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-slate-50">
+          <Navbar />
+          <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+            <p className="text-slate-500">Loading…</p>
+          </div>
+          <Footer />
+        </main>
+      }
+    >
+      <MyListingsContent />
+    </Suspense>
   );
 }
