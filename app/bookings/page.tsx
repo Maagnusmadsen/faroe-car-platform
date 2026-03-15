@@ -16,7 +16,8 @@ type BookingItem = {
   status: string;
   totalPrice: { toString(): string };
   currency: string;
-  hasReviewed?: boolean;
+  hasCarReviewed?: boolean;
+  hasRenterReviewed?: boolean;
   car: {
     id: string;
     title: string | null;
@@ -117,13 +118,15 @@ export default function BookingsPage() {
     setError(null);
     setReviewSubmitting(true);
     try {
+      const reviewType = tab === "renter" ? "car" : "renter";
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookingId,
+          type: reviewType,
           rating: reviewRating,
-          body: reviewComment.trim() || undefined,
+          comment: reviewComment.trim() || undefined,
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -133,7 +136,14 @@ export default function BookingsPage() {
         setReviewRating(5);
         setItems((prev) =>
           prev.map((b) =>
-            b.id === bookingId ? { ...b, hasReviewed: true } : b
+            b.id === bookingId
+              ? {
+                  ...b,
+                  ...(reviewType === "car"
+                    ? { hasCarReviewed: true }
+                    : { hasRenterReviewed: true }),
+                }
+              : b
           )
         );
       } else {
@@ -251,8 +261,14 @@ export default function BookingsPage() {
                 !isOwner && booking.status === "PENDING_PAYMENT";
               const canMarkCompleted =
                 isOwner && booking.status === "CONFIRMED";
-              const canReview =
-                booking.status === "COMPLETED" && !booking.hasReviewed;
+              const canReviewCar =
+                !isOwner &&
+                booking.status === "COMPLETED" &&
+                !booking.hasCarReviewed;
+              const canReviewRenter =
+                isOwner &&
+                booking.status === "COMPLETED" &&
+                !booking.hasRenterReviewed;
               const isUpdating = updatingId === booking.id;
               const isReviewing = reviewingId === booking.id;
 
@@ -348,24 +364,38 @@ export default function BookingsPage() {
                         {isUpdating ? "…" : "Mark as completed"}
                       </button>
                     )}
-                    {canReview && !isReviewing && (
+                    {canReviewCar && !isReviewing && (
                       <button
                         type="button"
                         onClick={() => setReviewingId(booking.id)}
                         className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600"
                       >
-                        Leave review
+                        Review car
                       </button>
                     )}
-                    {booking.hasReviewed && (
-                      <span className="text-xs text-slate-500">Reviewed</span>
+                    {canReviewRenter && !isReviewing && (
+                      <button
+                        type="button"
+                        onClick={() => setReviewingId(booking.id)}
+                        className="rounded-lg bg-amber-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-600"
+                      >
+                        Review renter
+                      </button>
+                    )}
+                    {booking.hasCarReviewed && !isOwner && (
+                      <span className="text-xs text-slate-500">Car reviewed</span>
+                    )}
+                    {booking.hasRenterReviewed && isOwner && (
+                      <span className="text-xs text-slate-500">Renter reviewed</span>
                     )}
                   </div>
                   </div>
                   {isReviewing && (
                     <div className="mt-4 border-t border-slate-100 pt-4">
                       <p className="mb-2 text-sm font-medium text-slate-700">
-                        Rate this trip
+                        {tab === "renter"
+                          ? "Rate the car and your trip"
+                          : "Rate the renter"}
                       </p>
                       <div className="mb-3 flex gap-1">
                         {[1, 2, 3, 4, 5].map((star) => (

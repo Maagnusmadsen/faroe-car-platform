@@ -24,7 +24,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
   const [deleting, setDeleting] = useState(false);
   const [claiming, setClaiming] = useState(false);
   const [claimDone, setClaimDone] = useState(false);
-  const [reviews, setReviews] = useState<{ id: string; rating: number; body: string | null; createdAt: string; reviewer: { name: string | null } }[]>([]);
+  const [reviews, setReviews] = useState<{ id: string; rating: number; comment: string | null; createdAt: string; reviewer: { name: string | null } }[]>([]);
   const name = car.title?.trim() || `${car.brand} ${car.model}`;
 
   const photos = car.images && car.images.length > 0 ? car.images : [car.imageUrl];
@@ -509,8 +509,8 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                             {r.reviewer?.name ?? "Guest"}
                           </span>
                         </div>
-                        {r.body && (
-                          <p className="mt-1 text-sm text-slate-700">{r.body}</p>
+                        {r.comment && (
+                          <p className="mt-1 text-sm text-slate-700">{r.comment}</p>
                         )}
                       </li>
                     ))}

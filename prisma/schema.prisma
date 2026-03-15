@@ -121,9 +121,9 @@ model User {
   carListings      CarListing[]       @relation("CarOwner")
   bookingsAsRenter Booking[]         @relation("BookingRenter")
   favorites        Favorite[]
-  reviewsGiven     Review[]           @relation("Reviewer")
-  reviewsReceived  Review[]           @relation("Reviewee")
-  reviewResponses  ReviewResponse[]
+  carReviewsGiven  CarReview[]        @relation("CarReviewReviewer")
+  userReviewsGiven UserReview[]       @relation("UserReviewReviewer")
+  userReviewsReceived UserReview[]    @relation("UserReviewReviewee")
   conversations    ConversationParticipant[]
   messagesSent     Message[]          @relation("MessageSender")
   notifications    Notification[]
@@ -244,7 +244,7 @@ model CarListing {
   pickupOptions       PickupOption[]
   bookings            Booking[]
   favorites           Favorite[]
-  reviews             Review[]
+  carReviews          CarReview[]
 
   @@index([ownerId])
   @@index([status])
@@ -344,7 +344,8 @@ model Booking {
   statusHistory BookingStatusHistory[]
   payments      Payment[]
   conversation  Conversation?
-  reviews       Review[]
+  carReviews    CarReview[]
+  userReviews   UserReview[]
 
   @@index([carId])
   @@index([renterId])
@@ -409,37 +410,41 @@ model Payout {
 
 // =============================================================================
 // Reviews (only after completed booking)
+// Renter → CarReview (reviews car). Owner → UserReview (reviews renter).
 // =============================================================================
 
-model Review {
-  id         String   @id @default(cuid())
-  bookingId String
-  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  carId     String
-  car       CarListing @relation(fields: [carId], references: [id], onDelete: Cascade)
-  reviewerId String
-  reviewer  User     @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
-  revieweeId String  // owner
-  reviewee  User     @relation("Reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
-  rating    Int      // 1-5
-  body      String?  @db.Text
-  createdAt DateTime @default(now())
+model CarReview {
+  id         String     @id @default(cuid())
+  bookingId  String
+  booking    Booking    @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  reviewerId String     // renter
+  reviewer   User       @relation("CarReviewReviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  carId      String
+  car        CarListing @relation(fields: [carId], references: [id], onDelete: Cascade)
+  rating     Int        // 1-5
+  comment    String?    @db.Text
+  createdAt  DateTime   @default(now())
 
-  response ReviewResponse?
-
+  @@unique([bookingId])
   @@index([carId])
-  @@index([revieweeId])
-  @@unique([bookingId, reviewerId])
+  @@index([reviewerId])
 }
 
-model ReviewResponse {
-  id        String   @id @default(cuid())
-  reviewId  String   @unique
-  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  body      String   @db.Text
-  createdAt DateTime @default(now())
+model UserReview {
+  id         String   @id @default(cuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  reviewerId String   // owner
+  reviewer   User     @relation("UserReviewReviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  revieweeId String   // renter
+  reviewee   User     @relation("UserReviewReviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
+  rating     Int      // 1-5
+  comment    String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@unique([bookingId])
+  @@index([reviewerId])
+  @@index([revieweeId])
 }
 
 // =============================================================================

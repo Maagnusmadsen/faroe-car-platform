@@ -44,9 +44,10 @@ export async function getOwnerRecentBookings(ownerId: string, limit = 10) {
   });
 }
 
+/** Car reviews left on the owner's listings (renter → car). */
 export async function getOwnerReviews(ownerId: string, limit = 10) {
-  return prisma.review.findMany({
-    where: { revieweeId: ownerId },
+  return prisma.carReview.findMany({
+    where: { car: { ownerId } },
     orderBy: { createdAt: "desc" },
     take: limit,
     include: {

@@ -78,23 +78,19 @@ export async function getRenterSavedCars(renterId: string) {
   });
 }
 
+/** Completed bookings where renter hasn't left a car review yet. */
 export async function getRenterPendingReviews(renterId: string, limit = 10) {
   const today = new Date();
   const todayStart = new Date(
     Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getDate())
   );
 
-  // Completed bookings where renter hasn't left a review yet
   return prisma.booking.findMany({
     where: {
       renterId,
       status: "COMPLETED",
       endDate: { lt: todayStart },
-      reviews: {
-        none: {
-          reviewerId: renterId,
-        },
-      },
+      carReviews: { none: {} },
     },
     orderBy: { endDate: "desc" },
     take: limit,

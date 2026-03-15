@@ -3,8 +3,10 @@ import { z } from "zod";
 export const reviewCreateSchema = z
   .object({
     bookingId: z.string().min(1, "bookingId is required"),
+    type: z.enum(["car", "renter"]),
     rating: z.coerce.number().int().min(1).max(5),
     body: z.string().max(5000).optional(),
+    comment: z.string().max(5000).optional(),
   })
   .strict();
 

@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
             renterId: session.user.id,
           };
 
-    const [bookings, total, reviewedBookingIds] = await Promise.all([
+    const [bookings, total] = await Promise.all([
       prisma.booking.findMany({
         where,
         orderBy: { createdAt: "desc" },
@@ -93,15 +93,29 @@ export async function GET(request: NextRequest) {
         },
       }),
       prisma.booking.count({ where }),
-      prisma.review.findMany({
-        where: { reviewerId: session.user.id },
-        select: { bookingId: true },
-      }).then((rows) => new Set(rows.map((r) => r.bookingId))),
     ]);
+
+    const bookingIds = bookings.map((b) => b.id);
+    const [carReviews, userReviews] =
+      bookingIds.length === 0
+        ? [[], []]
+        : await Promise.all([
+            prisma.carReview.findMany({
+              where: { bookingId: { in: bookingIds } },
+              select: { bookingId: true },
+            }),
+            prisma.userReview.findMany({
+              where: { bookingId: { in: bookingIds } },
+              select: { bookingId: true },
+            }),
+          ]);
+    const carReviewedSet = new Set(carReviews.map((r) => r.bookingId));
+    const userReviewedSet = new Set(userReviews.map((r) => r.bookingId));
 
     const items = bookings.map((b) => ({
       ...b,
-      hasReviewed: reviewedBookingIds.has(b.id),
+      hasCarReviewed: carReviewedSet.has(b.id),
+      hasRenterReviewed: userReviewedSet.has(b.id),
     }));
 
     return jsonSuccess(
