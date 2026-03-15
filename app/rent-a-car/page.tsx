@@ -47,11 +47,13 @@ export default function RentACarPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
 
   const runSearch = useCallback(
     async (pageNum: number, append: boolean) => {
       setLoading(true);
+      setSearchError(null);
       try {
         const params = new URLSearchParams();
         if (appliedLocation.trim()) params.set("location", appliedLocation.trim());
@@ -71,16 +73,31 @@ export default function RentACarPage() {
         params.set("page", String(pageNum));
         params.set("pageSize", String(PAGE_SIZE));
         const res = await fetch(`/api/cars?${params.toString()}`);
-        if (!res.ok) throw new Error("Search failed");
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          const msg = typeof errBody?.error === "string" ? errBody.error : "Search failed";
+          setSearchError(msg);
+          if (!append) {
+            setItems([]);
+            setTotal(0);
+          }
+          return;
+        }
         const { data } = await res.json();
         if (append) {
-          setItems((prev) => [...prev, ...data.items]);
+          setItems((prev) => [...prev, ...(data.items ?? [])]);
         } else {
           setItems(data.items ?? []);
         }
         setTotal(data.total ?? 0);
         setPage(data.page ?? pageNum);
         setHasMore(data.hasMore ?? false);
+      } catch (e) {
+        setSearchError(e instanceof Error ? e.message : "Search failed");
+        if (!append) {
+          setItems([]);
+          setTotal(0);
+        }
       } finally {
         setLoading(false);
       }
@@ -197,6 +214,19 @@ export default function RentACarPage() {
             <MapToggle showMap={showMapView} onToggle={() => setShowMapView((v) => !v)} />
           </div>
         </div>
+
+        {searchError && (
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="alert">
+            {searchError}
+            <button
+              type="button"
+              onClick={() => runSearch(1, false)}
+              className="ml-2 font-medium underline hover:no-underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
 
         {showMapView ? (
           <div className="rounded-2xl border border-slate-200 overflow-hidden bg-white shadow-sm">
