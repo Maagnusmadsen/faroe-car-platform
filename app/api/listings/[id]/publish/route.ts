@@ -13,6 +13,8 @@ import { listingWizardPayloadSchema } from "@/validation/schemas/car";
 import { notFound } from "@/lib/utils/errors";
 import type { ListingWizardData } from "@/components/listing-wizard/types";
 import { notifyListingPublished } from "@/lib/notifications-server";
+import { isStripeConnectReady } from "@/lib/stripe-connect";
+import { prisma } from "@/db";
 
 export async function POST(
   request: NextRequest,
@@ -21,6 +23,22 @@ export async function POST(
   try {
     const session = await requireAuth();
     const { id } = await params;
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { stripeConnectAccountId: true },
+    });
+    const ready = await isStripeConnectReady(user?.stripeConnectAccountId ?? null);
+    if (!ready) {
+      return Response.json(
+        {
+          error: "Connect your bank account with Stripe before publishing. Go to My listings and click “Connect with Stripe”.",
+          code: "STRIPE_CONNECT_REQUIRED",
+        },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const input = parseOrThrow(listingWizardPayloadSchema, body) as Partial<ListingWizardData>;
     const wizardData = input as ListingWizardData;
@@ -37,6 +55,15 @@ export async function POST(
     if (result.error === "NOT_DRAFT") {
       return Response.json(
         { error: "Listing is not a draft", code: "NOT_DRAFT" },
+        { status: 400 }
+      );
+    }
+    if (result.error === "STRIPE_CONNECT_REQUIRED") {
+      return Response.json(
+        {
+          error: "Connect your bank account with Stripe before publishing. Go to My listings and click “Connect with Stripe”.",
+          code: "STRIPE_CONNECT_REQUIRED",
+        },
         { status: 400 }
       );
     }

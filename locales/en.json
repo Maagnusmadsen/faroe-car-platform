@@ -211,7 +211,15 @@
     "wizardConfirmCorrect": "I confirm that the information provided is correct",
     "publishSuccessTitle": "Your car has been listed successfully",
     "publishSuccessMessage": "Your listing is now visible on the Rent a Car page.",
-    "publishSuccessRedirect": "Redirecting to your listing..."
+    "publishSuccessRedirect": "Redirecting to your listing...",
+    "connectRequiredToPublish": "To publish your car you need to connect your bank account first (one-time). When you list more cars later, you won't need to do this again.",
+    "connectChecking": "Checking payment setup…",
+    "connectPayoutCopy": "Get paid when someone books your car. Connect your bank once (about 1 min) – same as Gomore.",
+    "connectStripe": "Connect with Stripe",
+    "connectRedirecting": "Redirecting…",
+    "connectDone": "You're set up to receive payouts.",
+    "viewMyListings": "My listings",
+    "viewThisListing": "View this listing"
   },
   "auth": {
     "loginTitle": "Log in",

@@ -447,11 +447,19 @@ export async function getPublicListing(listingId: string) {
   };
 }
 
-/** Publish draft: validate all steps, then set status to ACTIVE. */
+/** Publish draft: require Stripe Connect, validate all steps, then set status to ACTIVE. */
 export async function publishListing(listingId: string, ownerId: string, wizardData: ListingWizardData) {
   const car = await getListingForOwner(listingId, ownerId);
   if (!car) return { success: false, error: "NOT_FOUND" as const };
   if (car.status !== "DRAFT") return { success: false, error: "NOT_DRAFT" as const };
+
+  const owner = await prisma.user.findUnique({
+    where: { id: ownerId },
+    select: { stripeConnectAccountId: true },
+  });
+  if (!owner?.stripeConnectAccountId) {
+    return { success: false, error: "STRIPE_CONNECT_REQUIRED" as const };
+  }
 
   const errors = validateAllWizardSteps(wizardData);
   if (Object.keys(errors).length > 0) {

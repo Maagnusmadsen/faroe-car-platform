@@ -9,6 +9,7 @@ import { jsonSuccess, jsonError, handleApiError } from "@/lib/utils/api-response
 import { getOwnerListings, getOwnerRecentBookings, getOwnerReviews } from "@/lib/owner-dashboard-server";
 import { prisma } from "@/db";
 import { previewPayoutForOwner } from "@/lib/payouts-server";
+import { isStripeConnectReady } from "@/lib/stripe-connect";
 
 export async function GET() {
   try {
@@ -63,6 +64,7 @@ export async function GET() {
     ]);
 
     const listings = allListings;
+    const stripeConnected = await isStripeConnectReady(user?.stripeConnectAccountId ?? null);
 
     return jsonSuccess({
       listings,
@@ -70,7 +72,7 @@ export async function GET() {
       payouts,
       pendingPayout: payoutPreview,
       reviews,
-      stripeConnected: !!user?.stripeConnectAccountId,
+      stripeConnected,
     });
   } catch (err) {
     const e = err as Error & { statusCode?: number };

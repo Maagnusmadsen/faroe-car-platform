@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import WizardStepper from "./WizardStepper";
@@ -57,6 +58,7 @@ export default function ListingWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const draftFromUrl = searchParams.get("draft");
+  const stepFromUrl = searchParams.get("step");
 
   const [draftId, setDraftId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,12 @@ export default function ListingWizard() {
   const [errors, setErrors] = useState<StepErrors>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [publishSuccess, setPublishSuccess] = useState(false);
+  const [publishedListingId, setPublishedListingId] = useState<string | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [stripeConnected, setStripeConnected] = useState<boolean | null>(null);
+  const [stripeRequiredOk, setStripeRequiredOk] = useState<boolean | null>(null);
+  const [connectLoading, setConnectLoading] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
 
   const updateData = useCallback((partial: Partial<ListingWizardData>) => {
     setData((prev) => ({ ...prev, ...partial }));
@@ -114,6 +121,7 @@ export default function ListingWizard() {
         const json = await res.json();
         setData(json.data as ListingWizardData);
         setDraftId(draftFromUrl);
+        if (stepFromUrl === "7") setStep(7);
         if (typeof window !== "undefined") sessionStorage.setItem(DRAFT_STORAGE_KEY, draftFromUrl);
       } else if (res.status === 404) {
         const createRes = await fetch("/api/listings", {
@@ -142,7 +150,63 @@ export default function ListingWizard() {
     return () => {
       cancelled = true;
     };
-  }, [draftFromUrl, router]);
+  }, [draftFromUrl, stepFromUrl, router]);
+
+  // On step 7, check if user must connect Stripe before publishing
+  useEffect(() => {
+    if (step !== 7) return;
+    let cancelled = false;
+    setStripeRequiredOk(null);
+    fetch("/api/owner/dashboard")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!cancelled) setStripeRequiredOk(!!json?.data?.stripeConnected);
+      })
+      .catch(() => {
+        if (!cancelled) setStripeRequiredOk(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [step]);
+
+  // After publish success, check if user has Stripe connected
+  useEffect(() => {
+    if (!publishSuccess) return;
+    let cancelled = false;
+    fetch("/api/owner/dashboard")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!cancelled) setStripeConnected(!!json?.data?.stripeConnected);
+      })
+      .catch(() => {
+        if (!cancelled) setStripeConnected(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [publishSuccess]);
+
+  const handleConnectStripe = useCallback((returnDraftId?: string | null) => {
+    setConnectError(null);
+    setConnectLoading(true);
+    const body = returnDraftId ? JSON.stringify({ draftId: returnDraftId }) : undefined;
+    fetch("/api/stripe/connect/onboard", {
+      method: "POST",
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body,
+    })
+      .then((res) => res.json().catch(() => ({})))
+      .then((json) => {
+        if (json?.data?.url) {
+          window.location.href = json.data.url;
+          return;
+        }
+        setConnectError(json?.error ?? "Could not start payment setup");
+      })
+      .catch(() => setConnectError("Could not start payment setup"))
+      .finally(() => setConnectLoading(false));
+  }, []);
 
   const goNext = useCallback(async () => {
     const stepErrors = validateStep(step - 1, data);
@@ -186,11 +250,14 @@ export default function ListingWizard() {
     const json = await res.json().catch(() => ({}));
     if (res.ok && json.data?.id) {
       if (typeof window !== "undefined") sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+      setPublishedListingId(json.data.id);
       setPublishSuccess(true);
-      setTimeout(() => {
-        router.push(`/rent-a-car/${json.data.id}`);
-      }, 1500);
     } else {
+      if (json.code === "STRIPE_CONNECT_REQUIRED") {
+        setStripeRequiredOk(false);
+        setPublishError(null);
+        return;
+      }
       const msg = json.details
         ? Object.values(json.details).join(". ")
         : json.error || "Failed to publish";
@@ -234,7 +301,43 @@ export default function ListingWizard() {
           {t("list.publishSuccessTitle")}
         </h3>
         <p className="mt-2 text-slate-600">{t("list.publishSuccessMessage")}</p>
-        <p className="mt-4 text-sm text-slate-500">{t("list.publishSuccessRedirect")}</p>
+
+        {stripeConnected === false && (
+          <div className="mt-6 rounded-xl border border-sky-200 bg-sky-50 p-4 text-left">
+            <p className="text-sm text-sky-800">{t("list.connectPayoutCopy")}</p>
+            {connectError && (
+              <p className="mt-2 text-sm text-amber-700" role="alert">{connectError}</p>
+            )}
+            <button
+              type="button"
+              onClick={() => handleConnectStripe()}
+              disabled={connectLoading}
+              className="mt-3 w-full rounded-lg bg-sky-600 px-4 py-3 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50 sm:w-auto"
+            >
+              {connectLoading ? t("list.connectRedirecting") : t("list.connectStripe")}
+            </button>
+          </div>
+        )}
+        {stripeConnected === true && (
+          <p className="mt-4 text-sm text-emerald-600">{t("list.connectDone")}</p>
+        )}
+
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href="/my-listings?published=1"
+            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            {t("list.viewMyListings")}
+          </Link>
+          {publishedListingId && (
+            <Link
+              href={`/rent-a-car/${publishedListingId}`}
+              className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+            >
+              {t("list.viewThisListing")}
+            </Link>
+          )}
+        </div>
       </div>
     );
   }
@@ -270,6 +373,25 @@ export default function ListingWizard() {
           <Step7Review data={data} errors={errors} onChange={updateData} />
         )}
       </div>
+      {step === 7 && stripeRequiredOk === null && (
+        <p className="mt-4 text-sm text-slate-500">{t("list.connectChecking")}</p>
+      )}
+      {step === 7 && stripeRequiredOk === false && (
+        <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-4">
+          <p className="text-sm text-sky-800">{t("list.connectRequiredToPublish")}</p>
+          {connectError && (
+            <p className="mt-2 text-sm text-amber-700" role="alert">{connectError}</p>
+          )}
+          <button
+            type="button"
+            onClick={() => handleConnectStripe(draftId)}
+            disabled={connectLoading}
+            className="mt-3 rounded-lg bg-sky-600 px-4 py-3 text-sm font-medium text-white hover:bg-sky-500 disabled:opacity-50"
+          >
+            {connectLoading ? t("list.connectRedirecting") : t("list.connectStripe")}
+          </button>
+        </div>
+      )}
       {(saveError || publishError) && (
         <p className="mt-4 text-sm text-red-600">{saveError || publishError}</p>
       )}
@@ -291,7 +413,10 @@ export default function ListingWizard() {
               type="button"
               onClick={handlePublish}
               disabled={
-                !data.confirmInsurance || !data.confirmAllowed || !data.confirmCorrect
+                stripeRequiredOk !== true ||
+                !data.confirmInsurance ||
+                !data.confirmAllowed ||
+                !data.confirmCorrect
               }
               className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:opacity-50"
             >

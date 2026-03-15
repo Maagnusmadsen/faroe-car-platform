@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,9 +23,16 @@ type ListingRow = {
   updatedAt: string;
 };
 
+function friendlyConnectError(raw: string | undefined): string {
+  if (!raw) return "Could not start payment setup.";
+  if (/connect|signed up/i.test(raw)) return "Payment setup is being configured. Please try again in a moment.";
+  return raw;
+}
+
 export default function MyListingsPage() {
   const { user, status } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [listings, setListings] = useState<ListingRow[]>([]);
   const [stripeConnected, setStripeConnected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -92,9 +99,9 @@ export default function MyListingsPage() {
         window.location.href = json.data.url;
         return;
       }
-      setError(json?.error ?? "Could not start Stripe setup");
+      setError(friendlyConnectError(json?.error));
     } catch {
-      setError("Could not start Stripe setup");
+      setError("Could not start payment setup.");
     } finally {
       setConnectLoading(false);
     }
@@ -132,8 +139,19 @@ export default function MyListingsPage() {
           </button>
         </div>
 
+        {searchParams.get("stripe") === "success" && (
+          <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800" role="status">
+            Bank account connected. You can now receive payouts when someone books your car.
+          </p>
+        )}
+        {searchParams.get("published") === "1" && !searchParams.get("stripe") && (
+          <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800" role="status">
+            Your listing is live. Connect your bank below to get paid when someone books.
+          </p>
+        )}
+
         {error && (
-          <p className="mt-4 text-sm text-red-600" role="alert">
+          <p className="mt-4 text-sm text-amber-700" role="alert">
             {error}
           </p>
         )}
@@ -141,7 +159,7 @@ export default function MyListingsPage() {
         {!stripeConnected && listings.length > 0 && (
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-sky-200 bg-sky-50 p-4">
             <p className="text-sm text-sky-800">
-              Connect Stripe to receive payouts when renters pay for bookings. Same system as Gomore and Turo.
+              Get paid when someone books – connect your bank (about 1 min).
             </p>
             <button
               type="button"
@@ -156,7 +174,7 @@ export default function MyListingsPage() {
 
         {stripeConnected && (
           <p className="mt-4 text-sm text-emerald-600">
-            Stripe connected – you can receive payouts from bookings.
+            Bank connected – you can receive payouts from bookings.
           </p>
         )}
 

@@ -26,8 +26,19 @@ export async function POST(request: NextRequest) {
 
     const stripe = getStripeClient();
     const baseUrl = getBaseUrl();
-    const refreshUrl = `${baseUrl}/my-listings?stripe=refresh`;
-    const returnUrl = `${baseUrl}/my-listings?stripe=success`;
+    let refreshUrl = `${baseUrl}/my-listings?stripe=refresh`;
+    let returnUrl = `${baseUrl}/my-listings?stripe=success`;
+    try {
+      const body = await request.json().catch(() => ({}));
+      const draftId = typeof body?.draftId === "string" ? body.draftId.trim() : null;
+      if (draftId) {
+        const listYourCar = `${baseUrl}/list-your-car?draft=${encodeURIComponent(draftId)}&step=7`;
+        refreshUrl = listYourCar;
+        returnUrl = listYourCar;
+      }
+    } catch {
+      // keep default URLs
+    }
 
     let accountId = user.stripeConnectAccountId;
 

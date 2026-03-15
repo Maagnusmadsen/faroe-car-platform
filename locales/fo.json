@@ -211,7 +211,15 @@
     "wizardConfirmCorrect": "Jeg váttar at upplýsingarnar eru rættar",
     "publishSuccessTitle": "Tín bíl er nú lagdur út",
     "publishSuccessMessage": "Tín listning sæst nú á Lána bíl síðuni.",
-    "publishSuccessRedirect": "Leiðir til tína listning..."
+    "publishSuccessRedirect": "Leiðir til tína listning...",
+    "connectRequiredToPublish": "Til at leggja bíl út mátt tú tengja bankaregn fyrst (ein ferð). Tá tú leggur fleiri bilar út síðani, darft tú ikki gera hetta aftur.",
+    "connectChecking": "Kanna betalingsuppsetan…",
+    "connectPayoutCopy": "Fá betalt tá ein leigar bíl. Teng banka ein ferð (um 1 min) – somu kerfi sum Gomore.",
+    "connectStripe": "Teng við Stripe",
+    "connectRedirecting": "Leiðir…",
+    "connectDone": "Tú ert til reiðar at taka ímóti útbetalingum.",
+    "viewMyListings": "Mínar listningar",
+    "viewThisListing": "Síða listning"
   },
   "auth": {
     "loginTitle": "Innritan",
