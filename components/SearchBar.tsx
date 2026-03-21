@@ -22,7 +22,7 @@ interface SearchBarProps {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand";
+  "w-full min-w-0 max-w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand";
 
 export default function SearchBar({
   pickupLocation,
@@ -36,8 +36,8 @@ export default function SearchBar({
   const { t } = useLanguage();
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="min-w-0">
         <label htmlFor="search-location" className="mb-1.5 block text-sm font-medium text-slate-700">
           {t("rent.searchLabelLocation")}
         </label>
@@ -56,7 +56,7 @@ export default function SearchBar({
           ))}
         </datalist>
       </div>
-      <div>
+      <div className="min-w-0">
         <label htmlFor="search-pickup" className="mb-1.5 block text-sm font-medium text-slate-700">
           {t("rent.searchLabelPickup")}
         </label>
@@ -68,7 +68,7 @@ export default function SearchBar({
           className={inputClass}
         />
       </div>
-      <div>
+      <div className="min-w-0">
         <label htmlFor="search-dropoff" className="mb-1.5 block text-sm font-medium text-slate-700">
           {t("rent.searchLabelDropoff")}
         </label>
@@ -80,7 +80,7 @@ export default function SearchBar({
           className={inputClass}
         />
       </div>
-      <div className="flex items-end">
+      <div className="flex min-w-0 items-end">
         <button
           type="button"
           onClick={onSearch}

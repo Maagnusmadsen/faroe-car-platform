@@ -1,5 +1,7 @@
 {
   "nav": {
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
     "rentACar": "Rent a Car",
     "listYourCar": "List Your Car",
     "bookingsAndListings": "Bookings & listings",

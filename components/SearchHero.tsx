@@ -33,7 +33,7 @@ export default function SearchHero({
         <p className="mt-4 text-sm text-slate-600">
           {t("rent.insuranceBlockTitle")} — {t("rent.insuranceBlockText")}
         </p>
-        <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg shadow-slate-200/50 sm:p-6">
+        <div className="mt-8 min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-lg shadow-slate-200/50 sm:p-6">
           <SearchBar
             pickupLocation={pickupLocation}
             onPickupLocationChange={onPickupLocationChange}

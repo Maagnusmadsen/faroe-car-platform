@@ -18,31 +18,35 @@ export default function HomePage() {
         aria-hidden
       >
         <div className="absolute inset-0" style={{ backgroundColor: "var(--overlay)" }} aria-hidden />
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/40 to-transparent"
+          aria-hidden
+        />
       </div>
 
       <div className="relative z-10">
         <Navbar variant="transparent" />
 
       {/* Centered hero content: headline → subtitle → buttons → trust */}
-      <section className="flex min-h-screen flex-col items-center justify-center px-4 py-20 text-center sm:px-6 lg:px-8">
+      <section className="flex min-h-[100dvh] min-h-screen flex-col items-center justify-center px-4 pb-20 pt-24 text-center sm:px-6 sm:pt-28 lg:px-8">
         <div className="mx-auto flex max-w-2xl flex-col items-center">
-          <h1 className="text-4xl font-bold tracking-tight text-white drop-shadow-md sm:text-5xl lg:text-6xl">
+          <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-lg sm:text-5xl lg:text-6xl">
             {t("home.headline")}
           </h1>
-          <p className="mt-6 text-xl text-white sm:text-2xl drop-shadow-sm">
+          <p className="mt-4 text-lg text-white drop-shadow-md sm:mt-6 sm:text-xl lg:text-2xl">
             {t("home.subheadline")}
           </p>
 
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
+          <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
             <Link
               href="/rent-a-car"
-              className="rounded-xl bg-brand px-8 py-4 text-lg font-semibold text-white shadow-lg transition-colors hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
+              className="rounded-xl bg-brand px-6 py-4 text-base font-semibold text-white shadow-lg shadow-slate-900/20 transition-colors hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent sm:px-8 sm:text-lg"
             >
               {t("nav.rentACar")}
             </Link>
             <Link
               href="/list-your-car"
-              className="rounded-xl border-2 border-white/90 bg-transparent px-8 py-4 text-lg font-semibold text-white transition-colors hover:bg-white/10 hover:border-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
+              className="rounded-xl border-2 border-white/90 bg-white/5 px-6 py-4 text-base font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/10 hover:border-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent sm:px-8 sm:text-lg"
             >
               {t("nav.listYourCar")}
             </Link>

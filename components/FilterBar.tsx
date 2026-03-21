@@ -44,7 +44,8 @@ export default function FilterBar({
   const showReset = hasActiveFilters(filters);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="-mx-4 overflow-x-auto overscroll-x-contain px-4 pb-1 sm:mx-0 sm:overflow-visible sm:px-0 sm:pb-0">
+      <div className="flex min-w-max flex-nowrap items-center gap-2 sm:min-w-0 sm:flex-wrap sm:flex-1">
       <ListingTypeFilter filters={filters} onFiltersChange={onFiltersChange} />
       <TransmissionFilter filters={filters} onFiltersChange={onFiltersChange} />
       <SeatsFilter filters={filters} onFiltersChange={onFiltersChange} />
@@ -68,6 +69,7 @@ export default function FilterBar({
           {t("rent.resetFilters")}
         </button>
       )}
+      </div>
     </div>
   );
 }

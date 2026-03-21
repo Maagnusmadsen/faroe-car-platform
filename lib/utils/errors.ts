@@ -64,18 +64,35 @@ export function unprocessable(message: string, details?: unknown): AppError {
   return new AppError(message, HttpStatus.UNPROCESSABLE_ENTITY, "VALIDATION_ERROR", details);
 }
 
+/** Patterns that indicate DB/infrastructure errors — never expose to users */
+const INFRA_ERROR_PATTERNS = [
+  /MaxClientsInSessionMode|max clients|connection pool/i,
+  /ECONNREFUSED|ETIMEDOUT|ENOTFOUND/i,
+  /prisma\./i,
+  /Invalid prisma\./i,
+  /querying the database/i,
+  /P1001|P1002|P1017|P2024/i, // Prisma connection errors
+];
+
+function isInfrastructureError(msg: string): boolean {
+  return INFRA_ERROR_PATTERNS.some((p) => p.test(msg));
+}
+
 /**
  * Normalize unknown errors to AppError for API response.
- * Use in catch blocks: throw toAppError(err);
+ * Sanitizes DB/infrastructure errors to avoid exposing raw messages to users.
  */
 export function toAppError(err: unknown): AppError {
   if (err instanceof AppError) return err;
   if (err instanceof Error) {
     const status = (err as Error & { statusCode?: number }).statusCode;
-    if (typeof status === "number") {
+    if (typeof status === "number" && status < 500) {
       return new AppError(err.message, status);
     }
-    return new AppError(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    const safeMessage = isInfrastructureError(err.message)
+      ? "The service is temporarily unavailable. Please try again later."
+      : err.message;
+    return new AppError(safeMessage, HttpStatus.INTERNAL_SERVER_ERROR);
   }
   return new AppError("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
 }
