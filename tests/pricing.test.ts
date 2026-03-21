@@ -18,9 +18,23 @@ describe("pricing engine", () => {
     expect(result.platformFeeAmount).toBeGreaterThan(0);
     expect(result.renterTotalAmount).toBeGreaterThan(0);
     expect(result.ownerPayoutAmount).toBeGreaterThan(0);
-    expect(
-      Math.round(result.renterTotalAmount - result.platformFeeAmount)
-    ).toBe(result.ownerPayoutAmount);
+    // Financial identity: totalPrice = platformFee + ownerPayout (exact, no rounding drift)
+    expect(result.renterTotalAmount).toBe(result.platformFeeAmount + result.ownerPayoutAmount);
+  });
+
+  it("preserves financial identity after rounding (total = platformFee + ownerPayout)", () => {
+    const result = calculatePricing({
+      pricePerDay: 333.33,
+      currency: "DKK",
+      minRentalDays: 1,
+      weeklyDiscountPct: 7,
+      startDate: "2026-03-10",
+      endDate: "2026-03-17", // 7 days
+    });
+    expect(result.renterTotalAmount).toBe(result.platformFeeAmount + result.ownerPayoutAmount);
+    expect(result.renterTotalAmount).toBeGreaterThan(0);
+    expect(result.ownerPayoutAmount).toBeGreaterThan(0);
+    expect(result.platformFeeAmount).toBeGreaterThan(0);
   });
 
   it("applies weekly discount for long rentals", () => {
@@ -50,6 +64,27 @@ describe("pricing engine", () => {
         endDate: "2026-03-11", // 1 night
       })
     ).toThrow(/Minimum rental is 3 day/);
+  });
+
+  it("rejects zero or negative daily price", () => {
+    expect(() =>
+      calculatePricing({
+        pricePerDay: 0,
+        currency: "DKK",
+        minRentalDays: 1,
+        startDate: "2026-03-10",
+        endDate: "2026-03-11",
+      })
+    ).toThrow(/Daily price must be greater than 0/);
+    expect(() =>
+      calculatePricing({
+        pricePerDay: -10,
+        currency: "DKK",
+        minRentalDays: 1,
+        startDate: "2026-03-10",
+        endDate: "2026-03-11",
+      })
+    ).toThrow(/Daily price must be greater than 0/);
   });
 });
 

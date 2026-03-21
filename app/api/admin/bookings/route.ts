@@ -15,9 +15,16 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, Number(searchParams.get("page")) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(searchParams.get("pageSize")) || 20));
+    const statusFilter = searchParams.get("status") ?? "all";
 
-    const [bookings, total] = await Promise.all([
+    const where: Record<string, unknown> = {};
+    if (statusFilter !== "all") {
+      where.status = statusFilter;
+    }
+
+    const [bookings, total, statusCounts] = await Promise.all([
       prisma.booking.findMany({
+        where,
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -42,8 +49,14 @@ export async function GET(request: NextRequest) {
           },
         },
       }),
-      prisma.booking.count(),
+      prisma.booking.count({ where }),
+      prisma.booking.groupBy({
+        by: ["status"],
+        _count: { id: true },
+      }),
     ]);
+
+    const summary = Object.fromEntries(statusCounts.map((s) => [s.status, s._count.id]));
 
     return jsonSuccess(
       {
@@ -52,6 +65,7 @@ export async function GET(request: NextRequest) {
         page,
         pageSize,
         hasMore: page * pageSize < total,
+        summary,
       },
       { headers: { "Cache-Control": "private, max-age=30" } }
     );

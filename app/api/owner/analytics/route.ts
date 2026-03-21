@@ -13,6 +13,7 @@ import {
   getOwnerRevenueOverTime,
   getOwnerUtilizationDemand,
   getOwnerPickupLocationsForMap,
+  getOwnerUpcomingBookings,
   type PeriodFilter,
 } from "@/lib/owner-analytics";
 
@@ -37,6 +38,7 @@ export async function GET(request: Request) {
       revenueMonthly,
       utilizationDemand,
       pickupLocations,
+      upcomingBookings,
     ] = await Promise.all([
       getOwnerTopMetrics(ownerId),
       getOwnerFinancialSummary({
@@ -52,6 +54,7 @@ export async function GET(request: Request) {
       getOwnerRevenueOverTime(ownerId, "month", 12),
       getOwnerUtilizationDemand(ownerId),
       getOwnerPickupLocationsForMap(ownerId),
+      getOwnerUpcomingBookings(ownerId),
     ]);
 
     return jsonSuccess({
@@ -66,6 +69,7 @@ export async function GET(request: Request) {
       },
       utilizationDemand,
       pickupLocations,
+      upcomingBookings,
     });
   } catch (err) {
     const e = err as Error & { statusCode?: number };

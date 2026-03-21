@@ -49,7 +49,7 @@ export function validateStep5(data: ListingWizardData): StepErrors {
   const errors: StepErrors = {};
   const price = data.pricePerDay ? parseFloat(String(data.pricePerDay)) : NaN;
   if (!Number.isFinite(price) || price <= 0) {
-    errors.pricePerDay = "Enter a valid price (positive number)";
+    errors.pricePerDay = "Daily price must be greater than 0";
   }
   return errors;
 }

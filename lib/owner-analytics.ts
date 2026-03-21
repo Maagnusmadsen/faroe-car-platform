@@ -157,6 +157,32 @@ export async function getOwnerTopMetrics(ownerId: string): Promise<TopMetrics> {
   };
 }
 
+const upcomingStatuses = ["CONFIRMED", "PAID"] as const;
+
+/** Upcoming bookings (confirmed, not yet completed) and their earnings. */
+export async function getOwnerUpcomingBookings(ownerId: string): Promise<{
+  count: number;
+  totalEarnings: number;
+  currency: string;
+}> {
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0));
+
+  const bookings = await prisma.booking.findMany({
+    where: {
+      car: { ownerId },
+      status: { in: [...upcomingStatuses] },
+      endDate: { gte: today },
+    },
+    select: { ownerPayoutAmount: true, currency: true },
+  });
+
+  const totalEarnings = bookings.reduce((sum, b) => sum + Number(b.ownerPayoutAmount), 0);
+  const currency = bookings[0]?.currency ?? "DKK";
+
+  return { count: bookings.length, totalEarnings, currency };
+}
+
 export interface FinancialRow {
   grossRevenue: number;
   platformFees: number;

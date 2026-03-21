@@ -70,7 +70,7 @@ export default function Footer() {
               className="text-center text-xs leading-relaxed"
               style={{ color: "rgba(255,255,255,0.7)" }}
             >
-              © {new Date().getFullYear()} RentLocal. {t("footer.copyright")}
+              © {new Date().getFullYear()} RentLocal
             </p>
           </div>
         </div>
@@ -122,7 +122,7 @@ export default function Footer() {
             className="mt-10 border-t border-white/20 pt-8 text-center text-sm"
             style={{ color: "rgba(255,255,255,0.7)" }}
           >
-            © {new Date().getFullYear()} RentLocal. {t("footer.copyright")}
+            © {new Date().getFullYear()} RentLocal
           </p>
         </div>
       </div>

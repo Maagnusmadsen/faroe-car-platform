@@ -9,7 +9,8 @@ import { getTownInfo } from "@/lib/town-coordinates";
 export function buildCarFromWizard(data: ListingWizardData): Omit<Car, "id"> {
   const townInfo = getTownInfo(data.town);
   const seats = data.seats === "" ? 5 : Number(data.seats);
-  const pricePerDay = Number(data.pricePerDay) || 0;
+  const raw = Number(data.pricePerDay);
+  const pricePerDay = Number.isFinite(raw) && raw > 0 ? raw : 1;
   const imageUrl =
     data.imageUrls?.length > 0
       ? data.imageUrls[0]

@@ -1,6 +1,9 @@
 /**
  * POST /api/payments/checkout – create a Stripe Checkout Session for a booking.
  * Body: { bookingId: string }
+ *
+ * Creates a PENDING Payment record immediately for traceability.
+ * Webhook updates it to SUCCEEDED/FAILED/CANCELLED as the flow progresses.
  */
 
 import { NextRequest } from "next/server";
@@ -10,6 +13,7 @@ import { AppError, HttpStatus } from "@/lib/utils/errors";
 import { getStripeClient } from "@/payments";
 import { prisma } from "@/db";
 import { getBaseUrl } from "@/config/env";
+import { createPendingPaymentForCheckout } from "@/lib/payments-server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -53,14 +57,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const totalPrice = Number(booking.totalPrice);
+    const amountInMinor = Math.round(totalPrice * 100);
+
+    if (amountInMinor <= 0) {
+      throw new AppError(
+        "Booking has invalid price. Please contact support.",
+        HttpStatus.BAD_REQUEST,
+        "INVALID_BOOKING_PRICE"
+      );
+    }
+
+    const platformFeeInMinor = Math.round(Number(booking.platformFeeAmount) * 100);
+
     const stripe = getStripeClient();
 
     const baseUrl = getBaseUrl();
     const successUrl = `${baseUrl}/bookings?payment=success`;
     const cancelUrl = `${baseUrl}/bookings?payment=cancelled`;
-
-    const amountInMinor = Math.round(Number(booking.totalPrice) * 100);
-    const platformFeeInMinor = Math.round(Number(booking.platformFeeAmount) * 100);
 
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -89,6 +103,26 @@ export async function POST(request: NextRequest) {
         bookingId: booking.id,
       },
     });
+
+    const paymentIntentId =
+      typeof checkoutSession.payment_intent === "string"
+        ? checkoutSession.payment_intent
+        : checkoutSession.payment_intent?.id;
+
+    if (paymentIntentId) {
+      await createPendingPaymentForCheckout({
+        bookingId: booking.id,
+        amount: totalPrice,
+        currency: booking.currency,
+        stripePaymentIntentId: paymentIntentId,
+        stripeCheckoutSessionId: checkoutSession.id,
+        metadata: {
+          renterId: session.user.id,
+          ownerId: booking.car.ownerId,
+          carId: booking.carId,
+        },
+      });
+    }
 
     return jsonSuccess({ url: checkoutSession.url });
   } catch (err) {

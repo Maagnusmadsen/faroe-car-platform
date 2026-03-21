@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Popup } from "react-leaflet";
 import type { Car } from "@/lib/cars";
 import { useLanguage } from "@/context/LanguageContext";
+import { formatPrice } from "@/lib/utils/price";
 
 interface CarMarkerProps {
   car: Car;
@@ -18,7 +19,7 @@ export default function CarMarkerPopup({ car }: CarMarkerProps) {
       <div className="min-w-[200px] p-1">
         <h3 className="font-semibold text-slate-900">{name}</h3>
         <p className="mt-1 text-sm text-slate-600">
-          {car.pricePerDay} DKK {t("rent.perDay")}
+          {formatPrice(car.pricePerDay, { perDay: true })}
         </p>
         <p className="text-sm text-slate-500">{car.location}</p>
         <Link

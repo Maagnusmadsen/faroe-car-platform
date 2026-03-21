@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import AdminLayoutClient from "@/components/admin/AdminLayout";
 
 export const metadata: Metadata = {
-  title: "Admin",
+  title: "Admin | RentLocal",
   description: "RentLocal admin dashboard.",
 };
 
@@ -10,5 +11,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <AdminLayoutClient>{children}</AdminLayoutClient>;
 }

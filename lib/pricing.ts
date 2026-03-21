@@ -8,16 +8,23 @@
  * - Platform commission
  * - Split between renter total and owner payout
  *
- * All monetary values are returned as numbers in the listing's currency.
+ * All monetary values are returned as numbers in the listing's currency (major units, 2 decimals).
  * Persisted values are stored in Decimal columns on Booking/Payment.
+ *
+ * Rounding strategy:
+ * - All calculations done in integer minor units (cents/øre) to avoid floating-point drift.
+ * - Financial identity is preserved: totalPrice = platformFeeAmount + ownerPayoutAmount (exact).
  */
 
 import { prisma } from "@/db";
 import { AppError, HttpStatus } from "@/lib/utils/errors";
+import {
+  PLATFORM_COMMISSION_PERCENT,
+  SERVICE_FEE_FLAT,
+} from "@/lib/platform-fee-config";
 
-// PLATFORM CONFIG
-const PLATFORM_COMMISSION_PERCENT = 15; // % of discounted rental amount
-const SERVICE_FEE_FLAT = 0; // flat fee per booking in listing currency (can be tuned later)
+/** Minor units per major unit (e.g. 100 øre per DKK). All internal math uses integers. */
+const MINOR_PER_MAJOR = 100;
 
 export interface PricingInput {
   pricePerDay: number;
@@ -50,11 +57,19 @@ function diffInDays(start: string, end: string): number {
   return Math.round((endDate.getTime() - startDate.getTime()) / msPerDay);
 }
 
-function roundAmount(value: number): number {
-  return Math.round(value);
+/** Convert minor units to major (2 decimal places). */
+function minorToMajor(minor: number): number {
+  return Math.round(minor) / MINOR_PER_MAJOR;
 }
 
 export function calculatePricing(input: PricingInput): PricingBreakdown {
+  if (!Number.isFinite(input.pricePerDay) || input.pricePerDay <= 0) {
+    throw new AppError(
+      "Daily price must be greater than 0",
+      HttpStatus.BAD_REQUEST,
+      "INVALID_PRICE"
+    );
+  }
   const days = diffInDays(input.startDate, input.endDate);
   if (days <= 0) {
     throw new AppError(
@@ -73,9 +88,9 @@ export function calculatePricing(input: PricingInput): PricingBreakdown {
   }
 
   const baseDailyPrice = input.pricePerDay;
-  const baseAmount = baseDailyPrice * days;
+  // Work in minor units (integer) to avoid floating-point drift
+  const baseAmountMinor = Math.round(baseDailyPrice * days * MINOR_PER_MAJOR);
 
-  // Choose the best available duration discount (month > week)
   const weekly = input.weeklyDiscountPct ?? null;
   const monthly = input.monthlyDiscountPct ?? null;
   let discountPercent = 0;
@@ -86,34 +101,29 @@ export function calculatePricing(input: PricingInput): PricingBreakdown {
     discountPercent = weekly;
   }
 
-  const discountAmount = roundAmount((baseAmount * discountPercent) / 100);
-  const discountedAmount = baseAmount - discountAmount;
+  const discountAmountMinor = Math.round((baseAmountMinor * discountPercent) / 100);
+  const discountedAmountMinor = baseAmountMinor - discountAmountMinor;
 
-  const serviceFeeAmount = SERVICE_FEE_FLAT;
+  const serviceFeeMinor = Math.round(SERVICE_FEE_FLAT * MINOR_PER_MAJOR);
+  const platformFeeMinor = Math.round((discountedAmountMinor * PLATFORM_COMMISSION_PERCENT) / 100);
 
-  // Platform commission on discounted rental amount
-  const commissionAmount = roundAmount(
-    (discountedAmount * PLATFORM_COMMISSION_PERCENT) / 100
-  );
-
-  // Platform keeps commission + service fee
-  const platformFeeAmount = commissionAmount + serviceFeeAmount;
-
-  const renterTotalAmount = discountedAmount + serviceFeeAmount;
-  const ownerPayoutAmount = renterTotalAmount - platformFeeAmount;
+  // Renter pays discounted amount + service fee
+  const renterTotalMinor = discountedAmountMinor + serviceFeeMinor;
+  // Owner gets renter total minus platform fee (identity: total = platformFee + ownerPayout)
+  const ownerPayoutMinor = renterTotalMinor - platformFeeMinor;
 
   return {
     currency: input.currency,
     days,
     baseDailyPrice,
-    baseAmount: roundAmount(baseAmount),
+    baseAmount: minorToMajor(baseAmountMinor),
     discountPercent,
-    discountAmount,
-    discountedAmount: roundAmount(discountedAmount),
-    serviceFeeAmount,
-    platformFeeAmount,
-    renterTotalAmount,
-    ownerPayoutAmount,
+    discountAmount: minorToMajor(discountAmountMinor),
+    discountedAmount: minorToMajor(discountedAmountMinor),
+    serviceFeeAmount: minorToMajor(serviceFeeMinor),
+    platformFeeAmount: minorToMajor(platformFeeMinor),
+    renterTotalAmount: minorToMajor(renterTotalMinor),
+    ownerPayoutAmount: minorToMajor(ownerPayoutMinor),
   };
 }
 
@@ -142,9 +152,17 @@ export async function calculatePricingForListing(
       "LISTING_NOT_FOUND"
     );
   }
+  const pricePerDay = Number(car.pricePerDay);
+  if (!Number.isFinite(pricePerDay) || pricePerDay <= 0) {
+    throw new AppError(
+      "Listing has invalid price (must be greater than 0)",
+      HttpStatus.BAD_REQUEST,
+      "INVALID_PRICE"
+    );
+  }
 
   return calculatePricing({
-    pricePerDay: Number(car.pricePerDay),
+    pricePerDay,
     currency: car.currency,
     minRentalDays: car.minRentalDays,
     weeklyDiscountPct: car.weeklyDiscountPct

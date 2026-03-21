@@ -2,460 +2,325 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import { useAuth } from "@/hooks/useAuth";
-import { BOOKING_STATUS_LABELS } from "@/constants/booking-status";
+import StatCard from "@/components/admin/StatCard";
+import { formatCurrency } from "@/lib/utils/price";
+import AdminSection from "@/components/admin/AdminSection";
+import ActionCenter, { type ActionItem } from "@/components/admin/ActionCenter";
 
-type Tab = "users" | "listings" | "bookings";
-
-type UserRow = {
-  id: string;
-  email: string;
-  name: string | null;
-  role: string;
-  createdAt: string;
-  verificationStatus?: string;
-  licenseImageUrl?: string | null;
-};
-
-type ListingRow = {
-  id: string;
-  brand: string;
-  model: string;
-  town: string;
-  island: string;
-  status: string;
-  owner: { id: string; email: string; name: string | null };
-  createdAt: string;
-};
-
-type BookingRow = {
-  id: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  totalPrice: { toString(): string };
-  currency: string;
-  car: {
+type DashboardData = {
+  metrics: {
+    totalUsers: number;
+    activeUsersLast30Days: number;
+    totalOwners: number;
+    totalRenters: number;
+    totalListings: number;
+    activeListings: number;
+    totalBookings: number;
+    upcomingBookings: number;
+    completedBookings: number;
+    cancelledBookings: number;
+    pendingBookings: number;
+    cancellationRate: number;
+    totalPlatformRevenue: number;
+    totalOwnerEarnings: number;
+    platformFees: number;
+    revenueThisMonth: number;
+    revenueLastMonth: number;
+    revenueThisYear: number;
+    averageBookingValue: number;
+    newUsersLast7Days: number;
+    newUsersLast30Days: number;
+    currency: string;
+  };
+  recentActivity: Array<{
     id: string;
-    title: string | null;
+    action: string;
+    entityType: string;
+    entityId: string | null;
+    userEmail: string | null;
+    createdAt: string;
+  }>;
+  issues: {
+    pendingRenterApprovals: number;
+    pendingListings: number;
+    failedPayouts: number;
+    pendingPayouts: number;
+    disputedBookings: number;
+    recentCancellations: number;
+  };
+  revenueOverTime: Array<{
+    period: string;
+    revenue: number;
+    platformFees: number;
+    ownerPayout: number;
+    rentalCount: number;
+  }>;
+  topListings: Array<{
+    listingId: string;
     brand: string;
     model: string;
+    year: number;
     town: string;
     island: string;
     status: string;
-    ownerId: string;
-    owner: { id: string; email: string; name: string | null };
-  };
-  renter: { id: string; email: string; name: string | null };
+    pricePerDay: number;
+    ownerEmail: string;
+    ownerName: string | null;
+    totalBookings: number;
+    totalRevenue: number;
+    utilizationRate: number;
+  }>;
 };
 
-export default function AdminPage() {
-  const { user, status: authStatus } = useAuth();
-  const router = useRouter();
-  const [tab, setTab] = useState<Tab>("users");
-  const [users, setUsers] = useState<UserRow[]>([]);
-  const [listings, setListings] = useState<ListingRow[]>([]);
-  const [bookingsData, setBookingsData] = useState<{
-    items: BookingRow[];
-    total: number;
-    page: number;
-    pageSize: number;
-  }>({ items: [], total: 0, page: 1, pageSize: 20 });
+
+const CANCELLATION_WARNING_THRESHOLD = 15;
+
+export default function AdminDashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [updatingListingId, setUpdatingListingId] = useState<string | null>(null);
-  const [updatingVerificationUserId, setUpdatingVerificationUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUsers = useCallback(async () => {
-    const res = await fetch("/api/admin/users");
-    if (!res.ok) throw new Error("Failed to load users");
-    const json = await res.json();
-    setUsers(json?.data ?? []);
-  }, []);
-
-  const fetchListings = useCallback(async () => {
-    const res = await fetch("/api/admin/listings");
-    if (!res.ok) throw new Error("Failed to load listings");
-    const json = await res.json();
-    setListings(json?.data ?? []);
-  }, []);
-
-  const fetchBookings = useCallback(async (page = 1) => {
-    const res = await fetch(`/api/admin/bookings?page=${page}&pageSize=20`);
-    if (!res.ok) throw new Error("Failed to load bookings");
-    const json = await res.json();
-    setBookingsData({
-      items: json?.data?.items ?? [],
-      total: json?.data?.total ?? 0,
-      page: json?.data?.page ?? 1,
-      pageSize: json?.data?.pageSize ?? 20,
-    });
+  const fetchData = useCallback(async () => {
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/dashboard");
+      if (!res.ok) throw new Error("Failed to load dashboard");
+      const json = await res.json();
+      setData(json.data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    if (authStatus === "unauthenticated") {
-      router.replace("/login?callbackUrl=/admin");
-      return;
-    }
-    if (authStatus !== "authenticated" || !user) return;
-    if (user.role !== "ADMIN") {
-      router.replace("/");
-      return;
-    }
+    fetchData();
+  }, [fetchData]);
 
-    setError(null);
-    setLoading(true);
-    const load = async () => {
-      try {
-        if (tab === "users") await fetchUsers();
-        else if (tab === "listings") await fetchListings();
-        else await fetchBookings();
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [authStatus, user, router, tab, fetchUsers, fetchListings, fetchBookings]);
-
-  async function setListingStatus(listingId: string, newStatus: "ACTIVE" | "PAUSED") {
-    setUpdatingListingId(listingId);
-    setError(null);
-    try {
-      const res = await fetch(`/api/admin/listings/${listingId}/moderate`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      if (res.ok) {
-        setListings((prev) =>
-          prev.map((l) => (l.id === listingId ? { ...l, status: newStatus } : l))
-        );
-      } else {
-        const json = await res.json().catch(() => ({}));
-        setError(json?.error ?? "Failed to update");
-      }
-    } catch {
-      setError("Failed to update");
-    } finally {
-      setUpdatingListingId(null);
-    }
-  }
-
-  async function approveRenter(userId: string) {
-    setUpdatingVerificationUserId(userId);
-    setError(null);
-    try {
-      const res = await fetch(`/api/admin/users/${userId}/verification`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ verificationStatus: "VERIFIED" }),
-      });
-      if (res.ok) {
-        setUsers((prev) =>
-          prev.map((u) => (u.id === userId ? { ...u, verificationStatus: "VERIFIED" } : u))
-        );
-      } else {
-        const json = await res.json().catch(() => ({}));
-        setError(json?.error ?? "Failed to approve");
-      }
-    } catch {
-      setError("Failed to approve");
-    } finally {
-      setUpdatingVerificationUserId(null);
-    }
-  }
-
-  if (authStatus === "loading" || !user) {
+  if (loading) {
     return (
-      <main className="min-h-screen bg-slate-50">
-        <Navbar />
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-          <p className="text-slate-500">Loading…</p>
-        </div>
-        <Footer />
-      </main>
+      <div className="flex items-center justify-center py-24">
+        <p className="text-slate-500">Loading dashboard…</p>
+      </div>
     );
   }
 
-  if (user.role !== "ADMIN") {
-    return null;
+  if (error || !data) {
+    return (
+      <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+        <p className="text-sm text-red-700">{error ?? "Failed to load dashboard"}</p>
+      </div>
+    );
   }
 
+  const { metrics, issues, revenueOverTime, topListings } = data;
+  const revenueTrend =
+    metrics.revenueLastMonth > 0
+      ? Math.round(
+          ((metrics.revenueThisMonth - metrics.revenueLastMonth) / metrics.revenueLastMonth) * 100
+        )
+      : null;
+  const maxRevenue = Math.max(...revenueOverTime.map((r) => r.revenue), 1);
+  const highCancellation = metrics.cancellationRate >= CANCELLATION_WARNING_THRESHOLD;
+
+  const actionItems: ActionItem[] = [
+    {
+      label: "Pending renter approvals",
+      count: issues.pendingRenterApprovals,
+      href: "/admin/users?filter=pending",
+      severity: "urgent",
+    },
+    {
+      label: "Failed payouts",
+      count: issues.failedPayouts,
+      href: "/admin/issues",
+      severity: "urgent",
+    },
+    {
+      label: "Disputed bookings",
+      count: issues.disputedBookings,
+      href: "/admin/bookings?status=DISPUTED",
+      severity: "urgent",
+    },
+    {
+      label: "Pending payouts",
+      count: issues.pendingPayouts,
+      href: "/admin/payments",
+      severity: issues.pendingPayouts > 0 ? "warning" : "info",
+    },
+    {
+      label: "Cancellations (7 days)",
+      count: issues.recentCancellations,
+      href: "/admin/bookings?status=CANCELLED",
+      severity: issues.recentCancellations > 5 ? "warning" : "info",
+    },
+  ];
+
   return (
-    <main className="min-h-screen bg-slate-50">
-      <Navbar />
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="text-2xl font-bold text-slate-900">Admin</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <p className="mt-1 text-sm text-slate-500">Platform control center</p>
+      </div>
 
-        <div className="mt-6 flex gap-2 border-b border-slate-200">
-          {(["users", "listings", "bookings"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={`border-b-2 px-4 py-2 text-sm font-medium capitalize transition-colors ${
-                tab === t
-                  ? "border-brand text-brand"
-                  : "border-transparent text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
+      {/* A. Action Center */}
+      <ActionCenter items={actionItems} title="Action Center" />
+
+      {/* B. Platform Overview */}
+      <AdminSection title="Platform Overview" subtitle="High-level KPIs">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <StatCard label="Total users" value={metrics.totalUsers} />
+          <StatCard
+            label="Active (30d)"
+            value={metrics.activeUsersLast30Days}
+            subtext="Signed up or had activity"
+          />
+          <StatCard label="Total listings" value={metrics.totalListings} subtext={`${metrics.activeListings} active`} />
+          <StatCard label="Owners" value={metrics.totalOwners} />
+          <StatCard label="Renters" value={metrics.totalRenters} />
         </div>
+      </AdminSection>
 
-        {error && (
-          <p className="mt-4 text-sm text-red-600" role="alert">
-            {error}
-          </p>
-        )}
+      {/* C. Bookings Health */}
+      <AdminSection title="Bookings Health">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          <StatCard label="Total bookings" value={metrics.totalBookings} />
+          <StatCard label="Completed" value={metrics.completedBookings} variant="success" />
+          <StatCard label="Upcoming" value={metrics.upcomingBookings} />
+          <StatCard label="Cancelled" value={metrics.cancelledBookings} variant="muted" />
+          <StatCard
+            label="Cancellation rate"
+            value={`${metrics.cancellationRate}%`}
+            variant={highCancellation ? "danger" : "muted"}
+          />
+        </div>
+      </AdminSection>
 
-        {loading ? (
-          <p className="mt-8 text-slate-500">Loading…</p>
-        ) : tab === "users" ? (
-          <div className="mt-8 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-            <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 font-medium text-slate-700">Email</th>
-                  <th className="px-4 py-3 font-medium text-slate-700">Name</th>
-                  <th className="px-4 py-3 font-medium text-slate-700">Role</th>
-                  <th className="px-4 py-3 font-medium text-slate-700">Renter status</th>
-                  <th className="px-4 py-3 font-medium text-slate-700">License</th>
-                  <th className="px-4 py-3 font-medium text-slate-700">Joined</th>
-                  <th className="px-4 py-3 font-medium text-slate-700">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((u) => (
-                  <tr key={u.id} className="border-b border-slate-100 last:border-0">
-                    <td className="px-4 py-3 text-slate-900">{u.email}</td>
-                    <td className="px-4 py-3 text-slate-600">{u.name ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          u.role === "ADMIN" ? "bg-violet-100 text-violet-800" : "bg-slate-100 text-slate-700"
-                        }`}
-                      >
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          u.verificationStatus === "VERIFIED"
-                            ? "bg-brand-light text-slate-800"
-                            : u.verificationStatus === "PENDING"
-                              ? "bg-amber-100 text-amber-800"
-                              : "bg-slate-100 text-slate-600"
-                        }`}
-                      >
-                        {u.verificationStatus ?? "UNVERIFIED"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {u.licenseImageUrl ? (
-                        <a
-                          href={u.licenseImageUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-medium text-brand hover:underline"
-                        >
-                          View license
-                        </a>
-                      ) : (
-                        <span className="text-slate-400">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-slate-500">
-                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {u.verificationStatus === "PENDING" && (
-                        <button
-                          type="button"
-                          onClick={() => approveRenter(u.id)}
-                          disabled={updatingVerificationUserId === u.id}
-                          className="rounded-lg bg-brand px-2 py-1 text-xs font-medium text-white hover:bg-brand-hover disabled:opacity-50"
-                        >
-                          {updatingVerificationUserId === u.id ? "…" : "Approve renter"}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {users.length === 0 && (
-              <p className="px-4 py-8 text-center text-slate-500">No users</p>
-            )}
+      {/* D. Revenue (Financial Flow) */}
+      <AdminSection title="Revenue" subtitle="Financial flow">
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <h3 className="mb-4 text-sm font-medium text-slate-700">Money flow (all time)</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-slate-600">Gross booking value</span>
+                <span className="font-medium text-slate-900">{formatCurrency(metrics.totalPlatformRevenue)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-600">Platform fees</span>
+                <span className="text-slate-600">− {formatCurrency(metrics.platformFees)}</span>
+              </div>
+              <div className="border-t border-slate-200 pt-3">
+                <div className="flex justify-between">
+                  <span className="font-medium text-slate-900">Owner payouts</span>
+                  <span className="font-bold text-brand">{formatCurrency(metrics.totalOwnerEarnings)}</span>
+                </div>
+              </div>
+            </div>
           </div>
-        ) : tab === "listings" ? (
-          <div className="mt-8 overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <h3 className="mb-4 text-sm font-medium text-slate-700">This month</h3>
+            <StatCard
+              label="Revenue"
+              value={formatCurrency(metrics.revenueThisMonth)}
+              subtext={
+                revenueTrend != null
+                  ? `${revenueTrend >= 0 ? "+" : ""}${revenueTrend}% vs last month`
+                  : undefined
+              }
+              variant="success"
+            />
+          </div>
+          <div className="rounded-xl border border-slate-200 bg-white p-5">
+            <h3 className="mb-4 text-sm font-medium text-slate-700">Averages</h3>
+            <StatCard label="Avg. booking value" value={formatCurrency(metrics.averageBookingValue)} variant="muted" />
+          </div>
+        </div>
+      </AdminSection>
+
+      {/* E. Performance Trends */}
+      <AdminSection title="Performance Trends" subtitle="Revenue & bookings over time">
+        <div className="rounded-xl border border-slate-200 bg-white p-6">
+          <div className="mb-4 flex flex-wrap gap-4 text-sm text-slate-600">
+            <span>
+              Last 12 months: <strong className="text-slate-900">{formatCurrency(revenueOverTime.reduce((s, r) => s + r.revenue, 0))}</strong> revenue
+            </span>
+            <span>
+              <strong className="text-slate-900">{revenueOverTime.reduce((s, r) => s + r.rentalCount, 0)}</strong> bookings
+            </span>
+          </div>
+          <div className="flex h-48 items-end gap-1">
+            {revenueOverTime.map((r) => (
+              <div
+                key={r.period}
+                className="flex flex-1 flex-col items-center gap-1"
+                title={`${r.period}: ${formatCurrency(r.revenue)} (${r.rentalCount} bookings)`}
+              >
+                <div
+                  className="w-full min-w-[4px] rounded-t bg-brand/70 transition-opacity hover:opacity-90"
+                  style={{ height: maxRevenue > 0 ? `${(r.revenue / maxRevenue) * 100}%` : "2px" }}
+                />
+                <span className="text-[10px] text-slate-500">{r.period.slice(-2)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </AdminSection>
+
+      {/* F. Listings Performance */}
+      <AdminSection title="Top Listings" subtitle="By revenue">
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          {topListings.length === 0 ? (
+            <p className="p-6 text-center text-slate-500">No listings with bookings yet</p>
+          ) : (
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-slate-200 bg-slate-50">
                 <tr>
                   <th className="px-4 py-3 font-medium text-slate-700">Car</th>
-                  <th className="px-4 py-3 font-medium text-slate-700">Location</th>
-                  <th className="px-4 py-3 font-medium text-slate-700">Status</th>
                   <th className="px-4 py-3 font-medium text-slate-700">Owner</th>
-                  <th className="px-4 py-3 font-medium text-slate-700">Actions</th>
+                  <th className="px-4 py-3 font-medium text-slate-700">Bookings</th>
+                  <th className="px-4 py-3 font-medium text-slate-700">Revenue</th>
+                  <th className="px-4 py-3 font-medium text-slate-700">Utilization</th>
                 </tr>
               </thead>
               <tbody>
-                {listings.map((l) => (
-                  <tr key={l.id} className="border-b border-slate-100 last:border-0">
+                {topListings.map((l) => (
+                  <tr key={l.listingId} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
                     <td className="px-4 py-3">
-                      <Link
-                        href={`/rent-a-car/${l.id}`}
-                        className="font-medium text-brand hover:underline"
-                      >
-                        {l.brand} {l.model}
+                      <Link href={`/rent-a-car/${l.listingId}`} className="font-medium text-brand hover:underline">
+                        {l.brand} {l.model} ({l.year})
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {l.town}, {l.island}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          l.status === "ACTIVE"
-                            ? "bg-brand-light text-slate-800"
-                            : l.status === "PAUSED"
-                              ? "bg-amber-100 text-amber-800"
-                              : l.status === "REJECTED"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-slate-100 text-slate-700"
-                        }`}
-                      >
-                        {l.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-slate-600">
-                      {l.owner?.name ?? l.owner?.email ?? "—"}
-                    </td>
-                    <td className="px-4 py-3">
-                      {l.status === "ACTIVE" && (
-                        <button
-                          type="button"
-                          onClick={() => setListingStatus(l.id, "PAUSED")}
-                          disabled={updatingListingId === l.id}
-                          className="rounded border border-amber-200 bg-white px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-50"
-                        >
-                          {updatingListingId === l.id ? "…" : "Deactivate"}
-                        </button>
-                      )}
-                      {(l.status === "PAUSED" || l.status === "REJECTED") && (
-                        <button
-                          type="button"
-                          onClick={() => setListingStatus(l.id, "ACTIVE")}
-                          disabled={updatingListingId === l.id}
-                          className="rounded border border-brand/30 bg-white px-2 py-1 text-xs font-medium text-brand hover:bg-brand-light disabled:opacity-50"
-                        >
-                          {updatingListingId === l.id ? "…" : "Reactivate"}
-                        </button>
-                      )}
-                    </td>
+                    <td className="px-4 py-3 text-slate-600">{l.ownerName ?? l.ownerEmail}</td>
+                    <td className="px-4 py-3 text-slate-600">{l.totalBookings}</td>
+                    <td className="px-4 py-3 font-medium text-slate-900">{formatCurrency(l.totalRevenue)}</td>
+                    <td className="px-4 py-3 text-slate-600">{Math.round(l.utilizationRate * 100)}%</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {listings.length === 0 && (
-              <p className="px-4 py-8 text-center text-slate-500">No listings</p>
-            )}
+          )}
+          <div className="border-t border-slate-100 px-4 py-2">
+            <Link href="/admin/analytics" className="text-sm font-medium text-brand hover:underline">
+              Full analytics →
+            </Link>
           </div>
-        ) : (
-          <div className="mt-8 space-y-4">
-            <p className="text-sm text-slate-600">
-              {bookingsData.total} booking{bookingsData.total !== 1 ? "s" : ""}
-            </p>
-            <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-              <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-slate-200 bg-slate-50">
-                  <tr>
-                    <th className="px-4 py-3 font-medium text-slate-700">Car</th>
-                    <th className="px-4 py-3 font-medium text-slate-700">Renter</th>
-                    <th className="px-4 py-3 font-medium text-slate-700">Dates</th>
-                    <th className="px-4 py-3 font-medium text-slate-700">Status</th>
-                    <th className="px-4 py-3 font-medium text-slate-700">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bookingsData.items.map((b) => (
-                    <tr key={b.id} className="border-b border-slate-100 last:border-0">
-                      <td className="px-4 py-3">
-                        <Link
-                          href={`/rent-a-car/${b.car.id}`}
-                          className="font-medium text-brand hover:underline"
-                        >
-                          {b.car.brand} {b.car.model}
-                        </Link>
-                        <span className="ml-1 text-slate-500">
-                          ({b.car.owner?.name ?? b.car.owner?.email ?? "—"})
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">
-                        {b.renter?.name ?? b.renter?.email ?? "—"}
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">
-                        {b.startDate?.slice(0, 10)} – {b.endDate?.slice(0, 10)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                            b.status === "COMPLETED" || b.status === "CONFIRMED"
-                              ? "bg-brand-light text-slate-800"
-                              : b.status === "PENDING_APPROVAL" || b.status === "PENDING_PAYMENT"
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-slate-100 text-slate-700"
-                          }`}
-                        >
-                          {BOOKING_STATUS_LABELS[b.status] ?? b.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-slate-700">
-                        {Number(b.totalPrice).toFixed(0)} {b.currency}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {bookingsData.items.length === 0 && (
-                <p className="px-4 py-8 text-center text-slate-500">No bookings</p>
-              )}
-            </div>
-            {bookingsData.total > bookingsData.pageSize && (
-              <div className="flex justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => fetchBookings(bookingsData.page - 1)}
-                  disabled={bookingsData.page <= 1}
-                  className="rounded border border-slate-200 px-3 py-1 text-sm disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <span className="py-1 text-sm text-slate-600">
-                  Page {bookingsData.page} of {Math.ceil(bookingsData.total / bookingsData.pageSize)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => fetchBookings(bookingsData.page + 1)}
-                  disabled={bookingsData.page * bookingsData.pageSize >= bookingsData.total}
-                  className="rounded border border-slate-200 px-3 py-1 text-sm disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      <Footer />
-    </main>
+        </div>
+      </AdminSection>
+
+      {/* G. Users Overview */}
+      <AdminSection title="Users Overview">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <StatCard label="New users (7d)" value={metrics.newUsersLast7Days} />
+          <StatCard label="New users (30d)" value={metrics.newUsersLast30Days} />
+          <StatCard
+            label="Pending approvals"
+            value={issues.pendingRenterApprovals}
+            variant={issues.pendingRenterApprovals > 0 ? "warning" : "muted"}
+          />
+        </div>
+      </AdminSection>
+    </div>
   );
 }

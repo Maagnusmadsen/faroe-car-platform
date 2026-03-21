@@ -37,6 +37,14 @@ export async function createBookingWithAvailabilityCheck(input: {
     );
   }
 
+  if (input.endDate <= input.startDate) {
+    throw new AppError(
+      "End date must be after start date",
+      HttpStatus.BAD_REQUEST,
+      "INVALID_DATES"
+    );
+  }
+
   const {
     carId,
     renterId,

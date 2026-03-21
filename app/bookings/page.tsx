@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/context/LanguageContext";
 import { BOOKING_STATUS_LABELS } from "@/constants/booking-status";
+import { formatPrice } from "@/lib/utils/price";
 
 type BookingItem = {
   id: string;
@@ -435,7 +436,7 @@ function BookingsContent() {
                   const priceDisplay =
                     listing.status === "DRAFT" && Number(listing.pricePerDay) === 0
                       ? "—"
-                      : `${Number(listing.pricePerDay).toFixed(0)} DKK/day`;
+                      : formatPrice(Number(listing.pricePerDay), { perDay: true });
                   return (
                     <li
                       key={listing.id}

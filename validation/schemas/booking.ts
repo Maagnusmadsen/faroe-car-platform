@@ -10,7 +10,14 @@ export const bookingCreateSchema = z
     startDate: dateStringSchema,
     endDate: dateStringSchema,
   })
-  .strict();
+  .strict()
+  .refine(
+    (data) => {
+      if (!data.startDate || !data.endDate) return true;
+      return data.endDate > data.startDate;
+    },
+    { message: "End date must be after start date", path: ["endDate"] }
+  );
 
 export type BookingCreateInput = z.infer<typeof bookingCreateSchema>;
 

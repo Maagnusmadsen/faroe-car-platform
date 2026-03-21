@@ -32,10 +32,21 @@ export async function PATCH(
 
     const listing = await prisma.carListing.findUnique({
       where: { id },
-      select: { id: true, ownerId: true, status: true },
+      select: { id: true, ownerId: true, status: true, pricePerDay: true },
     });
     if (!listing) {
       return jsonError(notFound("Listing not found"));
+    }
+
+    if (status === "ACTIVE") {
+      const price = Number(listing.pricePerDay);
+      if (!Number.isFinite(price) || price <= 0) {
+        throw new AppError(
+          "Cannot activate listing: daily price must be greater than 0",
+          HttpStatus.BAD_REQUEST,
+          "INVALID_PRICE"
+        );
+      }
     }
 
     const updated = await prisma.carListing.update({

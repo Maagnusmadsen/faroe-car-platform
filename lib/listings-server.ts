@@ -5,6 +5,7 @@
 
 import { Decimal } from "@prisma/client/runtime/library";
 import { prisma } from "@/db";
+import { AppError, HttpStatus } from "@/lib/utils/errors";
 import { getTownInfo } from "@/lib/town-coordinates";
 import type { ListingWizardData } from "@/components/listing-wizard/types";
 import {
@@ -120,7 +121,13 @@ function buildCreatePayload(ownerId: string, data: Partial<ListingWizardData>) {
   const year = data.year ? parseInt(String(data.year), 10) : new Date().getFullYear();
   const desc = (data.description ?? "").trim() || "—";
   const seats = data.seats === "" || data.seats == null ? 5 : Number(data.seats);
-  const price = data.pricePerDay ? Number(data.pricePerDay) : 0;
+  const priceProvided = data.pricePerDay != null && data.pricePerDay !== "";
+  const priceRaw = priceProvided ? Number(data.pricePerDay) : NaN;
+  const price = Number.isFinite(priceRaw) ? priceRaw : NaN;
+  if (priceProvided && (!Number.isFinite(price) || price <= 0)) {
+    throw new AppError("Daily price must be greater than 0", HttpStatus.BAD_REQUEST, "INVALID_PRICE");
+  }
+  const priceValue = priceProvided && price > 0 ? price : 1;
   const minDays = data.minimumRentalDays ? parseInt(String(data.minimumRentalDays), 10) : 1;
   const weekly = data.weeklyDiscount ? parseFloat(String(data.weeklyDiscount)) : null;
   const monthly = data.monthlyDiscount ? parseFloat(String(data.monthlyDiscount)) : null;
@@ -151,7 +158,7 @@ function buildCreatePayload(ownerId: string, data: Partial<ListingWizardData>) {
     model,
     year: Number.isFinite(year) ? year : new Date().getFullYear(),
     description: desc,
-    pricePerDay: new Decimal(price >= 0 ? price : 0),
+    pricePerDay: new Decimal(priceValue),
     minRentalDays: minDays >= 1 ? minDays : 1,
     weeklyDiscountPct: weekly != null && weekly >= 0 && weekly <= 100 ? new Decimal(weekly) : null,
     monthlyDiscountPct: monthly != null && monthly >= 0 && monthly <= 100 ? new Decimal(monthly) : null,
@@ -236,7 +243,10 @@ function buildUpdatePayload(data: Partial<ListingWizardData>) {
   if (data.pickupInstructions !== undefined) payload.pickupInstructions = String(data.pickupInstructions).trim() || null;
   if (data.pricePerDay !== undefined) {
     const p = Number(data.pricePerDay);
-    payload.pricePerDay = new Decimal(Number.isFinite(p) && p >= 0 ? p : 0);
+    if (!Number.isFinite(p) || p <= 0) {
+      throw new AppError("Daily price must be greater than 0", HttpStatus.BAD_REQUEST, "INVALID_PRICE");
+    }
+    payload.pricePerDay = new Decimal(p);
   }
   if (data.minimumRentalDays !== undefined) {
     const m = parseInt(String(data.minimumRentalDays), 10);
@@ -464,6 +474,15 @@ export async function publishListing(listingId: string, ownerId: string, wizardD
   const errors = validateAllWizardSteps(wizardData);
   if (Object.keys(errors).length > 0) {
     return { success: false, error: "VALIDATION" as const, errors };
+  }
+
+  const price = Number(car.pricePerDay);
+  if (!Number.isFinite(price) || price <= 0) {
+    return {
+      success: false,
+      error: "VALIDATION" as const,
+      errors: { pricePerDay: "Daily price must be greater than 0" },
+    };
   }
 
   await prisma.carListing.update({

@@ -71,6 +71,7 @@ enum PaymentStatus {
   SUCCEEDED
   FAILED
   REFUNDED
+  CANCELLED
 }
 
 enum PayoutStatus {
@@ -570,4 +571,15 @@ model PlatformFeeConfig {
   updatedAt     DateTime  @updatedAt
 
   @@index([effectiveFrom, effectiveTo])
+}
+
+/// Idempotency for Stripe webhooks. Prevents duplicate processing when Stripe retries.
+model StripeWebhookEvent {
+  id           String   @id @default(cuid())
+  stripeEventId String  @unique  // Stripe event ID (evt_xxx)
+  eventType    String
+  processedAt  DateTime @default(now())
+  payload      Json?    // minimal payload for debugging
+
+  @@index([stripeEventId])
 }

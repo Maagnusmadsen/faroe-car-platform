@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Car } from "@/lib/cars";
+import { formatPrice } from "@/lib/utils/price";
 
 interface CarCardProps {
   car: Car;
@@ -71,7 +72,7 @@ export default function CarCard({
           ★ {car.rating} {t("rent.rating")}
         </p>
         <p className="mt-3 text-2xl font-bold text-slate-900 md:text-3xl">
-          {car.pricePerDay} DKK
+          {formatPrice(car.pricePerDay)}
           <span className="ml-1 text-base font-normal text-slate-500">
             {t("rent.perDay")}
           </span>

@@ -22,7 +22,16 @@ export async function GET() {
       previewPayoutForOwner(ownerId),
     ]);
 
-    return jsonSuccess({ payouts, pendingPayout: preview });
+    const totalPaidOut = payouts
+      .filter((p) => p.status === "COMPLETED")
+      .reduce((sum, p) => sum + Number(p.amount), 0);
+    const currency = payouts[0]?.currency ?? preview?.currency ?? "DKK";
+
+    return jsonSuccess({
+      payouts,
+      pendingPayout: preview,
+      totalPaidOut: { amount: totalPaidOut, currency },
+    });
   } catch (err) {
     const e = err as Error & { statusCode?: number };
     if (e.statusCode === 401) {

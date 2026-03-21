@@ -40,7 +40,7 @@ Do **not** commit `.env` or `.env.local`. Use Vercel env UI only.
 
 1. Stripe Dashboard → **Developers** → **Webhooks** → **Add endpoint**.
 2. **Endpoint URL**: `https://your-app.vercel.app/api/stripe/webhook`
-3. **Events**: `checkout.session.completed`, `payment_intent.payment_failed`, `account.updated` (if using Connect).
+3. **Events**: `checkout.session.completed`, `checkout.session.expired`, `payment_intent.payment_failed`, `account.updated` (if using Connect).
 4. Create the endpoint and copy the **Signing secret** (`whsec_...`).
 5. In Vercel, set `STRIPE_WEBHOOK_SECRET` to that signing secret.
 6. Use **live** API keys in production (`sk_live_...`, `pk_live_...`). Set `STRIPE_SECRET_KEY`; publishable key is only needed if the client uses it (e.g. Elements).

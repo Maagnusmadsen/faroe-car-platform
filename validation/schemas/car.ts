@@ -38,24 +38,32 @@ export type CarCreateInput = z.infer<typeof carCreateSchema>;
 const sortSchema = z.enum(["relevant", "newest", "price-asc", "price-desc", "rating-desc"]);
 
 /** Query params for GET /api/cars */
-export const carsQuerySchema = z.object({
-  type: z.enum(["car_rental", "ride_share"]).optional(),
-  location: z.string().max(200).optional(),
-  island: z.string().max(100).optional(),
-  town: z.string().max(200).optional(),
-  startDate: dateStringSchema.optional(),
-  endDate: dateStringSchema.optional(),
-  priceMin: z.coerce.number().min(0).optional(),
-  priceMax: z.coerce.number().min(0).optional(),
-  seats: z.coerce.number().int().min(1).max(9).optional(),
-  transmission: transmissionSchema.optional(),
-  fuelType: fuelTypeSchema.optional(),
-  is4x4: z.coerce.boolean().optional(),
-  airportPickup: z.coerce.boolean().optional(),
-  sort: sortSchema.optional(),
-  page: z.coerce.number().int().min(1).optional(),
-  pageSize: z.coerce.number().int().min(1).max(100).optional(),
-});
+export const carsQuerySchema = z
+  .object({
+    type: z.enum(["car_rental", "ride_share"]).optional(),
+    location: z.string().max(200).optional(),
+    island: z.string().max(100).optional(),
+    town: z.string().max(200).optional(),
+    startDate: dateStringSchema.optional(),
+    endDate: dateStringSchema.optional(),
+    priceMin: z.coerce.number().min(0).optional(),
+    priceMax: z.coerce.number().min(0).optional(),
+    seats: z.coerce.number().int().min(1).max(9).optional(),
+    transmission: transmissionSchema.optional(),
+    fuelType: fuelTypeSchema.optional(),
+    is4x4: z.coerce.boolean().optional(),
+    airportPickup: z.coerce.boolean().optional(),
+    sort: sortSchema.optional(),
+    page: z.coerce.number().int().min(1).optional(),
+    pageSize: z.coerce.number().int().min(1).max(100).optional(),
+  })
+  .refine(
+    (data) => {
+      if (!data.startDate || !data.endDate) return true;
+      return data.endDate > data.startDate;
+    },
+    { message: "End date must be after start date", path: ["endDate"] }
+  );
 
 export type CarsQueryInput = z.infer<typeof carsQuerySchema>;
 
@@ -82,7 +90,17 @@ export const listingWizardPayloadSchema = z
     pickupInstructions: z.string().max(2000).optional(),
     imageUrls: z.array(z.string().max(500000)).optional(),
     imageIds: z.array(z.string()).optional(),
-    pricePerDay: z.union([z.string(), z.number()]).optional(),
+    pricePerDay: z
+      .union([z.string(), z.number()])
+      .optional()
+      .refine(
+        (val) => {
+          if (val === undefined || val === null || val === "") return true;
+          const n = typeof val === "string" ? parseFloat(val) : val;
+          return Number.isFinite(n) && n > 0;
+        },
+        { message: "Daily price must be greater than 0" }
+      ),
     minimumRentalDays: z.union([z.string(), z.number()]).optional(),
     weeklyDiscount: z.union([z.string(), z.number()]).optional(),
     monthlyDiscount: z.union([z.string(), z.number()]).optional(),

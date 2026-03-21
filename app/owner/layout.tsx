@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import OwnerLayoutClient from "@/components/owner/OwnerLayoutClient";
 
 export const metadata: Metadata = {
-  title: "Owner Dashboard",
-  description: "Manage your car listings and rental requests on RentLocal.",
+  title: "Your Earnings | RentLocal",
+  description: "Manage your car listings and see your earnings on RentLocal.",
 };
 
 export default function OwnerLayout({
@@ -10,5 +11,5 @@ export default function OwnerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <OwnerLayoutClient>{children}</OwnerLayoutClient>;
 }

@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/context/LanguageContext";
+import { formatPrice } from "@/lib/utils/price";
 import MapboxListingPreview from "@/components/map/MapboxListingPreview";
 import type { CarDetail } from "@/types/car-detail";
 
@@ -262,7 +263,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
             <div>
               <p className="text-sm text-slate-500">{t("rent.from")}</p>
               <p className="text-3xl font-bold text-slate-900">
-                {car.pricePerDay} DKK
+                {formatPrice(car.pricePerDay)}
                 <span className="text-lg font-normal text-slate-500">
                   {t("rent.perDay")}
                 </span>

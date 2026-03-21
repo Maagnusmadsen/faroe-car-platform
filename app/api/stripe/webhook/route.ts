@@ -1,128 +1,96 @@
 /**
  * POST /api/stripe/webhook – Stripe webhook handler.
- * Handles:
- * - checkout.session.completed → marks payment as SUCCEEDED and booking as CONFIRMED
- * - payment_intent.payment_failed → marks payment as FAILED
  *
- * Idempotency:
- * - Uses upsert on Payment by stripePaymentIntentId.
- * - Booking updates are idempotent (setting the same status multiple times is safe).
+ * Production-safe:
+ * - Returns 400 for non-retryable errors (invalid data) → Stripe does NOT retry
+ * - Returns 500 for retryable errors (transient failures) → Stripe retries
+ * - Returns 400 on signature/invalid payload (non-retryable)
+ * - Idempotent: same event can be received multiple times safely
+ * - Uses StripeWebhookEvent table to prevent duplicate processing
+ *
+ * Handles:
+ * - checkout.session.completed → Payment SUCCEEDED, Booking CONFIRMED
+ * - checkout.session.expired → Payment CANCELLED
+ * - payment_intent.payment_failed → Payment FAILED
+ * - account.updated → User stripeConnectAccountId
  */
 
 import { NextRequest } from "next/server";
 import Stripe from "stripe";
 import { env } from "@/config/env";
 import { getStripeClient } from "@/payments";
-import { prisma } from "@/db";
-import { notifyBookingConfirmed, notifyPaymentReceived } from "@/lib/notifications-server";
+import { handleStripeEvent } from "@/lib/stripe-webhook";
+
+/** Log webhook-level errors with context */
+function logWebhookError(message: string, context?: Record<string, unknown>) {
+  console.error("[Stripe Webhook]", JSON.stringify({
+    level: "error",
+    message,
+    ...context,
+    timestamp: new Date().toISOString(),
+  }));
+}
 
 export async function POST(request: NextRequest) {
   const stripe = getStripeClient();
   const webhookSecret = env.stripeWebhookSecret;
   const sig = request.headers.get("stripe-signature");
 
-  let event: Stripe.Event;
+  // 1. Signature verification (400 = bad request, do not retry)
+  if (!webhookSecret || !sig) {
+    logWebhookError("Webhook not configured: missing secret or signature");
+    return new Response(
+      JSON.stringify({ error: "Webhook not configured" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
 
+  let body: string;
   try {
-    const body = await request.text();
-    if (!webhookSecret || !sig) {
-      return new Response("Webhook not configured", { status: 500 });
-    }
+    body = await request.text();
+  } catch (err) {
+    logWebhookError("Failed to read request body", { error: (err as Error).message });
+    return new Response(
+      JSON.stringify({ error: "Invalid body" }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  let event: Stripe.Event;
+  try {
     event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err) {
-    return new Response("Webhook signature verification failed", { status: 400 });
+    const message = err instanceof Error ? err.message : "Signature verification failed";
+    logWebhookError("Invalid webhook signature", { error: message });
+    return new Response(
+      JSON.stringify({ error: "Webhook signature verification failed" }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
   }
 
-  try {
-    switch (event.type) {
-      case "checkout.session.completed": {
-        const session = event.data.object as Stripe.Checkout.Session;
-        const bookingId = session.metadata?.bookingId;
-        const paymentIntentId =
-          typeof session.payment_intent === "string"
-            ? session.payment_intent
-            : session.payment_intent?.id;
-        if (!bookingId || !paymentIntentId) break;
+  // 2. Process event
+  const result = await handleStripeEvent(event);
 
-        await prisma.$transaction(async (tx) => {
-          const booking = await tx.booking.findUnique({
-            where: { id: bookingId },
-            include: { car: { select: { ownerId: true } } },
-          });
-          if (!booking?.car) return;
-
-          const amount = booking.totalPrice;
-
-          await tx.payment.upsert({
-            where: { stripePaymentIntentId: paymentIntentId },
-            update: {
-              status: "SUCCEEDED",
-              bookingId: booking.id,
-            },
-            create: {
-              bookingId: booking.id,
-              type: "CHARGE",
-              amount,
-              currency: booking.currency,
-              status: "SUCCEEDED",
-              stripePaymentIntentId: paymentIntentId,
-            },
-          });
-
-          if (booking.status === "PENDING_PAYMENT") {
-            const updated = await tx.booking.update({
-              where: { id: booking.id },
-              data: { status: "CONFIRMED" },
-            });
-
-            // Notify renter that booking is confirmed
-            await notifyBookingConfirmed(
-              updated.renterId,
-              updated.id,
-              updated.carId
-            );
-          }
-
-          // Notify owner about payment receipt (ownerId from car)
-          await notifyPaymentReceived(
-            booking.car.ownerId,
-            booking.id,
-            Number(amount)
-          );
-        });
-        break;
-      }
-      case "payment_intent.payment_failed": {
-        const pi = event.data.object as Stripe.PaymentIntent;
-        const paymentIntentId = pi.id;
-
-        await prisma.payment.updateMany({
-          where: { stripePaymentIntentId: paymentIntentId },
-          data: { status: "FAILED" },
-        });
-        break;
-      }
-      case "account.updated": {
-        const account = event.data.object as Stripe.Account;
-        const userId = account.metadata?.userId;
-        if (userId && account.id) {
-          await prisma.user.updateMany({
-            where: { id: userId },
-            data: { stripeConnectAccountId: account.id },
-          });
-        }
-        break;
-      }
-      default:
-        // ignore other events for now
-        break;
-    }
-
+  // 3. Response
+  if (result.ok) {
     return new Response("ok", { status: 200 });
-  } catch (err) {
-    // Log error; respond 200 to avoid repeated retries if we can't handle it gracefully.
-    console.error("Stripe webhook error", err);
-    return new Response("error", { status: 200 });
   }
-}
 
+  // Processing failed – return 400 for non-retryable (Stripe stops), 500 for retryable (Stripe retries)
+  const statusCode = result.retryable ? 500 : 400;
+  const logMessage = result.retryable
+    ? "Event processing failed (retryable – returning 500)"
+    : "Event processing failed (non-retryable – returning 400, Stripe will not retry)";
+
+  logWebhookError(logMessage, {
+    eventId: event.id,
+    eventType: event.type,
+    reason: result.reason,
+    retryable: result.retryable,
+  });
+
+  return new Response(
+    JSON.stringify({ error: result.reason }),
+    { status: statusCode, headers: { "Content-Type": "application/json" } }
+  );
+}

@@ -13,7 +13,8 @@ export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [confirmEmail, setConfirmEmail] = useState(false);
@@ -29,7 +30,9 @@ export default function SignupPage() {
         email: email.trim().toLowerCase(),
         password,
         options: {
-          data: { name: name.trim() || undefined },
+          data: {
+            name: [firstName.trim(), lastName.trim()].filter(Boolean).join(" ") || undefined,
+          },
           emailRedirectTo: `${typeof window !== "undefined" ? window.location.origin : ""}/auth/callback?next=/`,
         },
       });
@@ -84,19 +87,35 @@ export default function SignupPage() {
             </div>
           )}
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <div>
-              <label htmlFor="signup-name" className="block text-sm font-medium text-slate-700">
-                {t("auth.name")}
-              </label>
-              <input
-                id="signup-name"
-                type="text"
-                autoComplete="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={t("auth.namePlaceholder")}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="signup-firstName" className="block text-sm font-medium text-slate-700">
+                  {t("auth.firstName")}
+                </label>
+                <input
+                  id="signup-firstName"
+                  type="text"
+                  autoComplete="given-name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="signup-lastName" className="block text-sm font-medium text-slate-700">
+                  {t("auth.lastName")}
+                </label>
+                <input
+                  id="signup-lastName"
+                  type="text"
+                  autoComplete="family-name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                  required
+                />
+              </div>
             </div>
             <div>
               <label htmlFor="signup-email" className="block text-sm font-medium text-slate-700">
@@ -108,7 +127,6 @@ export default function SignupPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("auth.emailPlaceholder")}
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                 required
               />
