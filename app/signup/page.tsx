@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function SignupPage() {
@@ -66,14 +67,14 @@ export default function SignupPage() {
           <h1 className="text-2xl font-bold text-slate-900">{t("auth.signupTitle")}</h1>
           <p className="mt-1 text-sm text-slate-500">
             {t("auth.noAccount")}{" "}
-            <Link href="/login" className="font-medium text-emerald-600 hover:underline">
+            <Link href="/login" className="font-medium text-brand hover:underline">
               {t("nav.login")}
             </Link>
           </p>
           {confirmEmail && (
-            <div className="mt-2 space-y-2 rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-800" role="status">
+            <div className="mt-2 space-y-2 rounded-lg bg-brand-light px-3 py-3 text-sm text-brand" role="status">
               <p>{t("auth.confirmEmail") || "Check your email to confirm your account, then log in."}</p>
-              <p className="text-emerald-700">
+              <p className="text-brand-hover">
                 Fik du ingen mail? (fx på localhost) Prøv at{" "}
                 <Link href="/login" className="font-medium underline">
                   logge ind
@@ -94,7 +95,7 @@ export default function SignupPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("auth.namePlaceholder")}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
             <div>
@@ -108,7 +109,7 @@ export default function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("auth.emailPlaceholder")}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                 required
               />
             </div>
@@ -123,7 +124,7 @@ export default function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={t("auth.passwordPlaceholder")}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                 required
                 minLength={8}
               />
@@ -136,13 +137,14 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-emerald-600 px-4 py-3 font-semibold text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+              className="w-full rounded-lg bg-brand px-4 py-3 font-semibold text-white hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50"
             >
               {loading ? "…" : t("auth.signupButton")}
             </button>
           </form>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }

@@ -1,27 +1,113 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   RentLocal Brand System – nature-inspired, premium
+   Primary: #3F8F4F | Hover: #357A43
+   ========================================================================== */
 :root {
+  /* Brand – soft natural green (landscape-inspired) */
+  --brand-primary: #3F8F4F;   /* primary buttons, CTAs, icons, links */
+  --brand-dark: #357A43;      /* hover state */
+  --brand-hover: #357A43;     /* hover state */
+  --brand-light: rgba(63, 143, 79, 0.1);   /* icons, subtle UI elements */
+  --brand-muted: rgba(63, 143, 79, 0.08);  /* subtle highlights */
+
+  /* Core UI */
   --background: #ffffff;
   --foreground: #0f172a;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --border-hover: #cbd5e1;
+
+  /* Hero overlay – good contrast on images */
+  --overlay: rgba(0, 0, 0, 0.32);
+
+  /* Aliases for compatibility */
+  --primary: var(--brand-primary);
+  --primary-hover: var(--brand-hover);
+  --primary-light: var(--brand-light);
+  --secondary: var(--brand-primary);
+  --secondary-hover: var(--brand-hover);
+  --accent: var(--brand-primary);
+  --accent-hover: var(--brand-hover);
+  --brand: var(--brand-primary);
+}
+
+/* Dark mode */
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --text-muted: #94a3b8;
+  --border: #334155;
+  --border-hover: #475569;
+  --brand-primary: #4a9d5a;
+  --brand-dark: #3F8F4F;
+  --brand-hover: #357A43;
+  --brand-light: rgba(63, 143, 79, 0.15);
+  --brand-muted: rgba(63, 143, 79, 0.12);
+  --primary: var(--brand-primary);
+  --primary-hover: var(--brand-hover);
+  --primary-light: var(--brand-light);
+  --secondary: #94a3b8;
+  --secondary-hover: #cbd5e1;
+  --accent: var(--brand-primary);
+  --accent-hover: var(--brand-hover);
+  --brand: var(--brand-primary);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-light: var(--brand-light);
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-dark: var(--brand-dark);
+  --color-text-muted: var(--text-muted);
+  --color-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-overlay: var(--overlay);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 /* Scandinavian-inspired: minimal, clean, lots of whitespace */
+html,
 body {
+  margin: 0;
+  padding: 0;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+/* Smooth transitions for theme switches and interactions */
+body,
 button,
-a {
-  transition-property: color, background-color, transform, opacity;
+a,
+input,
+select,
+textarea {
+  transition-property: color, background-color, border-color, fill, opacity, box-shadow, transform;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Focus ring for accessibility (WCAG 2.1) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
 }
 
 /* Subtle hero background zoom on load */

@@ -16,7 +16,7 @@ export default function FAQPage() {
           {t("home.faqTitle")}
         </h1>
         <p className="mt-2 text-slate-600">
-          Quick answers about renting and listing cars on FaroeRent.
+          Quick answers about renting and listing cars on RentLocal.
         </p>
 
         <section className="mt-10">
@@ -50,7 +50,7 @@ export default function FAQPage() {
             ))}
           </dl>
           <p className="mt-4">
-            <Link href="/rent-a-car" className="text-sm font-medium text-emerald-600 hover:underline">
+            <Link href="/rent-a-car" className="text-sm font-medium text-brand hover:underline">
               Rent a car →
             </Link>
           </p>
@@ -71,14 +71,14 @@ export default function FAQPage() {
             ))}
           </dl>
           <p className="mt-4">
-            <Link href="/list-your-car" className="text-sm font-medium text-emerald-600 hover:underline">
+            <Link href="/list-your-car" className="text-sm font-medium text-brand hover:underline">
               List your car →
             </Link>
           </p>
         </section>
 
         <p className="mt-12 text-center text-sm text-slate-500">
-          <Link href="/" className="text-emerald-600 hover:underline">
+          <Link href="/" className="text-brand hover:underline">
             ← Back to home
           </Link>
         </p>

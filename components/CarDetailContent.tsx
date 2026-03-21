@@ -234,7 +234,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                   <button
                     type="button"
                     onClick={handleToggleFavorite}
-                    className="text-sm text-slate-500 hover:text-emerald-600"
+                    className="text-sm text-slate-500 hover:text-brand"
                     aria-label={
                       isFavorite ? t("rent.removeFavorite") : t("rent.addFavorite")
                     }
@@ -246,7 +246,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
               <p className="mt-1 text-slate-500">{car.location}</p>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <div className="rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">
+              <div className="rounded-full bg-brand-light px-4 py-2 text-sm font-semibold text-brand">
                 ★ {reviewsSummary?.ratingAvg ?? car.rating} {t("rent.rating")}
               </div>
               {reviewsSummary && (
@@ -280,7 +280,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                   <div className="mt-2 flex flex-wrap items-center justify-center gap-4">
                     <Link
                       href={`/list-your-car?draft=${car.id}`}
-                      className="text-sm font-medium text-emerald-600 hover:underline"
+                      className="text-sm font-medium text-brand hover:underline"
                     >
                       Edit listing
                     </Link>
@@ -299,7 +299,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                   <p className="text-sm font-medium text-amber-800">{t("rent.renterNotApproved")}</p>
                   <Link
                     href="/renter-approval"
-                    className="mt-3 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+                    className="mt-3 inline-block rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover"
                   >
                     {t("rent.getApprovedFirst")}
                   </Link>
@@ -308,7 +308,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                 <button
                   type="button"
                   disabled={isTemporarilyUnavailable}
-                  className="rounded-xl bg-emerald-600 px-8 py-3 font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-slate-300"
+                  className="rounded-xl bg-brand px-8 py-3 font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-slate-300"
                   onClick={handleBookNow}
                 >
                   {isTemporarilyUnavailable
@@ -321,7 +321,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
               {bookingMessage && bookingState === "error" && (
                 <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2">
                   <p className="text-sm text-amber-800">{bookingMessage}</p>
-                  <Link href="/renter-approval" className="mt-2 inline-block text-sm font-medium text-emerald-600 hover:underline">
+                  <Link href="/renter-approval" className="mt-2 inline-block text-sm font-medium text-brand hover:underline">
                     {t("rent.getApprovedFirst")}
                   </Link>
                 </div>
@@ -334,7 +334,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                 </p>
               )}
               {bookingState === "success" && (
-                <p className="text-sm text-emerald-600">
+                <p className="text-sm text-brand">
                   {t("rent.bookingRequestSent")}{" "}
                   <Link href="/bookings" className="font-medium underline">
                     {t("rent.viewMyBookings")}
@@ -420,7 +420,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                   )}
                   <li>{t("rent.policyDriverRequirements")}</li>
                   <li>
-                    <Link href="/cancellation" className="text-emerald-600 hover:underline">
+                    <Link href="/cancellation" className="text-brand hover:underline">
                       {t("rent.policyCancellationLink")}
                     </Link>
                   </li>
@@ -436,7 +436,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                     {t("rent.owner")}
                   </h2>
                   <div className="mt-3 flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand text-sm font-semibold text-white">
                       {owner.avatarUrl ? (
                         <Image
                           src={owner.avatarUrl}
@@ -482,7 +482,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                     {pickup.location}
                   </p>
                   {pickup.airportPickup && (
-                    <p className="mt-1 text-xs text-emerald-700">
+                    <p className="mt-1 text-xs text-brand">
                       {t("rent.airportPickupAvailable")}
                     </p>
                   )}

@@ -11,26 +11,17 @@ export default function HomePage() {
 
   return (
     <main className="relative min-h-screen">
-      {/* Full-screen hero background — fills entire viewport */}
-      <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 hero-bg-zoom">
-          <Image
-            src="/hero-faroe.jpg"
-            alt="Scenic winding road in the Faroe Islands with a car, mountains and ocean"
-            fill
-            priority
-            className="object-cover object-center"
-            sizes="100vw"
-          />
-        </div>
-        {/* Subtle dark overlay — readable text, image stays visible */}
-        <div
-          className="absolute inset-0 bg-black/35"
-          aria-hidden
-        />
+      {/* Full-screen hero background — CSS background for reliable display */}
+      <div
+        className="fixed inset-0 z-0 bg-slate-900 bg-cover bg-center hero-bg-zoom"
+        style={{ backgroundImage: "url('/hero-faroe.jpg')" }}
+        aria-hidden
+      >
+        <div className="absolute inset-0" style={{ backgroundColor: "var(--overlay)" }} aria-hidden />
       </div>
 
-      <Navbar variant="transparent" />
+      <div className="relative z-10">
+        <Navbar variant="transparent" />
 
       {/* Centered hero content: headline → subtitle → buttons → trust */}
       <section className="flex min-h-screen flex-col items-center justify-center px-4 py-20 text-center sm:px-6 lg:px-8">
@@ -45,13 +36,13 @@ export default function HomePage() {
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4">
             <Link
               href="/rent-a-car"
-              className="rounded-xl bg-emerald-500 px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
+              className="rounded-xl bg-brand px-8 py-4 text-lg font-semibold text-white shadow-lg transition-colors hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
             >
               {t("nav.rentACar")}
             </Link>
             <Link
               href="/list-your-car"
-              className="rounded-xl border-2 border-white/90 bg-transparent px-8 py-4 text-lg font-semibold text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
+              className="rounded-xl border-2 border-white/90 bg-transparent px-8 py-4 text-lg font-semibold text-white transition-colors hover:bg-white/10 hover:border-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
             >
               {t("nav.listYourCar")}
             </Link>
@@ -59,15 +50,15 @@ export default function HomePage() {
 
           <ul className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-xs text-white/80 sm:gap-x-8">
             <li className="flex items-center gap-1.5">
-              <span className="h-1 w-1 shrink-0 rounded-full bg-emerald-400" />
+              <span className="h-1 w-1 shrink-0 rounded-full bg-brand" />
               {t("home.trustLocal")}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="h-1 w-1 shrink-0 rounded-full bg-emerald-400" />
+              <span className="h-1 w-1 shrink-0 rounded-full bg-brand" />
               {t("home.trustAirport")}
             </li>
             <li className="flex items-center gap-1.5">
-              <span className="h-1 w-1 shrink-0 rounded-full bg-emerald-400" />
+              <span className="h-1 w-1 shrink-0 rounded-full bg-brand" />
               {t("home.trustInsurance")}
             </li>
           </ul>
@@ -75,7 +66,7 @@ export default function HomePage() {
       </section>
 
       {/* Concept section — two-column on desktop, stacked on mobile */}
-      <section className="bg-slate-50/80 px-4 py-24 sm:px-6 lg:px-8">
+      <section className="bg-slate-100 px-4 py-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2 lg:gap-16">
             {/* Left: title + body text */}
@@ -108,8 +99,8 @@ export default function HomePage() {
 
           {/* Highlight cards */}
           <div className="mt-20 grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-8">
-            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600" aria-hidden>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md sm:p-8">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-light text-brand" aria-hidden>
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
@@ -121,8 +112,8 @@ export default function HomePage() {
                 {t("home.conceptLocalText")}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600" aria-hidden>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md sm:p-8">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-light text-brand" aria-hidden>
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3l14 9-14 9V3z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 12H5" />
@@ -135,8 +126,8 @@ export default function HomePage() {
                 {t("home.conceptAirportText")}
               </p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600" aria-hidden>
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-md sm:p-8">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-light text-brand" aria-hidden>
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -152,7 +143,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      <Footer />
+        <Footer />
+      </div>
     </main>
   );
 }

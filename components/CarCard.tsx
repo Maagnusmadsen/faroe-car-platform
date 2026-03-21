@@ -37,7 +37,7 @@ export default function CarCard({
       id={`car-${car.id}`}
       className={`group overflow-hidden rounded-2xl border bg-white shadow-sm transition-all hover:shadow-lg ${
         isHighlighted
-          ? "border-emerald-500 ring-2 ring-emerald-500/30"
+          ? "border-brand ring-2 ring-brand/30"
           : "border-slate-200"
       }`}
     >
@@ -59,7 +59,7 @@ export default function CarCard({
             <button
               type="button"
               onClick={() => onToggleFavorite(car.id)}
-              className="text-sm text-slate-500 hover:text-emerald-600"
+              className="text-sm text-slate-500 hover:text-brand"
               aria-label={isFavorite ? t("rent.removeFavorite") : t("rent.addFavorite")}
             >
               {isFavorite ? "★" : "☆"}
@@ -78,7 +78,7 @@ export default function CarCard({
         </p>
         <Link
           href={href}
-          className="mt-4 block w-full rounded-xl bg-emerald-600 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-emerald-500"
+          className="mt-4 block w-full rounded-xl bg-brand py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-brand"
         >
           {t("rent.viewDetails")}
         </Link>

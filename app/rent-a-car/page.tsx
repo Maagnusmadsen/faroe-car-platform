@@ -204,7 +204,7 @@ export default function RentACarPage() {
           </h2>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">
             <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 text-center">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-base font-bold text-emerald-700">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-base font-bold text-brand">
                 1
               </span>
               <h3 className="mt-3 text-base font-semibold text-slate-900">
@@ -213,7 +213,7 @@ export default function RentACarPage() {
               <p className="mt-1.5 text-sm text-slate-600">{t("rent.howStep1Text")}</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 text-center">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-base font-bold text-emerald-700">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-base font-bold text-brand">
                 2
               </span>
               <h3 className="mt-3 text-base font-semibold text-slate-900">
@@ -222,7 +222,7 @@ export default function RentACarPage() {
               <p className="mt-1.5 text-sm text-slate-600">{t("rent.howStep2Text")}</p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 text-center">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-base font-bold text-emerald-700">
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-base font-bold text-brand">
                 3
               </span>
               <h3 className="mt-3 text-base font-semibold text-slate-900">

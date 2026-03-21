@@ -43,7 +43,7 @@ export default function ListingTypeFilter({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className={`flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-slate-50 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 ${
+        className={`flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-slate-50 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand ${
           filters.listingType ? "text-slate-900" : "text-slate-700"
         }`}
       >
@@ -64,7 +64,7 @@ export default function ListingTypeFilter({
               }}
               className={`w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-slate-50 ${
                 filters.listingType === opt.value
-                  ? "bg-emerald-50 font-medium text-emerald-700"
+                  ? "bg-brand-light font-medium text-brand"
                   : "text-slate-700"
               }`}
             >

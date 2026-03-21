@@ -20,16 +20,14 @@ export default function ListYourCarPage() {
 
       {/* Hero */}
       <section
-        className="relative flex min-h-[75vh] w-full flex-col items-center justify-center px-4 py-24 text-center sm:px-6 lg:px-8"
+        className="relative flex min-h-[75vh] w-full flex-col items-center justify-center bg-slate-900 bg-cover bg-center px-4 py-24 text-center sm:px-6 lg:px-8"
         style={{
           backgroundImage: "url('/hero-2-faroe.png')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
         }}
       >
         <div
           className="absolute inset-0"
-          style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
+          style={{ backgroundColor: "var(--overlay)" }}
           aria-hidden
         />
         <div className="relative z-10 mx-auto max-w-2xl">
@@ -42,7 +40,7 @@ export default function ListYourCarPage() {
           <button
             type="button"
             onClick={scrollToWizard}
-            className="mt-10 rounded-xl bg-emerald-500 px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
+            className="mt-10 rounded-xl bg-brand px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
           >
             {t("list.heroCta")}
           </button>
@@ -57,7 +55,7 @@ export default function ListYourCarPage() {
           </h2>
           <div className="mt-12 grid gap-8 sm:grid-cols-3">
             <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-6 text-center shadow-sm">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-light text-lg font-bold text-brand">
                 1
               </span>
               <h3 className="mt-4 text-lg font-semibold text-slate-900">
@@ -66,7 +64,7 @@ export default function ListYourCarPage() {
               <p className="mt-2 text-sm text-slate-600">{t("list.howStep1Text")}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-6 text-center shadow-sm">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-light text-lg font-bold text-brand">
                 2
               </span>
               <h3 className="mt-4 text-lg font-semibold text-slate-900">
@@ -75,7 +73,7 @@ export default function ListYourCarPage() {
               <p className="mt-2 text-sm text-slate-600">{t("list.howStep2Text")}</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-6 text-center shadow-sm">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+              <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand-light text-lg font-bold text-brand">
                 3
               </span>
               <h3 className="mt-4 text-lg font-semibold text-slate-900">

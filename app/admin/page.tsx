@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
+import { BOOKING_STATUS_LABELS } from "@/constants/booking-status";
 
 type Tab = "users" | "listings" | "bookings";
 
@@ -16,6 +17,7 @@ type UserRow = {
   role: string;
   createdAt: string;
   verificationStatus?: string;
+  licenseImageUrl?: string | null;
 };
 
 type ListingRow = {
@@ -48,16 +50,6 @@ type BookingRow = {
     owner: { id: string; email: string; name: string | null };
   };
   renter: { id: string; email: string; name: string | null };
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING_APPROVAL: "Pending",
-  PENDING_PAYMENT: "Awaiting payment",
-  CONFIRMED: "Confirmed",
-  REJECTED: "Rejected",
-  CANCELLED: "Cancelled",
-  COMPLETED: "Completed",
-  DISPUTED: "Disputed",
 };
 
 export default function AdminPage() {
@@ -208,7 +200,7 @@ export default function AdminPage() {
               onClick={() => setTab(t)}
               className={`border-b-2 px-4 py-2 text-sm font-medium capitalize transition-colors ${
                 tab === t
-                  ? "border-emerald-600 text-emerald-600"
+                  ? "border-brand text-brand"
                   : "border-transparent text-slate-600 hover:text-slate-900"
               }`}
             >
@@ -234,6 +226,7 @@ export default function AdminPage() {
                   <th className="px-4 py-3 font-medium text-slate-700">Name</th>
                   <th className="px-4 py-3 font-medium text-slate-700">Role</th>
                   <th className="px-4 py-3 font-medium text-slate-700">Renter status</th>
+                  <th className="px-4 py-3 font-medium text-slate-700">License</th>
                   <th className="px-4 py-3 font-medium text-slate-700">Joined</th>
                   <th className="px-4 py-3 font-medium text-slate-700">Actions</th>
                 </tr>
@@ -256,7 +249,7 @@ export default function AdminPage() {
                       <span
                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                           u.verificationStatus === "VERIFIED"
-                            ? "bg-emerald-100 text-emerald-800"
+                            ? "bg-brand-light text-slate-800"
                             : u.verificationStatus === "PENDING"
                               ? "bg-amber-100 text-amber-800"
                               : "bg-slate-100 text-slate-600"
@@ -264,6 +257,20 @@ export default function AdminPage() {
                       >
                         {u.verificationStatus ?? "UNVERIFIED"}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {u.licenseImageUrl ? (
+                        <a
+                          href={u.licenseImageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-medium text-brand hover:underline"
+                        >
+                          View license
+                        </a>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-slate-500">
                       {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
@@ -274,7 +281,7 @@ export default function AdminPage() {
                           type="button"
                           onClick={() => approveRenter(u.id)}
                           disabled={updatingVerificationUserId === u.id}
-                          className="rounded-lg bg-emerald-600 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+                          className="rounded-lg bg-brand px-2 py-1 text-xs font-medium text-white hover:bg-brand-hover disabled:opacity-50"
                         >
                           {updatingVerificationUserId === u.id ? "…" : "Approve renter"}
                         </button>
@@ -306,7 +313,7 @@ export default function AdminPage() {
                     <td className="px-4 py-3">
                       <Link
                         href={`/rent-a-car/${l.id}`}
-                        className="font-medium text-emerald-600 hover:underline"
+                        className="font-medium text-brand hover:underline"
                       >
                         {l.brand} {l.model}
                       </Link>
@@ -318,7 +325,7 @@ export default function AdminPage() {
                       <span
                         className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                           l.status === "ACTIVE"
-                            ? "bg-emerald-100 text-emerald-800"
+                            ? "bg-brand-light text-slate-800"
                             : l.status === "PAUSED"
                               ? "bg-amber-100 text-amber-800"
                               : l.status === "REJECTED"
@@ -348,7 +355,7 @@ export default function AdminPage() {
                           type="button"
                           onClick={() => setListingStatus(l.id, "ACTIVE")}
                           disabled={updatingListingId === l.id}
-                          className="rounded border border-emerald-200 bg-white px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                          className="rounded border border-brand/30 bg-white px-2 py-1 text-xs font-medium text-brand hover:bg-brand-light disabled:opacity-50"
                         >
                           {updatingListingId === l.id ? "…" : "Reactivate"}
                         </button>
@@ -384,7 +391,7 @@ export default function AdminPage() {
                       <td className="px-4 py-3">
                         <Link
                           href={`/rent-a-car/${b.car.id}`}
-                          className="font-medium text-emerald-600 hover:underline"
+                          className="font-medium text-brand hover:underline"
                         >
                           {b.car.brand} {b.car.model}
                         </Link>
@@ -402,13 +409,13 @@ export default function AdminPage() {
                         <span
                           className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                             b.status === "COMPLETED" || b.status === "CONFIRMED"
-                              ? "bg-emerald-100 text-emerald-800"
+                              ? "bg-brand-light text-slate-800"
                               : b.status === "PENDING_APPROVAL" || b.status === "PENDING_PAYMENT"
                                 ? "bg-amber-100 text-amber-800"
                                 : "bg-slate-100 text-slate-700"
                           }`}
                         >
-                          {STATUS_LABELS[b.status] ?? b.status}
+                          {BOOKING_STATUS_LABELS[b.status] ?? b.status}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-slate-700">

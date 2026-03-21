@@ -78,7 +78,7 @@ export default function CarDetailPage() {
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/rent-a-car"
-              className="rounded-xl bg-emerald-600 px-6 py-3 font-medium text-white hover:bg-emerald-500"
+              className="rounded-xl bg-brand px-6 py-3 font-medium text-white hover:bg-brand-hover"
             >
               Browse cars
             </Link>

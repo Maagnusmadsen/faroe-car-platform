@@ -16,7 +16,7 @@ function getUnique<T>(arr: T[]): T[] {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500";
+  "w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand";
 
 export default function AdvancedFilters({
   cars,

@@ -76,7 +76,7 @@ export default function Step7Review({ data, errors, onChange }: Step7Props) {
             type="checkbox"
             checked={data.confirmInsurance}
             onChange={(e) => onChange({ confirmInsurance: e.target.checked })}
-            className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
           />
           <span className="text-sm text-slate-700">{t("list.wizardConfirmInsurance")}</span>
         </label>
@@ -85,7 +85,7 @@ export default function Step7Review({ data, errors, onChange }: Step7Props) {
             type="checkbox"
             checked={data.confirmAllowed}
             onChange={(e) => onChange({ confirmAllowed: e.target.checked })}
-            className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
           />
           <span className="text-sm text-slate-700">{t("list.wizardConfirmAllowed")}</span>
         </label>
@@ -94,7 +94,7 @@ export default function Step7Review({ data, errors, onChange }: Step7Props) {
             type="checkbox"
             checked={data.confirmCorrect}
             onChange={(e) => onChange({ confirmCorrect: e.target.checked })}
-            className="mt-1 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
           />
           <span className="text-sm text-slate-700">{t("list.wizardConfirmCorrect")}</span>
         </label>

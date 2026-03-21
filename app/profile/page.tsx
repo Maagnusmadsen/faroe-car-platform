@@ -181,7 +181,7 @@ export default function ProfilePage() {
                     type="button"
                     onClick={handleSave}
                     disabled={saving}
-                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+                    className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-50"
                   >
                     {saving ? "…" : t("profile.save")}
                   </button>
@@ -193,7 +193,7 @@ export default function ProfilePage() {
           <div className="px-6 py-5 sm:px-8 sm:py-6">
             {message && (
               <div
-                className={`mb-5 rounded-lg px-4 py-3 text-sm ${message.type === "success" ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}
+                className={`mb-5 rounded-lg px-4 py-3 text-sm ${message.type === "success" ? "bg-brand-light text-slate-800" : "bg-red-50 text-red-800"}`}
                 role="alert"
               >
                 {message.text}
@@ -212,7 +212,7 @@ export default function ProfilePage() {
                 <p className="mt-2 text-sm text-amber-700">{t("profile.getApprovedDescription")}</p>
                 <Link
                   href="/renter-approval"
-                  className="mt-4 inline-block rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-500"
+                  className="mt-4 inline-block rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-hover"
                 >
                   {t("profile.getApprovedCta")}
                 </Link>
@@ -220,9 +220,9 @@ export default function ProfilePage() {
             )}
 
             {isVerified && (
-              <div className="mb-6 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-white">✓</span>
-                <span className="text-sm font-medium text-emerald-800">{t("profile.verificationVerified")}</span>
+              <div className="mb-6 flex items-center gap-3 rounded-xl border border-brand/30 bg-brand-light px-4 py-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand text-white">✓</span>
+                <span className="text-sm font-medium text-slate-800">{t("profile.verificationVerified")}</span>
               </div>
             )}
 
@@ -235,7 +235,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-200">
                   <div
-                    className="h-full rounded-full bg-emerald-500 transition-all"
+                    className="h-full rounded-full bg-brand transition-all"
                     style={{ width: `${profile.completionPercent}%` }}
                   />
                 </div>
@@ -465,7 +465,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="mt-8 border-t border-slate-100 pt-6">
-              <Link href="/" className="text-sm font-medium text-emerald-600 hover:underline">
+              <Link href="/" className="text-sm font-medium text-brand hover:underline">
                 {t("profile.backToHome")}
               </Link>
             </div>

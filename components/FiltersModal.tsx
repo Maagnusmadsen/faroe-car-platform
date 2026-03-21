@@ -59,7 +59,7 @@ export default function FiltersModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand"
             aria-label="Close"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +77,7 @@ export default function FiltersModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full rounded-xl bg-emerald-600 py-3 font-semibold text-white transition-colors hover:bg-emerald-500"
+            className="w-full rounded-xl bg-brand py-3 font-semibold text-white transition-colors hover:bg-brand-hover"
           >
             {t("rent.applyFilters")}
           </button>

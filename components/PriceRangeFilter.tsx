@@ -5,7 +5,7 @@ import type { CarFilters } from "@/lib/filter-cars";
 import { useLanguage } from "@/context/LanguageContext";
 
 const inputClass =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500";
+  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand";
 
 interface PriceRangeFilterProps {
   filters: CarFilters;
@@ -46,7 +46,7 @@ export default function PriceRangeFilter({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className={`flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-slate-50 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 ${
+        className={`flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium shadow-sm transition-colors hover:bg-slate-50 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand ${
           hasValue ? "text-slate-900" : "text-slate-700"
         }`}
       >

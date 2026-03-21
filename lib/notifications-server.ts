@@ -30,7 +30,7 @@ export async function notifyUserSignup(userId: string) {
   await createNotification({
     userId,
     type: "SYSTEM",
-    title: "Welcome to FaroeRent",
+    title: "Welcome to RentLocal",
     body: "Your account has been created successfully.",
   });
 }
@@ -120,6 +120,16 @@ export async function notifyPayoutCreated(ownerId: string, payoutId: string, amo
     title: "Payout created",
     body: "A payout has been created for your earnings.",
     data: { payoutId, amount },
+  });
+}
+
+/** Called when admin sets renter verification to VERIFIED. User sees this in-app (and can be notified by email later if you add it). */
+export async function notifyRenterApproved(userId: string) {
+  await createNotification({
+    userId,
+    type: "SYSTEM",
+    title: "You're approved to rent",
+    body: "Your driving licence has been verified. You can now book cars on RentLocal.",
   });
 }
 

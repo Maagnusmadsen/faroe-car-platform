@@ -283,7 +283,7 @@ export default function ListingWizard() {
         <button
           type="button"
           onClick={() => window.location.reload()}
-          className="mt-4 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white"
+          className="mt-4 rounded-xl bg-brand px-4 py-2 text-sm font-medium text-white"
         >
           Try again
         </button>
@@ -294,7 +294,7 @@ export default function ListingWizard() {
   if (publishSuccess) {
     return (
       <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm sm:p-12 text-center">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-600">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-light text-2xl text-brand">
           ✓
         </div>
         <h3 className="mt-4 text-xl font-semibold text-slate-900">
@@ -319,7 +319,7 @@ export default function ListingWizard() {
           </div>
         )}
         {stripeConnected === true && (
-          <p className="mt-4 text-sm text-emerald-600">{t("list.connectDone")}</p>
+          <p className="mt-4 text-sm text-brand">{t("list.connectDone")}</p>
         )}
 
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -332,7 +332,7 @@ export default function ListingWizard() {
           {publishedListingId && (
             <Link
               href={`/rent-a-car/${publishedListingId}`}
-              className="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500"
+              className="rounded-xl bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover"
             >
               {t("list.viewThisListing")}
             </Link>
@@ -418,7 +418,7 @@ export default function ListingWizard() {
                 !data.confirmAllowed ||
                 !data.confirmCorrect
               }
-              className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:opacity-50"
+              className="rounded-xl bg-brand px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-hover disabled:opacity-50"
             >
               {t("list.wizardPublish")}
             </button>
@@ -427,7 +427,7 @@ export default function ListingWizard() {
               type="button"
               onClick={goNext}
               disabled={!canGoNext}
-              className="rounded-xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-500 disabled:opacity-50"
+              className="rounded-xl bg-brand px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-hover disabled:opacity-50"
             >
               {t("list.wizardNext")}
             </button>

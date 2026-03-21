@@ -66,7 +66,7 @@ export default function Step3Location({ data, errors, onChange }: Step3Props) {
             type="checkbox"
             checked={data.airportPickup}
             onChange={(e) => onChange({ airportPickup: e.target.checked })}
-            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+            className="h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
           />
           <span className="text-sm font-medium text-slate-700">
             {t("rent.airportPickupAvailable")}

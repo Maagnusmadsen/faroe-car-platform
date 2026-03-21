@@ -31,7 +31,7 @@ export default function TermsPage() {
               <p>{t("terms.termsInsurance")}</p>
               <p>
                 {t("terms.termsCancellation")}{" "}
-                <Link href="/cancellation" className="font-medium text-emerald-600 hover:underline">
+                <Link href="/cancellation" className="font-medium text-brand hover:underline">
                   Cancellation policy
                 </Link>
               </p>
@@ -52,11 +52,11 @@ export default function TermsPage() {
         </div>
 
         <p className="mt-12 text-center text-sm text-slate-500">
-          <Link href="/contact" className="text-emerald-600 hover:underline">
+          <Link href="/contact" className="text-brand hover:underline">
             {t("footer.contact")}
           </Link>
           {" · "}
-          <Link href="/" className="text-emerald-600 hover:underline">
+          <Link href="/" className="text-brand hover:underline">
             {t("contact.backToHome")}
           </Link>
         </p>

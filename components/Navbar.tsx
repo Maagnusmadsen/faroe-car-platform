@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/context/LanguageContext";
+import { Logo } from "@/components/Logo";
 
 type Variant = "light" | "transparent";
 
@@ -30,29 +32,20 @@ export default function Navbar({ variant = "light" }: NavbarProps) {
 
   return (
     <header
-      className={`sticky top-0 z-50 w-full transition-colors duration-200 ${
+      className={`sticky top-0 z-50 w-full transition-[background-color,border-color] duration-300 ease-out ${
         isSolid
-          ? "border-b border-slate-200 bg-white"
+          ? "border-b border-border bg-white"
           : "bg-transparent backdrop-blur-sm"
       }`}
     >
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-2">
-          <div
-            className={
-              isSolid
-                ? "flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-600 font-bold text-white"
-                : "flex h-10 w-10 items-center justify-center rounded-xl bg-white/95 font-bold text-emerald-600"
-            }
-          >
-            F
-          </div>
-          <span
-            className={`text-xl font-bold ${isSolid ? "text-slate-900" : "text-white"}`}
-          >
-            FaroeRent
-          </span>
-        </Link>
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+        <div className="mr-3">
+          <Logo
+            variant={isSolid ? "dark" : "light"}
+            href="/"
+            responsive="navbar"
+          />
+        </div>
 
         <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-4">
           <NavLinks variant={isSolid ? "light" : variant} />
@@ -64,10 +57,15 @@ export default function Navbar({ variant = "light" }: NavbarProps) {
 
 function NavLinks({ variant }: { variant: Variant }) {
   const { t } = useLanguage();
+  const pathname = usePathname();
   const { user, status, signOut } = useAuth();
-  // Default false: only show "Your earnings" after API confirms hasListings === true
   const [hasListings, setHasListings] = useState(false);
   const isTransparent = variant === "transparent";
+
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
 
   useEffect(() => {
     if (status !== "authenticated" || !user) {
@@ -96,43 +94,46 @@ function NavLinks({ variant }: { variant: Variant }) {
     return () => window.removeEventListener("focus", onFocus);
   }, [status, user]);
 
-  const linkClass = `text-sm font-medium ${
-    isTransparent
-      ? "text-white/90 hover:text-white"
-      : "text-slate-600 hover:text-slate-900"
-  }`;
+  const getLinkClass = (href: string) => {
+    const active = isActive(href);
+    const base = "text-sm font-medium transition-colors duration-200";
+    if (isTransparent) {
+      return `${base} ${active ? "text-white font-semibold" : "text-white/90 hover:text-white"}`;
+    }
+    return `${base} ${active ? "text-brand font-semibold" : "text-muted hover:text-brand"}`;
+  };
 
   const buttonClass =
     isTransparent
-      ? "rounded-lg bg-white px-4 py-2 text-sm font-semibold text-emerald-600"
-      : "rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700";
+      ? "rounded-lg bg-white px-4 py-2 text-sm font-semibold text-brand transition-colors hover:bg-brand-light"
+      : "rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-hover";
 
   return (
     <>
-      <Link href="/rent-a-car" className={linkClass}>
+      <Link href="/rent-a-car" className={getLinkClass("/rent-a-car")}>
         {t("nav.rentACar")}
       </Link>
-      <Link href="/list-your-car" className={linkClass}>
+      <Link href="/list-your-car" className={getLinkClass("/list-your-car")}>
         {t("nav.listYourCar")}
       </Link>
       {status === "loading" ? (
-        <span className={linkClass}>…</span>
+        <span className="text-sm font-medium text-slate-600">…</span>
       ) : user ? (
         <>
-          <Link href="/bookings" className={linkClass}>
+          <Link href="/bookings" className={getLinkClass("/bookings")}>
             {t("nav.bookingsAndListings")}
           </Link>
           {hasListings === true && (
-            <Link href="/owner/dashboard" className={linkClass}>
+            <Link href="/owner/dashboard" className={getLinkClass("/owner/dashboard")}>
               {t("ownerDashboard.title")}
             </Link>
           )}
           {user.role === "ADMIN" && (
-            <Link href="/admin" className={linkClass}>
+            <Link href="/admin" className={getLinkClass("/admin")}>
               Admin
             </Link>
           )}
-          <Link href="/profile" className={linkClass}>
+          <Link href="/profile" className={getLinkClass("/profile")}>
             {t("auth.profile")}
           </Link>
           <button
@@ -145,7 +146,7 @@ function NavLinks({ variant }: { variant: Variant }) {
         </>
       ) : (
         <>
-          <Link href="/login" className={linkClass}>
+          <Link href="/login" className={getLinkClass("/login")}>
             {t("nav.login")}
           </Link>
           <Link href="/signup" className={buttonClass}>

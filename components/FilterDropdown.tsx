@@ -53,7 +53,7 @@ export default function FilterDropdown<T extends string | number | boolean>({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+        className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
       >
         <span className={value != null ? "text-slate-900" : ""}>{buttonLabel}</span>
         <span className="text-slate-400" aria-hidden>
@@ -74,7 +74,7 @@ export default function FilterDropdown<T extends string | number | boolean>({
               setOpen(false);
             }}
             className={`w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-slate-50 ${
-              value == null ? "bg-emerald-50 font-medium text-emerald-700" : "text-slate-700"
+              value == null ? "bg-brand-light font-medium text-brand" : "text-slate-700"
             }`}
           >
             {placeholder}
@@ -91,7 +91,7 @@ export default function FilterDropdown<T extends string | number | boolean>({
               }}
               className={`w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-slate-50 ${
                 value === opt.value
-                  ? "bg-emerald-50 font-medium text-emerald-700"
+                  ? "bg-brand-light font-medium text-brand"
                   : "text-slate-700"
               }`}
             >

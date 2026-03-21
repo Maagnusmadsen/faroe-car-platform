@@ -32,7 +32,7 @@ export default function ContactPage() {
             {supportEmail ? (
               <a
                 href={`mailto:${supportEmail}`}
-                className="mt-4 inline-block rounded-xl bg-emerald-600 px-5 py-2.5 font-medium text-white transition-colors hover:bg-emerald-500"
+                className="mt-4 inline-block rounded-xl bg-brand px-5 py-2.5 font-medium text-white transition-colors hover:bg-brand-hover"
               >
                 {supportEmail}
               </a>
@@ -78,7 +78,7 @@ export default function ContactPage() {
         </section>
 
         <p className="mt-12 text-center text-sm text-slate-500">
-          <Link href="/" className="text-emerald-600 hover:underline">
+          <Link href="/" className="text-brand hover:underline">
             {t("contact.backToHome")}
           </Link>
         </p>

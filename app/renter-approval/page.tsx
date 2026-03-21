@@ -138,12 +138,12 @@ export default function RenterApprovalPage() {
         </p>
 
         {verificationStatus === "VERIFIED" ? (
-          <div className="mt-10 rounded-2xl border border-emerald-200 bg-emerald-50 p-6">
-            <p className="font-medium text-emerald-800">{t("renterApproval.alreadyApproved")}</p>
+          <div className="mt-10 rounded-2xl border border-brand/30 bg-brand-light p-6">
+            <p className="font-medium text-slate-800">{t("renterApproval.alreadyApproved")}</p>
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 href="/rent-a-car"
-                className="rounded-xl bg-emerald-600 px-5 py-2.5 font-medium text-white hover:bg-emerald-500"
+                className="rounded-xl bg-brand px-5 py-2.5 font-medium text-white hover:bg-brand-hover"
               >
                 {t("renterApproval.backToCars")}
               </Link>
@@ -159,13 +159,13 @@ export default function RenterApprovalPage() {
           <div className="mt-10 rounded-2xl border border-amber-200 bg-amber-50 p-6">
             <p className="font-medium text-amber-800">{t("renterApproval.requestSuccess")}</p>
             <p className="mt-2 text-sm text-amber-700">
-              You can close this page. We will email you when you are approved, or check back later.
+              {t("renterApproval.afterSubmitHint")}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
-              <Link href="/rent-a-car" className="text-sm font-medium text-emerald-600 hover:underline">
+              <Link href="/rent-a-car" className="text-sm font-medium text-brand hover:underline">
                 {t("renterApproval.backToCars")}
               </Link>
-              <Link href="/profile" className="text-sm font-medium text-emerald-600 hover:underline">
+              <Link href="/profile" className="text-sm font-medium text-brand hover:underline">
                 {t("renterApproval.backToProfile")}
               </Link>
             </div>
@@ -193,7 +193,7 @@ export default function RenterApprovalPage() {
                   required
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
-                  className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                 />
               </div>
               <div>
@@ -206,7 +206,7 @@ export default function RenterApprovalPage() {
                   value={licenseNumber}
                   onChange={(e) => setLicenseNumber(e.target.value)}
                   placeholder="e.g. 12345678"
-                  className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                 />
               </div>
               <div>
@@ -220,7 +220,7 @@ export default function RenterApprovalPage() {
                   accept={ACCEPT}
                   required
                   onChange={onFileChange}
-                  className="mt-2 block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:px-4 file:py-2 file:font-medium file:text-emerald-700 hover:file:bg-emerald-100"
+                  className="mt-2 block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-brand-light file:px-4 file:py-2 file:font-medium file:text-brand hover:file:bg-brand-light"
                 />
                 {licenseFile && (
                   <p className="mt-1 text-xs text-slate-500">
@@ -234,7 +234,7 @@ export default function RenterApprovalPage() {
                 <div
                   className={`rounded-xl px-4 py-3 text-sm ${
                     message.type === "success"
-                      ? "border border-emerald-200 bg-emerald-50 text-emerald-800"
+                      ? "border border-brand/30 bg-brand-light text-slate-800"
                       : "border border-red-200 bg-red-50 text-red-800"
                   }`}
                   role="alert"
@@ -246,7 +246,7 @@ export default function RenterApprovalPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-xl bg-emerald-600 px-6 py-3 font-medium text-white hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="w-full rounded-xl bg-brand px-6 py-3 font-medium text-white hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? t("renterApproval.requestPending") : t("renterApproval.requestButton")}
               </button>
@@ -255,11 +255,11 @@ export default function RenterApprovalPage() {
         )}
 
         <p className="mt-12 text-center text-sm text-slate-500">
-          <Link href="/profile" className="text-emerald-600 hover:underline">
+          <Link href="/profile" className="text-brand hover:underline">
             {t("renterApproval.backToProfile")}
           </Link>
           {" · "}
-          <Link href="/" className="text-emerald-600 hover:underline">
+          <Link href="/" className="text-brand hover:underline">
             {t("contact.backToHome")}
           </Link>
         </p>

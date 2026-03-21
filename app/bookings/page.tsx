@@ -7,6 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/context/LanguageContext";
+import { BOOKING_STATUS_LABELS } from "@/constants/booking-status";
 
 type BookingItem = {
   id: string;
@@ -34,17 +35,6 @@ type BookingItem = {
     name: string | null;
     email: string | null;
   };
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING_APPROVAL: "Pending",
-  PENDING_PAYMENT: "Awaiting payment",
-  CONFIRMED: "Confirmed",
-  REJECTED: "Rejected",
-  CANCELLED: "Cancelled",
-  COMPLETED: "Completed",
-  PAID: "Paid",
-  DISPUTED: "Disputed",
 };
 
 type ListingRow = {
@@ -315,7 +305,7 @@ function BookingsContent() {
             onClick={() => setTabAndUrl("renter")}
             className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
               tab === "renter"
-                ? "border-emerald-600 text-emerald-600"
+                ? "border-brand text-brand"
                 : "border-transparent text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -326,7 +316,7 @@ function BookingsContent() {
             onClick={() => setTabAndUrl("owner")}
             className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
               tab === "owner"
-                ? "border-emerald-600 text-emerald-600"
+                ? "border-brand text-brand"
                 : "border-transparent text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -337,7 +327,7 @@ function BookingsContent() {
             onClick={() => setTabAndUrl("listings")}
             className={`border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
               tab === "listings"
-                ? "border-emerald-600 text-emerald-600"
+                ? "border-brand text-brand"
                 : "border-transparent text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -347,7 +337,7 @@ function BookingsContent() {
 
         {tab !== "listings" && (
           <p className="mt-3 text-sm text-slate-600">
-            <Link href="/cancellation" className="text-emerald-600 hover:underline">
+            <Link href="/cancellation" className="text-brand hover:underline">
               {t("cancellation.needToCancel")} {t("cancellation.linkText")}
             </Link>
           </p>
@@ -355,25 +345,25 @@ function BookingsContent() {
 
         {paymentSuccess && (
           <div
-            className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6"
+            className="mt-6 rounded-2xl border border-brand/30 bg-brand-light p-6"
             role="alert"
             aria-live="polite"
           >
             <div className="flex items-start gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-2xl text-white" aria-hidden>
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand text-2xl text-white" aria-hidden>
                 ✓
               </span>
               <div>
-                <h2 className="text-xl font-bold text-emerald-900">
+                <h2 className="text-xl font-bold text-slate-900">
                   {t("rent.bookingConfirmedTitle")}
                 </h2>
-                <p className="mt-2 text-emerald-800">
+                <p className="mt-2 text-slate-800">
                   {t("rent.bookingConfirmedMessage")}
                 </p>
                 <button
                   type="button"
                   onClick={() => router.replace("/bookings", { scroll: false })}
-                  className="mt-4 text-sm font-medium text-emerald-700 underline hover:no-underline"
+                  className="mt-4 text-sm font-medium text-brand underline hover:no-underline"
                 >
                   Dismiss
                 </button>
@@ -402,12 +392,12 @@ function BookingsContent() {
         {tab === "listings" && (
           <>
             {stripeSuccess && (
-              <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800" role="status">
+              <p className="mt-4 rounded-lg border border-brand/30 bg-brand-light px-4 py-2 text-sm text-slate-800" role="status">
                 Bank account connected. You can now receive payouts when someone books your car.
               </p>
             )}
             {publishedParam && !stripeSuccess && (
-              <p className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800" role="status">
+              <p className="mt-4 rounded-lg border border-brand/30 bg-brand-light px-4 py-2 text-sm text-slate-800" role="status">
                 Your listing is live. Connect your bank below to get paid when someone books.
               </p>
             )}
@@ -427,7 +417,7 @@ function BookingsContent() {
               </div>
             )}
             {stripeConnected && listings.length > 0 && (
-              <p className="mt-4 text-sm text-emerald-600">
+              <p className="mt-4 text-sm text-brand">
                 Bank connected – you can receive payouts from bookings.
               </p>
             )}
@@ -458,7 +448,7 @@ function BookingsContent() {
                           <span
                             className={
                               listing.status === "ACTIVE"
-                                ? "text-emerald-600"
+                                ? "text-brand"
                                 : listing.status === "DRAFT"
                                   ? "text-amber-600"
                                   : "text-slate-500"
@@ -510,7 +500,7 @@ function BookingsContent() {
                   ? t("bookings.noRequestsRenter")
                   : t("bookings.noRequestsOwner")}{" "}
                 {tab === "renter" && (
-                  <Link href="/rent-a-car" className="text-emerald-600 hover:underline">
+                  <Link href="/rent-a-car" className="text-brand hover:underline">
                     {t("bookings.browseCars")}
                   </Link>
                 )}
@@ -572,13 +562,13 @@ function BookingsContent() {
                             : booking.status === "PENDING_PAYMENT"
                               ? "bg-sky-100 text-sky-800"
                               : booking.status === "CONFIRMED" || booking.status === "COMPLETED" || booking.status === "PAID"
-                                ? "bg-emerald-100 text-emerald-800"
+                                ? "bg-brand-light text-slate-800"
                                 : booking.status === "REJECTED" || booking.status === "CANCELLED"
                                   ? "bg-slate-100 text-slate-700"
                                   : "bg-slate-100 text-slate-700"
                         }`}
                       >
-                        {STATUS_LABELS[booking.status] ?? booking.status}
+                        {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
                       </span>
                     </p>
                   </div>
@@ -594,7 +584,7 @@ function BookingsContent() {
                         type="button"
                         onClick={() => handlePayNow(booking.id)}
                         disabled={isUpdating}
-                        className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+                        className="rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-50"
                       >
                         {isUpdating ? "…" : "Pay now"}
                       </button>
@@ -604,7 +594,7 @@ function BookingsContent() {
                         type="button"
                         onClick={() => updateStatus(booking.id, "CONFIRMED")}
                         disabled={isUpdating}
-                        className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+                        className="rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-50"
                       >
                         {isUpdating ? "…" : "Approve"}
                       </button>
@@ -697,7 +687,7 @@ function BookingsContent() {
                           type="button"
                           onClick={() => handleSubmitReview(booking.id)}
                           disabled={reviewSubmitting}
-                          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-500 disabled:opacity-50"
+                          className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover disabled:opacity-50"
                         >
                           {reviewSubmitting ? "Submitting…" : "Submit review"}
                         </button>

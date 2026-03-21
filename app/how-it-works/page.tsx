@@ -25,7 +25,7 @@ export default function HowItWorksPage() {
           </h2>
           <ol className="mt-6 space-y-6">
             <li className="flex gap-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-light text-lg font-bold text-brand">
                 1
               </span>
               <div>
@@ -34,7 +34,7 @@ export default function HowItWorksPage() {
               </div>
             </li>
             <li className="flex gap-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-light text-lg font-bold text-brand">
                 2
               </span>
               <div>
@@ -43,7 +43,7 @@ export default function HowItWorksPage() {
               </div>
             </li>
             <li className="flex gap-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-light text-lg font-bold text-brand">
                 3
               </span>
               <div>
@@ -52,7 +52,7 @@ export default function HowItWorksPage() {
               </div>
             </li>
             <li className="flex gap-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-light text-lg font-bold text-brand">
                 4
               </span>
               <div>
@@ -69,7 +69,7 @@ export default function HowItWorksPage() {
           </h2>
           <ol className="mt-6 space-y-6">
             <li className="flex gap-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-light text-lg font-bold text-brand">
                 1
               </span>
               <div>
@@ -78,7 +78,7 @@ export default function HowItWorksPage() {
               </div>
             </li>
             <li className="flex gap-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-light text-lg font-bold text-brand">
                 2
               </span>
               <div>
@@ -87,7 +87,7 @@ export default function HowItWorksPage() {
               </div>
             </li>
             <li className="flex gap-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-light text-lg font-bold text-brand">
                 3
               </span>
               <div>
@@ -101,7 +101,7 @@ export default function HowItWorksPage() {
         <div className="mt-12 flex flex-wrap gap-4">
           <Link
             href="/rent-a-car"
-            className="rounded-xl bg-emerald-600 px-5 py-2.5 font-medium text-white hover:bg-emerald-500"
+            className="rounded-xl bg-brand px-5 py-2.5 font-medium text-white hover:bg-brand-hover"
           >
             {t("nav.rentACar")}
           </Link>
@@ -114,7 +114,7 @@ export default function HowItWorksPage() {
         </div>
 
         <p className="mt-12 text-center text-sm text-slate-500">
-          <Link href="/" className="text-emerald-600 hover:underline">
+          <Link href="/" className="text-brand hover:underline">
             {t("contact.backToHome")}
           </Link>
         </p>

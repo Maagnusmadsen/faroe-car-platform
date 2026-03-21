@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { useLanguage } from "@/context/LanguageContext";
 
 function LoginForm() {
@@ -84,7 +85,7 @@ function LoginForm() {
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
           <h1 className="text-2xl font-bold text-slate-900">{t("auth.loginTitle")}</h1>
           {registered && (
-            <p className="mt-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+            <p className="mt-2 rounded-lg bg-brand-light px-3 py-2 text-sm text-brand" role="status">
               {t("auth.signupSuccess")}
             </p>
           )}
@@ -95,7 +96,7 @@ function LoginForm() {
           )}
           <p className="mt-1 text-sm text-slate-500">
             {t("auth.hasAccount")}{" "}
-            <Link href="/signup" className="font-medium text-emerald-600 hover:underline">
+            <Link href="/signup" className="font-medium text-brand hover:underline">
               {t("nav.signUp")}
             </Link>
           </p>
@@ -111,7 +112,7 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("auth.emailPlaceholder")}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                 required
               />
             </div>
@@ -126,7 +127,7 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={t("auth.passwordPlaceholder")}
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
               />
             </div>
             {error && (
@@ -135,14 +136,14 @@ function LoginForm() {
               </p>
             )}
             {magicLinkSent && (
-              <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800" role="status">
+              <p className="rounded-lg bg-brand-light px-3 py-2 text-sm text-brand" role="status">
                 {t("auth.magicLinkSent") || "Check your email for the sign-in link."}
               </p>
             )}
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-emerald-600 px-4 py-3 font-semibold text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50"
+              className="w-full rounded-lg bg-brand px-4 py-3 font-semibold text-white hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50"
             >
               {loading ? "…" : t("auth.loginButton")}
             </button>
@@ -150,13 +151,14 @@ function LoginForm() {
               type="button"
               onClick={handleMagicLink}
               disabled={loading}
-              className="w-full text-sm font-medium text-slate-600 hover:text-emerald-600 disabled:opacity-50"
+              className="w-full text-sm font-medium text-slate-600 hover:text-brand disabled:opacity-50"
             >
               {t("auth.magicLink") || "Send magic link to email"}
             </button>
           </form>
         </div>
       </section>
+      <Footer />
     </main>
   );
 }
@@ -173,6 +175,7 @@ export default function LoginPage() {
               <div className="mt-4 h-4 w-full animate-pulse rounded bg-slate-100" />
             </div>
           </section>
+          <Footer />
         </main>
       }
     >

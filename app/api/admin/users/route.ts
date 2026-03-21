@@ -23,7 +23,7 @@ export async function GET() {
         role: true,
         createdAt: true,
         profile: {
-          select: { verificationStatus: true },
+          select: { verificationStatus: true, licenseImageUrl: true },
         },
       },
       take: 100,
@@ -32,6 +32,7 @@ export async function GET() {
     const usersWithVerification = users.map(({ profile, ...u }) => ({
       ...u,
       verificationStatus: profile?.verificationStatus ?? "UNVERIFIED",
+      licenseImageUrl: profile?.licenseImageUrl ?? null,
     }));
 
     return jsonSuccess(usersWithVerification);

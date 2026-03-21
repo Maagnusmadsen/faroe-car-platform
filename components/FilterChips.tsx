@@ -166,7 +166,7 @@ export default function FilterChips({
             }
             className={`rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
               active
-                ? "bg-emerald-600 text-white hover:bg-emerald-500"
+                ? "bg-brand text-white hover:bg-brand-hover"
                 : "bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
             }`}
           >
@@ -184,7 +184,7 @@ export default function FilterChips({
           aria-label={seatsLabel}
           className={`rounded-full px-4 py-2.5 text-sm font-medium transition-colors ${
             seatsActive
-              ? "bg-emerald-600 text-white hover:bg-emerald-500"
+              ? "bg-brand text-white hover:bg-brand-hover"
               : "bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -211,7 +211,7 @@ export default function FilterChips({
                 }}
                 className={`w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-slate-50 ${
                   filters.seats === value
-                    ? "bg-emerald-50 font-medium text-emerald-700"
+                    ? "bg-brand-light font-medium text-brand"
                     : "text-slate-700"
                 }`}
               >

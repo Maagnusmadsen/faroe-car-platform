@@ -235,22 +235,22 @@ export default function OwnerDashboardPage() {
               </p>
               <ul className="mt-6 space-y-3">
                 <li className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">✓</span>
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-light text-brand">✓</span>
                   <span className="text-slate-700">{t("ownerDashboard.noListingsBenefit1")}</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">✓</span>
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-light text-brand">✓</span>
                   <span className="text-slate-700">{t("ownerDashboard.noListingsBenefit2")}</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">✓</span>
+                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-light text-brand">✓</span>
                   <span className="text-slate-700">{t("ownerDashboard.noListingsBenefit3")}</span>
                 </li>
               </ul>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/list-your-car"
-                  className="inline-flex rounded-xl bg-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-emerald-500"
+                  className="inline-flex rounded-xl bg-brand px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-brand-hover"
                 >
                   {t("ownerDashboard.noListingsCta")}
                 </Link>
@@ -281,7 +281,7 @@ export default function OwnerDashboardPage() {
                   <p className="text-sm font-medium text-slate-500">
                     <MetricTooltip label={t("ownerDashboard.thisMonth")} hint={t("ownerDashboard.thisMonthHint")} />
                   </p>
-                  <p className="mt-1 text-2xl font-bold text-emerald-600">{formatMoney(m!.revenueThisMonth, m!.currency)}</p>
+                  <p className="mt-1 text-2xl font-bold text-brand">{formatMoney(m!.revenueThisMonth, m!.currency)}</p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                   <p className="text-sm font-medium text-slate-500">
@@ -319,7 +319,7 @@ export default function OwnerDashboardPage() {
                   <p className="text-sm font-medium text-slate-500">
                     <MetricTooltip label={t("ownerDashboard.thisYear")} hint={t("ownerDashboard.thisYearHint")} />
                   </p>
-                  <p className="mt-1 text-xl font-semibold text-emerald-600">{formatMoney(m!.revenueThisYear, m!.currency)}</p>
+                  <p className="mt-1 text-xl font-semibold text-brand">{formatMoney(m!.revenueThisYear, m!.currency)}</p>
                 </div>
               </div>
             </section>
@@ -406,7 +406,7 @@ export default function OwnerDashboardPage() {
                     <p className="text-sm text-slate-500">
                       <MetricTooltip label={t("ownerDashboard.youGet")} hint={t("ownerDashboard.youGetHint")} />
                     </p>
-                    <p className="mt-1 text-lg font-semibold text-emerald-600">{formatMoney(fin!.netPayout, "DKK")}</p>
+                    <p className="mt-1 text-lg font-semibold text-brand">{formatMoney(fin!.netPayout, "DKK")}</p>
                   </div>
                 </div>
               </div>
@@ -414,7 +414,7 @@ export default function OwnerDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setShowAccountantSection(!showAccountantSection)}
-                  className="text-sm font-medium text-emerald-600 hover:text-emerald-700"
+                  className="text-sm font-medium text-brand hover:text-brand"
                 >
                   {showAccountantSection ? "▼ " : "▶ "}{t("ownerDashboard.forAccountant")}
                 </button>
@@ -436,7 +436,7 @@ export default function OwnerDashboardPage() {
                       <button
                         type="button"
                         onClick={handleExportCsv}
-                        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                        className="rounded-lg bg-brand px-4 py-2 text-sm font-medium text-white hover:bg-brand-hover"
                       >
                         {t("ownerDashboard.exportCSV")}
                       </button>
@@ -445,7 +445,7 @@ export default function OwnerDashboardPage() {
                       <div><dt className="text-slate-500">Gross revenue</dt><dd className="font-medium">{formatMoney(fin!.grossRevenue, "DKK")}</dd></div>
                       <div><dt className="text-slate-500">Platform fees</dt><dd className="font-medium">−{formatMoney(fin!.platformFees, "DKK")}</dd></div>
                       <div><dt className="text-slate-500">Payment fees (est.)</dt><dd className="font-medium">−{formatMoney(fin!.stripeFeesEstimate, "DKK")}</dd></div>
-                      <div><dt className="text-slate-500">Net payout</dt><dd className="font-medium text-emerald-600">{formatMoney(fin!.netPayout, "DKK")}</dd></div>
+                      <div><dt className="text-slate-500">Net payout</dt><dd className="font-medium text-brand">{formatMoney(fin!.netPayout, "DKK")}</dd></div>
                       <div><dt className="text-slate-500">Est. VAT ({vatPercent}%)</dt><dd className="font-medium">−{formatMoney(fin!.estimatedVatOwed, "DKK")}</dd></div>
                       <div><dt className="text-slate-500">Net before tax</dt><dd className="font-medium">{formatMoney(fin!.netIncomeBeforeTax, "DKK")}</dd></div>
                     </dl>
@@ -464,7 +464,7 @@ export default function OwnerDashboardPage() {
                     key={g}
                     type="button"
                     onClick={() => setChartGroup(g)}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-medium ${chartGroup === g ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
+                    className={`rounded-lg px-3 py-1.5 text-sm font-medium ${chartGroup === g ? "bg-brand text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
                   >
                     {g === "month" ? t("ownerDashboard.monthly") : g === "week" ? t("ownerDashboard.weekly") : t("ownerDashboard.daily")}
                   </button>
@@ -479,7 +479,7 @@ export default function OwnerDashboardPage() {
                       title={`${r.period}: ${formatMoney(r.revenue, "DKK")} (${r.rentalCount} ${r.rentalCount === 1 ? "rental" : "rentals"})`}
                     >
                       <div
-                        className="w-full min-w-[4px] rounded-t bg-emerald-500 transition hover:bg-emerald-600"
+                        className="w-full min-w-[4px] rounded-t bg-brand transition hover:bg-brand"
                         style={{ height: maxRevenue > 0 ? `${(r.revenue / maxRevenue) * 100}%` : "2px" }}
                       />
                       <span className="hidden text-[10px] text-slate-500 sm:block">{r.period.slice(-2)}</span>
@@ -570,7 +570,7 @@ export default function OwnerDashboardPage() {
                           title={`${m.month}: ${m.rentalDays} days`}
                         >
                           <div
-                            className="w-full min-w-[2px] rounded-t bg-emerald-400"
+                            className="w-full min-w-[2px] rounded-t bg-brand"
                             style={{
                               height: Math.max(4, (m.rentalDays / Math.max(1, Math.max(...demand.monthlyTrend.map((x) => x.rentalDays)))) * 100),
                             }}

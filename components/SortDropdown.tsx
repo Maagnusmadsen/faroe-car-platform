@@ -42,7 +42,7 @@ export default function SortDropdown({ value, onChange }: SortDropdownProps) {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+        className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
       >
         <span>{t("rent.sortBy")}: {t(currentLabel)}</span>
         <span className="text-slate-400" aria-hidden>
@@ -66,7 +66,7 @@ export default function SortDropdown({ value, onChange }: SortDropdownProps) {
               }}
               className={`w-full px-4 py-2.5 text-left text-sm transition-colors hover:bg-slate-50 ${
                 value === opt.value
-                  ? "bg-emerald-50 font-medium text-emerald-700"
+                  ? "bg-brand-light font-medium text-brand"
                   : "text-slate-700"
               }`}
             >

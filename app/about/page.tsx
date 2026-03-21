@@ -55,7 +55,7 @@ export default function AboutPage() {
         </section>
 
         <p className="mt-12 text-center text-sm text-slate-500">
-          <Link href="/" className="text-emerald-600 hover:underline">
+          <Link href="/" className="text-brand hover:underline">
             {t("contact.backToHome")}
           </Link>
         </p>

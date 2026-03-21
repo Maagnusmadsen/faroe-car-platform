@@ -23,7 +23,7 @@ export default function CarMarkerPopup({ car }: CarMarkerProps) {
         <p className="text-sm text-slate-500">{car.location}</p>
         <Link
           href={`/rent-a-car/${car.id}`}
-          className="mt-3 block w-full rounded-lg bg-emerald-600 px-3 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-emerald-500"
+          className="mt-3 block w-full rounded-lg bg-brand px-3 py-2 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-hover"
         >
           {t("rent.viewDetails")}
         </Link>

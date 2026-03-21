@@ -22,7 +22,7 @@ interface SearchBarProps {
 }
 
 const inputClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500";
+  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand";
 
 export default function SearchBar({
   pickupLocation,
@@ -84,7 +84,7 @@ export default function SearchBar({
         <button
           type="button"
           onClick={onSearch}
-          className="w-full rounded-xl bg-emerald-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-emerald-500"
+          className="w-full rounded-xl bg-brand px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-hover"
         >
           {t("rent.search")}
         </button>

@@ -213,7 +213,7 @@ export default function Step4Photos({ data, errors, onChange, draftId }: Step4Pr
                 )}
               </div>
               {index === 0 && (
-                <span className="absolute left-2 top-2 rounded bg-emerald-600 px-2 py-0.5 text-xs text-white">
+                <span className="absolute left-2 top-2 rounded bg-brand px-2 py-0.5 text-xs text-white">
                   {t("list.wizardCover")}
                 </span>
               )}

@@ -17,5 +17,4 @@
   <path d="M1920 1080 L1400 450 L700 1080 Z" fill="#1e293b"/>
   <!-- Road silhouette -->
   <path d="M-50 1080 L400 700 L960 500 L1520 700 L1970 1080 Z" fill="url(#road)" opacity="0.6"/>
-  <text x="960" y="540" font-family="system-ui,sans-serif" font-size="24" fill="#94a3b8" text-anchor="middle">Replace with hero-bg.jpg (Faroe Islands, road, car)</text>
 </svg>

@@ -59,15 +59,15 @@ export default function CancellationPage() {
         </div>
 
         <p className="mt-12 text-center text-sm text-slate-500">
-          <Link href="/contact" className="text-emerald-600 hover:underline">
+          <Link href="/contact" className="text-brand hover:underline">
             {t("footer.contact")}
           </Link>
           {" · "}
-          <Link href="/terms" className="text-emerald-600 hover:underline">
+          <Link href="/terms" className="text-brand hover:underline">
             {t("footer.termsPrivacy")}
           </Link>
           {" · "}
-          <Link href="/" className="text-emerald-600 hover:underline">
+          <Link href="/" className="text-brand hover:underline">
             {t("contact.backToHome")}
           </Link>
         </p>

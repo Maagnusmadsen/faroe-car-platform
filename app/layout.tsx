@@ -15,9 +15,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FaroeRent – Rent a Car from Locals on the Faroe Islands",
+  title: {
+    default: "RentLocal",
+    template: "%s | RentLocal",
+  },
   description:
-    "Explore the Faroe Islands with a car from local owners. Rent or list your car on our peer-to-peer car sharing platform.",
+    "RentLocal connects travellers with local car owners across the Faroe Islands. Rent or list your car on a clean, modern peer-to-peer car sharing platform.",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "RentLocal",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({
@@ -30,6 +41,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var t=localStorage.getItem("rentlocal-theme");var d=window.matchMedia("(prefers-color-scheme: dark)").matches;var useDark=t==="dark"||(t!=="light"&&d);document.documentElement.classList.toggle("dark",!!useDark);})();`,
+          }}
+        />
         <Providers>
           <LanguageProvider>{children}</LanguageProvider>
         </Providers>

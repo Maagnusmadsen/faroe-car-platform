@@ -6,7 +6,14 @@ import { updateSession } from "@/lib/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PROTECTED_PREFIXES = ["/list-your-car", "/profile"];
+const PROTECTED_PREFIXES = [
+  "/list-your-car",
+  "/profile",
+  "/bookings",
+  "/owner",
+  "/admin",
+  "/renter-approval",
+];
 
 function isProtected(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));

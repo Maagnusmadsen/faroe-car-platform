@@ -15,7 +15,7 @@ export default function FilterToggle({ expanded, onToggle }: FilterToggleProps) 
       type="button"
       onClick={onToggle}
       aria-expanded={expanded}
-      className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 py-3 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+      className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 py-3 text-sm font-medium text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-100 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
     >
       <span>{expanded ? t("rent.fewerFilters") : t("rent.moreFilters")}</span>
       <svg

@@ -9,6 +9,7 @@ import { requireAuth, requireAdmin } from "@/auth/guards";
 import { jsonSuccess, jsonError, handleApiError } from "@/lib/utils/api-response";
 import { prisma } from "@/db";
 import { notFound } from "@/lib/utils/errors";
+import { notifyRenterApproved } from "@/lib/notifications-server";
 
 const ALLOWED = new Set(["VERIFIED", "PENDING", "UNVERIFIED"]);
 
@@ -38,6 +39,12 @@ export async function PATCH(
       where: { userId },
       data: { verificationStatus: status as "VERIFIED" | "PENDING" | "UNVERIFIED" },
     });
+
+    if (status === "VERIFIED") {
+      await notifyRenterApproved(userId).catch(() => {
+        // ignore notification failure
+      });
+    }
 
     return jsonSuccess({ verificationStatus: status });
   } catch (err) {

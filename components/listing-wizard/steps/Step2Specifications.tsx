@@ -43,7 +43,7 @@ export default function Step2Specifications({ data, errors, onChange }: Step2Pro
                 name="transmission"
                 checked={data.transmission === value}
                 onChange={() => onChange({ transmission: value })}
-                className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                className="h-4 w-4 border-slate-300 text-brand focus:ring-brand"
               />
               <span className="text-sm text-slate-700">{t(labelKey)}</span>
             </label>
@@ -63,7 +63,7 @@ export default function Step2Specifications({ data, errors, onChange }: Step2Pro
                 name="fuelType"
                 checked={data.fuelType === value}
                 onChange={() => onChange({ fuelType: value })}
-                className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                className="h-4 w-4 border-slate-300 text-brand focus:ring-brand"
               />
               <span className="text-sm text-slate-700">{t(labelKey)}</span>
             </label>
@@ -81,7 +81,7 @@ export default function Step2Specifications({ data, errors, onChange }: Step2Pro
                 name="seats"
                 checked={data.seats === num}
                 onChange={() => onChange({ seats: num })}
-                className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                className="h-4 w-4 border-slate-300 text-brand focus:ring-brand"
               />
               <span className="text-sm text-slate-700">{num}</span>
             </label>
@@ -99,7 +99,7 @@ export default function Step2Specifications({ data, errors, onChange }: Step2Pro
                 name="vehicleType"
                 checked={data.vehicleType === value}
                 onChange={() => onChange({ vehicleType: value })}
-                className="h-4 w-4 border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                className="h-4 w-4 border-slate-300 text-brand focus:ring-brand"
               />
               <span className="text-sm text-slate-700">{t(labelKey)}</span>
             </label>
@@ -115,7 +115,7 @@ export default function Step2Specifications({ data, errors, onChange }: Step2Pro
             type="checkbox"
             checked={data.is4x4}
             onChange={(e) => onChange({ is4x4: e.target.checked })}
-            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+            className="h-4 w-4 rounded border-slate-300 text-brand focus:ring-brand"
           />
           <span className="text-sm font-medium text-slate-700">{t("list.wizard4x4")}</span>
         </label>
