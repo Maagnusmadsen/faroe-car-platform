@@ -76,13 +76,13 @@ export default function SignupPage() {
           </p>
           {confirmEmail && (
             <div className="mt-2 space-y-2 rounded-lg bg-brand-light px-3 py-3 text-sm text-brand" role="status">
-              <p>{t("auth.confirmEmail") || "Check your email to confirm your account, then log in."}</p>
+              <p>Please check your email to confirm your account.</p>
               <p className="text-brand-hover">
-                Fik du ingen mail? (fx på localhost) Prøv at{" "}
+                Didn&apos;t receive it? You can still try{" "}
                 <Link href="/login" className="font-medium underline">
-                  logge ind
+                  logging in
                 </Link>{" "}
-                med din adgangskode – kontoen er ofte allerede aktiv.
+                — you may already be set up.
               </p>
             </div>
           )}
