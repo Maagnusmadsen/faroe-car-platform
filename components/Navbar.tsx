@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/context/LanguageContext";
 import { Logo } from "@/components/Logo";
@@ -47,17 +48,56 @@ export default function Navbar({ variant = "light" }: NavbarProps) {
   }, [mobileMenuOpen]);
 
   const isSolid = !isTransparentVariant || scrolled;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const mobileMenu = mobileMenuOpen && mounted && (
+    <>
+      <div
+        className="fixed inset-0 z-[9998] bg-slate-900/60 sm:hidden"
+        aria-hidden
+        onClick={() => setMobileMenuOpen(false)}
+      />
+      <div
+        className="fixed inset-y-0 right-0 z-[9999] flex w-full max-w-[320px] flex-col border-l border-slate-200 bg-white shadow-2xl sm:hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-3">
+          <span className="text-sm font-semibold text-slate-700">{t("nav.openMenu")}</span>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700"
+            aria-label={t("nav.closeMenu")}
+          >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <nav className="flex-1 overflow-y-auto p-4">
+          <NavLinks
+            variant="light"
+            mobile
+            onNavigate={() => setMobileMenuOpen(false)}
+          />
+        </nav>
+      </div>
+    </>
+  );
 
   return (
     <header
       className={`sticky top-0 z-50 w-full transition-[background-color,border-color] duration-300 ease-out ${
         isSolid
           ? "border-b border-border bg-white"
-          : "bg-black/40 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-sm"
+          : "bg-transparent backdrop-blur-sm max-sm:bg-black/25 max-sm:backdrop-blur-md"
       }`}
     >
-      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <div className="mr-3 flex min-w-0 shrink-0">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="mr-2 flex min-w-0 shrink-0 sm:mr-3">
           <Logo
             variant={isSolid ? "dark" : "light"}
             href="/"
@@ -75,7 +115,7 @@ export default function Navbar({ variant = "light" }: NavbarProps) {
           <button
             type="button"
             onClick={() => setMobileMenuOpen((o) => !o)}
-            className={`-mr-2 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand ${
+            className={`relative z-[60] -mr-2 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand ${
               isSolid ? "text-slate-600 hover:bg-slate-100" : "text-white hover:bg-white/20"
             }`}
             aria-expanded={mobileMenuOpen}
@@ -94,29 +134,8 @@ export default function Navbar({ variant = "light" }: NavbarProps) {
         </div>
       </nav>
 
-      {/* Mobile menu overlay */}
-      {mobileMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-slate-900/50 sm:hidden"
-            aria-hidden
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          <div
-            className="fixed right-0 top-0 z-50 flex h-full w-[min(100%,320px)] flex-col border-l border-slate-200 bg-white shadow-xl sm:hidden"
-            role="dialog"
-            aria-label="Navigation menu"
-          >
-            <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-4 pt-16">
-              <NavLinks
-                variant={isSolid ? "light" : variant}
-                mobile
-                onNavigate={() => setMobileMenuOpen(false)}
-              />
-            </div>
-          </div>
-        </>
-      )}
+      {/* Mobile menu — rendered via portal to avoid stacking/overflow issues */}
+      {mobileMenu && createPortal(mobileMenu, document.body)}
     </header>
   );
 }
@@ -202,10 +221,6 @@ function NavLinks({
     onNavigate?.();
   };
 
-  const footerLinkClass = mobile
-    ? "flex min-h-[44px] items-center rounded-lg px-4 py-3 -mx-1 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-    : "";
-
   return wrap(
     <>
       <Link href="/rent-a-car" className={getLinkClass("/rent-a-car")} onClick={handleNavigate}>
@@ -252,29 +267,6 @@ function NavLinks({
           </Link>
           <Link href="/signup" className={buttonClass} onClick={handleNavigate}>
             {t("nav.signUp")}
-          </Link>
-        </>
-      )}
-      {mobile && (
-        <>
-          <div className="my-4 border-t border-slate-200" />
-          <Link href="/about" className={footerLinkClass} onClick={handleNavigate}>
-            {t("footer.about")}
-          </Link>
-          <Link href="/how-it-works" className={footerLinkClass} onClick={handleNavigate}>
-            {t("footer.howItWorks")}
-          </Link>
-          <Link href="/faq" className={footerLinkClass} onClick={handleNavigate}>
-            {t("footer.faq")}
-          </Link>
-          <Link href="/contact" className={footerLinkClass} onClick={handleNavigate}>
-            {t("footer.contact")}
-          </Link>
-          <Link href="/cancellation" className={footerLinkClass} onClick={handleNavigate}>
-            {t("footer.cancellation")}
-          </Link>
-          <Link href="/terms" className={footerLinkClass} onClick={handleNavigate}>
-            {t("footer.termsPrivacy")}
           </Link>
         </>
       )}

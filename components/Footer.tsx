@@ -24,51 +24,102 @@ export default function Footer() {
       />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-[60px] lg:px-8">
-        {/* Section 1: Navigation links */}
-        <nav className="flex flex-col items-center gap-0 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-x-8 sm:gap-y-4 sm:pb-10">
-          <Link
-            href="/about"
-            className="flex min-h-[44px] w-full max-w-[200px] items-center justify-center text-sm font-medium text-white transition-colors hover:text-brand max-sm:border-b max-sm:border-white/10 sm:max-w-none sm:border-0"
-          >
-            {t("footer.about")}
-          </Link>
-          <Link
-            href="/how-it-works"
-            className="flex min-h-[44px] w-full max-w-[200px] items-center justify-center text-sm font-medium text-white transition-colors hover:text-brand max-sm:border-b max-sm:border-white/10 sm:max-w-none sm:border-0"
-          >
-            {t("footer.howItWorks")}
-          </Link>
-          <Link
-            href="/faq"
-            className="flex min-h-[44px] w-full max-w-[200px] items-center justify-center text-sm font-medium text-white transition-colors hover:text-brand max-sm:border-b max-sm:border-white/10 sm:max-w-none sm:border-0"
-          >
-            {t("footer.faq")}
-          </Link>
-          <Link
-            href="/contact"
-            className="flex min-h-[44px] w-full max-w-[200px] items-center justify-center text-sm font-medium text-white transition-colors hover:text-brand max-sm:border-b max-sm:border-white/10 sm:max-w-none sm:border-0"
-          >
-            {t("footer.contact")}
-          </Link>
-          <Link
-            href="/cancellation"
-            className="flex min-h-[44px] w-full max-w-[200px] items-center justify-center text-sm font-medium text-white transition-colors hover:text-brand max-sm:border-b max-sm:border-white/10 sm:max-w-none sm:border-0"
-          >
-            {t("footer.cancellation")}
-          </Link>
-          <Link
-            href="/terms"
-            className="flex min-h-[44px] w-full max-w-[200px] items-center justify-center text-sm font-medium text-white transition-colors hover:text-brand max-sm:border-b max-sm:border-white/10 sm:max-w-none sm:border-0"
-          >
-            {t("footer.termsPrivacy")}
-          </Link>
-        </nav>
+        {/* Mobile: centered, stacked */}
+        <div className="flex flex-col items-center md:hidden">
+          <nav className="flex w-full max-w-[200px] flex-col gap-0">
+            <Link
+              href="/about"
+              className="flex min-h-[44px] items-center justify-center border-b border-white/10 text-sm font-medium text-white transition-colors hover:text-brand"
+            >
+              {t("footer.about")}
+            </Link>
+            <Link
+              href="/how-it-works"
+              className="flex min-h-[44px] items-center justify-center border-b border-white/10 text-sm font-medium text-white transition-colors hover:text-brand"
+            >
+              {t("footer.howItWorks")}
+            </Link>
+            <Link
+              href="/faq"
+              className="flex min-h-[44px] items-center justify-center border-b border-white/10 text-sm font-medium text-white transition-colors hover:text-brand"
+            >
+              {t("footer.faq")}
+            </Link>
+            <Link
+              href="/contact"
+              className="flex min-h-[44px] items-center justify-center border-b border-white/10 text-sm font-medium text-white transition-colors hover:text-brand"
+            >
+              {t("footer.contact")}
+            </Link>
+            <Link
+              href="/cancellation"
+              className="flex min-h-[44px] items-center justify-center border-b border-white/10 text-sm font-medium text-white transition-colors hover:text-brand"
+            >
+              {t("footer.cancellation")}
+            </Link>
+            <Link
+              href="/terms"
+              className="flex min-h-[44px] items-center justify-center border-b border-white/10 text-sm font-medium text-white transition-colors hover:text-brand"
+            >
+              {t("footer.termsPrivacy")}
+            </Link>
+          </nav>
+          <div className="mt-8 flex flex-col items-center gap-4 border-t border-white/20 pt-8">
+            <Logo href="/" responsive="footer" variant="light" />
+            <p
+              className="text-center text-xs leading-relaxed"
+              style={{ color: "rgba(255,255,255,0.7)" }}
+            >
+              © {new Date().getFullYear()} RentLocal. {t("footer.copyright")}
+            </p>
+          </div>
+        </div>
 
-        {/* Section 2: Logo + copyright */}
-        <div className="flex flex-col items-center gap-4 border-t border-white/20 pt-8 sm:gap-6 sm:pt-10">
-          <Logo href="/" responsive="footer" variant="light" />
+        {/* Desktop: logo left, links right, copyright bottom */}
+        <div className="hidden md:block">
+          <div className="flex flex-wrap items-start justify-between gap-8">
+            <Logo href="/" responsive="footer" variant="light" />
+            <nav className="flex flex-wrap items-center gap-x-8 gap-y-2">
+              <Link
+                href="/about"
+                className="text-sm font-medium text-white transition-colors hover:text-brand"
+              >
+                {t("footer.about")}
+              </Link>
+              <Link
+                href="/how-it-works"
+                className="text-sm font-medium text-white transition-colors hover:text-brand"
+              >
+                {t("footer.howItWorks")}
+              </Link>
+              <Link
+                href="/faq"
+                className="text-sm font-medium text-white transition-colors hover:text-brand"
+              >
+                {t("footer.faq")}
+              </Link>
+              <Link
+                href="/contact"
+                className="text-sm font-medium text-white transition-colors hover:text-brand"
+              >
+                {t("footer.contact")}
+              </Link>
+              <Link
+                href="/cancellation"
+                className="text-sm font-medium text-white transition-colors hover:text-brand"
+              >
+                {t("footer.cancellation")}
+              </Link>
+              <Link
+                href="/terms"
+                className="text-sm font-medium text-white transition-colors hover:text-brand"
+              >
+                {t("footer.termsPrivacy")}
+              </Link>
+            </nav>
+          </div>
           <p
-            className="text-center text-xs leading-relaxed sm:text-sm"
+            className="mt-10 border-t border-white/20 pt-8 text-center text-sm"
             style={{ color: "rgba(255,255,255,0.7)" }}
           >
             © {new Date().getFullYear()} RentLocal. {t("footer.copyright")}
