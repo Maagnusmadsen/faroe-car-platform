@@ -81,8 +81,8 @@ function LoginForm() {
   return (
     <main className="min-h-screen bg-slate-50">
       <Navbar />
-      <section className="mx-auto flex max-w-md flex-col justify-center px-4 py-16">
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <section className="mx-auto flex max-w-md flex-col justify-center px-4 py-12 sm:py-16">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <h1 className="text-2xl font-bold text-slate-900">{t("auth.loginTitle")}</h1>
           {registered && (
             <p className="mt-2 rounded-lg bg-brand-light px-3 py-2 text-sm text-brand" role="status">
@@ -143,7 +143,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-brand px-4 py-3 font-semibold text-white hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50"
+              className="flex min-h-[48px] w-full items-center justify-center rounded-lg bg-brand px-4 py-3 font-semibold text-white hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50"
             >
               {loading ? "…" : t("auth.loginButton")}
             </button>
@@ -151,7 +151,7 @@ function LoginForm() {
               type="button"
               onClick={handleMagicLink}
               disabled={loading}
-              className="w-full text-sm font-medium text-slate-600 hover:text-brand disabled:opacity-50"
+              className="flex min-h-[44px] w-full items-center justify-center text-sm font-medium text-slate-600 hover:text-brand disabled:opacity-50"
             >
               {t("auth.magicLink") || "Send magic link to email"}
             </button>

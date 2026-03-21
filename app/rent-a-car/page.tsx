@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
 import dynamic from "next/dynamic";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -27,8 +28,9 @@ const CarMap = dynamic(() => import("@/components/CarMap"), {
   ),
 });
 
-export default function RentACarPage() {
+function RentACarContent() {
   const { t } = useLanguage();
+  const searchParams = useSearchParams();
   const { status: authStatus } = useAuth();
   const [pickupLocation, setPickupLocation] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -36,6 +38,23 @@ export default function RentACarPage() {
   const [appliedLocation, setAppliedLocation] = useState("");
   const [appliedStartDate, setAppliedStartDate] = useState("");
   const [appliedEndDate, setAppliedEndDate] = useState("");
+  const [urlInitialized, setUrlInitialized] = useState(false);
+
+  useEffect(() => {
+    if (urlInitialized) return;
+    const loc = searchParams.get("location") ?? "";
+    const start = searchParams.get("startDate") ?? "";
+    const end = searchParams.get("endDate") ?? "";
+    if (loc || start || end) {
+      setPickupLocation(loc);
+      setStartDate(start);
+      setEndDate(end);
+      setAppliedLocation(loc);
+      setAppliedStartDate(start);
+      setAppliedEndDate(end);
+    }
+    setUrlInitialized(true);
+  }, [searchParams, urlInitialized]);
   const [filters, setFilters] = useState<CarFilters>(defaultCarFilters);
   const [sort, setSort] = useState<SortOption>("newest");
   const [showMapView, setShowMapView] = useState(false);
@@ -112,8 +131,9 @@ export default function RentACarPage() {
   );
 
   useEffect(() => {
+    if (!urlInitialized) return;
     runSearch(1, false);
-  }, [runSearch]);
+  }, [runSearch, urlInitialized]);
 
   // Load favorite state for currently listed cars when authenticated
   useEffect(() => {
@@ -197,13 +217,13 @@ export default function RentACarPage() {
       />
 
       {/* How it works */}
-      <section className="border-t border-slate-200 bg-white px-4 py-12 sm:px-6 lg:px-8">
+      <section className="border-t border-slate-200 bg-white px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+          <h2 className="text-center text-lg font-bold tracking-tight text-slate-900 max-sm:text-balance sm:text-2xl">
             {t("rent.howTitle")}
           </h2>
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
-            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 text-center">
+          <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-3 sm:gap-6">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center sm:p-5">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-base font-bold text-brand">
                 1
               </span>
@@ -212,7 +232,7 @@ export default function RentACarPage() {
               </h3>
               <p className="mt-1.5 text-sm text-slate-600">{t("rent.howStep1Text")}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 text-center">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center sm:p-5">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-base font-bold text-brand">
                 2
               </span>
@@ -221,7 +241,7 @@ export default function RentACarPage() {
               </h3>
               <p className="mt-1.5 text-sm text-slate-600">{t("rent.howStep2Text")}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 text-center">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-center sm:p-5">
               <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-base font-bold text-brand">
                 3
               </span>
@@ -234,7 +254,7 @@ export default function RentACarPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <FilterBar
             filters={filters}
@@ -291,7 +311,7 @@ export default function RentACarPage() {
                   type="button"
                   onClick={handleLoadMore}
                   disabled={loading}
-                  className="rounded-xl bg-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-300 disabled:opacity-50"
+                  className="flex min-h-[48px] items-center justify-center rounded-xl bg-slate-200 px-6 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-300 disabled:opacity-50"
                 >
                   {loading ? t("rent.loading") : t("rent.loadMore")}
                 </button>
@@ -311,5 +331,13 @@ export default function RentACarPage() {
 
       <Footer />
     </main>
+  );
+}
+
+export default function RentACarPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-50" />}>
+      <RentACarContent />
+    </Suspense>
   );
 }

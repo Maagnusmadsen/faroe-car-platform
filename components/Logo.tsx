@@ -13,7 +13,7 @@ interface LogoProps {
 }
 
 const sizePresets = {
-  navbar: "h-[60px] w-auto md:h-[72px]",
+  navbar: "h-[48px] w-auto sm:h-[60px] md:h-[72px]",
   hero: "h-12 w-auto md:h-14",
   footer: "h-10 w-auto md:h-12",
   default: "h-8 w-auto md:h-9",

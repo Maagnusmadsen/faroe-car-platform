@@ -56,7 +56,7 @@ export default function FilterBar({
       <button
         type="button"
         onClick={onMoreFiltersClick}
-        className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
+        className="flex min-h-[44px] shrink-0 items-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
       >
         {t("rent.moreFilters")}
       </button>
@@ -64,7 +64,7 @@ export default function FilterBar({
         <button
           type="button"
           onClick={() => onFiltersChange(defaultCarFilters)}
-          className="rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 underline-offset-2 hover:underline"
+          className="flex min-h-[44px] shrink-0 items-center rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 underline-offset-2 hover:underline"
         >
           {t("rent.resetFilters")}
         </button>

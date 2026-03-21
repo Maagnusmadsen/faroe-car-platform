@@ -50,7 +50,7 @@ export default function CarCard({
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       </div>
-      <div className="flex flex-col p-5">
+      <div className="flex flex-col p-4 sm:p-5">
         <div className="flex items-start justify-between gap-2">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">{name}</h3>
@@ -59,7 +59,7 @@ export default function CarCard({
             <button
               type="button"
               onClick={() => onToggleFavorite(car.id)}
-              className="text-sm text-slate-500 hover:text-brand"
+              className="-mr-2 flex min-h-[44px] min-w-[44px] items-center justify-center text-lg text-slate-500 hover:text-brand"
               aria-label={isFavorite ? t("rent.removeFavorite") : t("rent.addFavorite")}
             >
               {isFavorite ? "★" : "☆"}
@@ -78,7 +78,7 @@ export default function CarCard({
         </p>
         <Link
           href={href}
-          className="mt-4 block w-full rounded-xl bg-brand py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-brand"
+          className="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-xl bg-brand py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-brand"
         >
           {t("rent.viewDetails")}
         </Link>

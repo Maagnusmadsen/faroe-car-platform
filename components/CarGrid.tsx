@@ -25,14 +25,14 @@ export default function CarGrid({
 
   if (cars.length === 0) {
     return (
-      <p className="rounded-2xl border border-slate-200 bg-white p-12 text-center text-slate-600">
+      <p className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-600 sm:p-12">
         {t("rent.noCarsMatch")}
       </p>
     );
   }
 
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {cars.map((car) => (
         <CarCard
           key={car.id}

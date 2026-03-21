@@ -84,7 +84,7 @@ export default function SearchBar({
         <button
           type="button"
           onClick={onSearch}
-          className="w-full rounded-xl bg-brand px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-hover"
+          className="flex min-h-[48px] w-full items-center justify-center rounded-xl bg-brand px-4 py-3 font-semibold text-white transition-colors hover:bg-brand-hover"
         >
           {t("rent.search")}
         </button>

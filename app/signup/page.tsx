@@ -62,8 +62,8 @@ export default function SignupPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       <Navbar />
-      <section className="mx-auto flex max-w-md flex-col justify-center px-4 py-16">
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+      <section className="mx-auto flex max-w-md flex-col justify-center px-4 py-12 sm:py-16">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <h1 className="text-2xl font-bold text-slate-900">{t("auth.signupTitle")}</h1>
           <p className="mt-1 text-sm text-slate-500">
             {t("auth.noAccount")}{" "}
@@ -137,7 +137,7 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-lg bg-brand px-4 py-3 font-semibold text-white hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50"
+              className="flex min-h-[48px] w-full items-center justify-center rounded-lg bg-brand px-4 py-3 font-semibold text-white hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50"
             >
               {loading ? "…" : t("auth.signupButton")}
             </button>

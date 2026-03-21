@@ -35,6 +35,17 @@ export default function Navbar({ variant = "light" }: NavbarProps) {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   const isSolid = !isTransparentVariant || scrolled;
 
   return (
@@ -42,7 +53,7 @@ export default function Navbar({ variant = "light" }: NavbarProps) {
       className={`sticky top-0 z-50 w-full transition-[background-color,border-color] duration-300 ease-out ${
         isSolid
           ? "border-b border-border bg-white"
-          : "bg-transparent backdrop-blur-sm"
+          : "bg-black/40 backdrop-blur-md sm:bg-transparent sm:backdrop-blur-sm"
       }`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
@@ -92,11 +103,11 @@ export default function Navbar({ variant = "light" }: NavbarProps) {
             onClick={() => setMobileMenuOpen(false)}
           />
           <div
-            className="fixed right-0 top-0 z-50 h-full w-full max-w-xs border-l border-slate-200 bg-white shadow-xl sm:hidden"
+            className="fixed right-0 top-0 z-50 flex h-full w-[min(100%,320px)] flex-col border-l border-slate-200 bg-white shadow-xl sm:hidden"
             role="dialog"
             aria-label="Navigation menu"
           >
-            <div className="flex flex-col gap-1 p-4 pt-16">
+            <div className="flex flex-1 flex-col gap-1 overflow-y-auto p-4 pt-16">
               <NavLinks
                 variant={isSolid ? "light" : variant}
                 mobile
@@ -191,6 +202,10 @@ function NavLinks({
     onNavigate?.();
   };
 
+  const footerLinkClass = mobile
+    ? "flex min-h-[44px] items-center rounded-lg px-4 py-3 -mx-1 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+    : "";
+
   return wrap(
     <>
       <Link href="/rent-a-car" className={getLinkClass("/rent-a-car")} onClick={handleNavigate}>
@@ -237,6 +252,29 @@ function NavLinks({
           </Link>
           <Link href="/signup" className={buttonClass} onClick={handleNavigate}>
             {t("nav.signUp")}
+          </Link>
+        </>
+      )}
+      {mobile && (
+        <>
+          <div className="my-4 border-t border-slate-200" />
+          <Link href="/about" className={footerLinkClass} onClick={handleNavigate}>
+            {t("footer.about")}
+          </Link>
+          <Link href="/how-it-works" className={footerLinkClass} onClick={handleNavigate}>
+            {t("footer.howItWorks")}
+          </Link>
+          <Link href="/faq" className={footerLinkClass} onClick={handleNavigate}>
+            {t("footer.faq")}
+          </Link>
+          <Link href="/contact" className={footerLinkClass} onClick={handleNavigate}>
+            {t("footer.contact")}
+          </Link>
+          <Link href="/cancellation" className={footerLinkClass} onClick={handleNavigate}>
+            {t("footer.cancellation")}
+          </Link>
+          <Link href="/terms" className={footerLinkClass} onClick={handleNavigate}>
+            {t("footer.termsPrivacy")}
           </Link>
         </>
       )}
