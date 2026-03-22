@@ -27,7 +27,7 @@ const EVENT_CONFIG: Record<
   "review.requested": { channels: ["IN_APP", "EMAIL"], critical: false, userCanDisable: true },
   "listing.published": { channels: ["IN_APP"], critical: false, userCanDisable: true },
   "renter.approved": { channels: ["IN_APP", "EMAIL"], critical: true, userCanDisable: false },
-  "user.welcome": { channels: ["IN_APP"], critical: false, userCanDisable: false },
+  "user.welcome": { channels: ["IN_APP", "EMAIL"], critical: false, userCanDisable: false },
 };
 
 export function getEventConfig(type: EventType): EventConfig {

@@ -269,9 +269,21 @@ export function renderEmailTemplate(
       };
     }
 
+    case "user.welcome": {
+      const content = `
+        <h1 class="headline">Welcome to RentLocal</h1>
+        <p class="body">Thanks for signing up! You can now browse cars, make bookings, and rent vehicles in the Faroe Islands.</p>
+        ${ctaButton(`${appUrl}/rent-a-car`, "Browse cars")}
+      `;
+      return {
+        subject: "Welcome to RentLocal",
+        html: emailLayout(content, "Welcome"),
+        text: "Welcome to RentLocal! Browse cars and start your rental: " + `${appUrl}/rent-a-car`,
+      };
+    }
+
     case "listing.published":
     case "renter.approved":
-    case "user.welcome":
       return null;
 
     default:
