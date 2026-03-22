@@ -58,9 +58,15 @@ function LoginForm() {
             </p>
           )}
           {errorParam === "auth_callback" && (
-            <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800" role="status">
-              {t("auth.errorGeneric") || "Something went wrong. Please try again."}
-            </p>
+            <div className="mt-2 space-y-2 rounded-lg bg-amber-50 px-3 py-3 text-sm text-amber-800" role="status">
+              <p className="font-medium">
+                {t("auth.errorGeneric") || "Something went wrong. Please try again."}
+              </p>
+              <p>
+                {t("auth.errorCallbackHint") ||
+                  "On mobile, the verification link may open in your email app's browser. Try: long-press the link → «Open in Safari» or «Open in Chrome», or copy the link and paste it into your browser."}
+              </p>
+            </div>
           )}
           <p className="mt-1 text-sm text-slate-500">
             Don&apos;t have an account?{" "}

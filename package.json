@@ -18,7 +18,8 @@
     "db:delete-all-listings": "tsx scripts/delete-all-listings.ts",
     "db:make-admin": "tsx scripts/make-admin.ts",
     "db:reset": "tsx scripts/reset-database.ts",
-    "logo:png": "tsx scripts/convert-logo-to-png.ts"
+    "logo:png": "tsx scripts/convert-logo-to-png.ts",
+    "logo:base64": "tsx scripts/logo-base64-for-email.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

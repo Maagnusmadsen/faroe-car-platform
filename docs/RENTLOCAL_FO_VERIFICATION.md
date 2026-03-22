@@ -74,7 +74,7 @@ I **Project → Settings → Environment Variables** (Production):
 | Tjek | Handling |
 |------|----------|
 | [ ] Site URL | **Authentication → URL Configuration** → `https://rentlocal.fo` |
-| [ ] Redirect URLs | Inkluder `https://rentlocal.fo`, `https://rentlocal.fo/**`, `https://rentlocal.fo/auth/callback` |
+| [ ] Redirect URLs | Inkluder `https://rentlocal.fo`, `https://rentlocal.fo/**`, `https://rentlocal.fo/auth/callback`, `https://rentlocal.fo/auth/verify` |
 | [ ] Database connection | DATABASE_URL peger på Supabase pooler |
 
 ---

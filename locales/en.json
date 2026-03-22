@@ -301,13 +301,15 @@
     "errorInvalidCredentials": "Invalid email or password.",
     "errorEmailInUse": "This email is already registered.",
     "errorGeneric": "Something went wrong. Please try again.",
+    "errorCallbackHint": "On mobile, the verification link may open in your email app's browser. Try: long-press the link → «Open in Safari» or «Open in Chrome», or copy the link and paste it into your browser.",
     "signupSuccess": "Account created. Please log in.",
     "loginRequired": "Please log in to continue.",
     "forgotPassword": "Forgot password?",
     "resetPassword": "Reset password",
     "magicLink": "Send magic link to email",
     "magicLinkSent": "Check your email for the sign-in link.",
-    "confirmEmail": "Check your email to confirm your account, then log in."
+    "confirmEmail": "Check your email to confirm your account, then log in.",
+    "signupMobileHint": "On mobile: if the button doesn't work, long-press the link and choose «Open in Safari» or «Open in Chrome»."
   },
   "profile": {
     "title": "Profile",
