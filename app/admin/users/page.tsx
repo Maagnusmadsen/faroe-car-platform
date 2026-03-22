@@ -34,6 +34,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [resendingId, setResendingId] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
   const filter = searchParams.get("filter") ?? "all";
@@ -73,6 +74,21 @@ export default function AdminUsersPage() {
       if (res.ok) fetchUsers();
     } finally {
       setApprovingId(null);
+    }
+  }
+
+  async function resendWelcome(userId: string) {
+    setResendingId(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/resend-welcome`, { method: "POST" });
+      const json = await res.json();
+      if (res.ok) {
+        setError(null);
+      } else {
+        setError(json.error ?? "Failed to resend");
+      }
+    } finally {
+      setResendingId(null);
     }
   }
 
@@ -210,6 +226,15 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => resendWelcome(u.id)}
+                          disabled={resendingId === u.id}
+                          className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                          title="Resend welcome email (for testing)"
+                        >
+                          {resendingId === u.id ? "…" : "Resend welcome"}
+                        </button>
                         {u.verificationStatus === "PENDING" && (
                           <button
                             type="button"

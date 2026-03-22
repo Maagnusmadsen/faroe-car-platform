@@ -18,7 +18,7 @@ export default function Step5Pricing({ data, errors, onChange }: Step5Props) {
       <h3 className="text-lg font-semibold text-slate-900">{t("list.wizardStep5")}</h3>
       <div>
         <label htmlFor="wizard-price" className={labelClass}>
-          {t("list.pricePerDay")} (DKK) *
+          {t("list.pricePerDay")} *
         </label>
         <input
           id="wizard-price"

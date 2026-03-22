@@ -15,8 +15,6 @@ import { prisma } from "@/db";
 
 /** Optional (eventType, channel) pairs. Must match events with userCanDisable. */
 const OPTIONAL_PREFERENCES: Array<{ eventType: string; channel: "EMAIL" | "IN_APP" }> = [
-  { eventType: "booking.requested", channel: "EMAIL" },
-  { eventType: "booking.requested", channel: "IN_APP" },
   { eventType: "booking.reminder", channel: "EMAIL" },
   { eventType: "booking.reminder", channel: "IN_APP" },
   { eventType: "message.received", channel: "EMAIL" },

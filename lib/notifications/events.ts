@@ -10,7 +10,7 @@ const EVENT_CONFIG: Record<
   EventType,
   { channels: NotificationChannel[]; critical: boolean; userCanDisable: boolean }
 > = {
-  "booking.requested": { channels: ["IN_APP", "EMAIL"], critical: false, userCanDisable: true },
+  "booking.requested": { channels: ["IN_APP", "EMAIL"], critical: true, userCanDisable: false },
   "booking.approved": { channels: ["IN_APP", "EMAIL"], critical: true, userCanDisable: false },
   "booking.rejected": { channels: ["IN_APP", "EMAIL"], critical: true, userCanDisable: false },
   "booking.confirmed": { channels: ["IN_APP", "EMAIL"], critical: true, userCanDisable: false },

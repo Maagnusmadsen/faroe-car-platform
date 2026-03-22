@@ -21,6 +21,9 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
   const searchParams = useSearchParams();
   const [bookingState, setBookingState] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [bookingMessage, setBookingMessage] = useState<string | null>(null);
+  const [bookingErrorCode, setBookingErrorCode] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [claiming, setClaiming] = useState(false);
@@ -44,6 +47,23 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
 
   const startParam = searchParams.get("start") ?? undefined;
   const endParam = searchParams.get("end") ?? undefined;
+
+  useEffect(() => {
+    if (startParam) setStartDate(startParam);
+    if (endParam) setEndDate(endParam);
+  }, [startParam, endParam]);
+
+  const pickupMin = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + (availability?.minNoticeDays ?? 0));
+    return d.toISOString().slice(0, 10);
+  })();
+  const pickupMax = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + (availability?.advanceBookingDays ?? 365));
+    return d.toISOString().slice(0, 10);
+  })();
+  const dropoffMin = startDate || "";
 
   useEffect(() => {
     const loadFavorite = async () => {
@@ -155,9 +175,12 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
   }
 
   async function handleBookNow() {
-    if (!startParam || !endParam) {
+    const start = startDate || startParam;
+    const end = endDate || endParam;
+    if (!start || !end) {
       setBookingState("error");
       setBookingMessage(t("rent.bookingNeedsDates"));
+      setBookingErrorCode(null);
       return;
     }
     if (!sessionUser) {
@@ -168,14 +191,15 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
 
     setBookingState("submitting");
     setBookingMessage(null);
+    setBookingErrorCode(null);
     try {
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           listingId: car.id,
-          startDate: startParam,
-          endDate: endParam,
+          startDate: start,
+          endDate: end,
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -183,8 +207,10 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
         setBookingState("error");
         if (json?.code === "RENTER_NOT_VERIFIED") {
           setBookingMessage(t("rent.renterNotApproved"));
+          setBookingErrorCode("RENTER_NOT_VERIFIED");
         } else {
           setBookingMessage(json?.error ?? t("rent.bookingError"));
+          setBookingErrorCode(null);
         }
         return;
       }
@@ -197,6 +223,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
 
       setBookingState("success");
       setBookingMessage(null);
+      setBookingErrorCode(null);
     } catch {
       setBookingState("error");
       setBookingMessage(t("rent.bookingError"));
@@ -306,25 +333,59 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                   </Link>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  disabled={isTemporarilyUnavailable}
-                  className="rounded-xl bg-brand px-8 py-3 font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-slate-300"
-                  onClick={handleBookNow}
-                >
-                  {isTemporarilyUnavailable
-                    ? t("rent.notBookable")
-                    : bookingState === "submitting"
-                      ? t("rent.loading")
-                      : t("rent.requestToBook")}
-                </button>
+                <div className="flex flex-col gap-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="booking-pickup" className="mb-1 block text-xs font-medium text-slate-600">
+                        {t("rent.searchLabelPickup")}
+                      </label>
+                      <input
+                        id="booking-pickup"
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        min={pickupMin || undefined}
+                        max={pickupMax || undefined}
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="booking-dropoff" className="mb-1 block text-xs font-medium text-slate-600">
+                        {t("rent.searchLabelDropoff")}
+                      </label>
+                      <input
+                        id="booking-dropoff"
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        min={dropoffMin || undefined}
+                        max={pickupMax || undefined}
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={isTemporarilyUnavailable || (!startDate && !startParam) || (!endDate && !endParam)}
+                    className="rounded-xl bg-brand px-8 py-3 font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:bg-slate-300"
+                    onClick={handleBookNow}
+                  >
+                    {isTemporarilyUnavailable
+                      ? t("rent.notBookable")
+                      : bookingState === "submitting"
+                        ? t("rent.loading")
+                        : t("rent.requestToBook")}
+                  </button>
+                </div>
               )}
               {bookingMessage && bookingState === "error" && (
                 <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2">
                   <p className="text-sm text-amber-800">{bookingMessage}</p>
-                  <Link href="/renter-approval" className="mt-2 inline-block text-sm font-medium text-brand hover:underline">
-                    {t("rent.getApprovedFirst")}
-                  </Link>
+                  {bookingErrorCode === "RENTER_NOT_VERIFIED" && (
+                    <Link href="/renter-approval" className="mt-2 inline-block text-sm font-medium text-brand hover:underline">
+                      {t("rent.getApprovedFirst")}
+                    </Link>
+                  )}
                 </div>
               )}
               {availability && (
