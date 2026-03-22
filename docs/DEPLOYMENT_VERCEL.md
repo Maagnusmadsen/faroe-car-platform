@@ -25,6 +25,7 @@ In Vercel: **Project → Settings → Environment Variables**. Add for **Product
 | `EMAIL_FROM_NAME` | Optional | Sender display name (default: RentLocal). |
 | `EMAIL_REPLY_TO` | Optional | Reply-to address (e.g. `support@rentlocal.fo`). |
 | `SUPPORT_EMAIL` / `NEXT_PUBLIC_SUPPORT_EMAIL` | Optional | Support contact in email footer. |
+| `SUPER_ADMIN_EMAIL` | Optional | Email of super admin (only this user can delete other admins). Defaults to maagnusmadsen@gmail.com. |
 
 Do **not** commit `.env` or `.env.local`. Use Vercel env UI only.
 

@@ -67,6 +67,11 @@ export function getSupportEmail(): string {
   return getEnv("SUPPORT_EMAIL") ?? getEnv("NEXT_PUBLIC_SUPPORT_EMAIL") ?? "support@rentlocal.fo";
 }
 
+/** Super admin: only this user can delete other admins. Set SUPER_ADMIN_EMAIL or defaults to maagnusmadsen@gmail.com */
+export function getSuperAdminEmail(): string {
+  return getEnv("SUPER_ADMIN_EMAIL") ?? "maagnusmadsen@gmail.com";
+}
+
 export function getResendApiKey(): string | undefined {
   return getEnv("RESEND_API_KEY");
 }
@@ -89,4 +94,5 @@ export const env = {
   emailFromName: getEmailFromName,
   emailReplyTo: getEmailReplyTo,
   supportEmail: getSupportEmail,
+  superAdminEmail: getSuperAdminEmail,
 };

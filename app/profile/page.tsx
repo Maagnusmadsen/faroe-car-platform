@@ -50,13 +50,14 @@ const EMPTY_PROFILE: ProfileData = {
 
 export default function ProfilePage() {
   const { t } = useLanguage();
-  const { user: sessionUser, status } = useAuth();
+  const { user: sessionUser, status, signOut } = useAuth();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [form, setForm] = useState<ProfileData>(EMPTY_PROFILE);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (status !== "authenticated" || !sessionUser) return;
@@ -123,6 +124,23 @@ export default function ProfilePage() {
       setMessage({ type: "error", text: t("profile.saveError") });
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (!confirm(t("profile.deleteAccountWarning") + "\n\nAre you sure?")) return;
+    setDeleting(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/profile", { method: "DELETE" });
+      const json = await res.json();
+      if (res.ok) {
+        await signOut();
+      } else {
+        setMessage({ type: "error", text: json?.error ?? "Could not delete account" });
+      }
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -471,6 +489,19 @@ export default function ProfilePage() {
               <Link href="/" className="text-sm font-medium text-brand hover:underline">
                 {t("profile.backToHome")}
               </Link>
+            </div>
+
+            <div className="mt-8 rounded-lg border border-red-200 bg-red-50/50 p-6">
+              <h2 className="text-sm font-semibold text-red-900">{t("profile.deleteAccount")}</h2>
+              <p className="mt-1 text-sm text-red-800">{t("profile.deleteAccountWarning")}</p>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="mt-4 rounded border border-red-300 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              >
+                {deleting ? "…" : t("profile.deleteAccountConfirm")}
+              </button>
             </div>
           </div>
         </div>

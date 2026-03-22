@@ -33,6 +33,7 @@ export default function AdminListingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
   const statusFilter = searchParams.get("status") ?? "all";
@@ -69,6 +70,22 @@ export default function AdminListingsPage() {
       if (res.ok) fetchListings();
     } finally {
       setUpdatingId(null);
+    }
+  }
+
+  async function deleteListing(listingId: string, carTitle: string) {
+    if (!confirm(`Delete listing "${carTitle}"? This cannot be undone.`)) return;
+    setDeletingId(listingId);
+    try {
+      const res = await fetch(`/api/admin/listings/${listingId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (res.ok) {
+        fetchListings();
+      } else {
+        setError(json.error ?? "Failed to delete");
+      }
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -144,26 +161,36 @@ export default function AdminListingsPage() {
                     </td>
                     <td className="px-4 py-3 text-slate-600">{l.bookingCount}</td>
                     <td className="px-4 py-3">
-                      {l.status === "ACTIVE" && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        {l.status === "ACTIVE" && (
+                          <button
+                            type="button"
+                            onClick={() => setStatus(l.id, "PAUSED")}
+                            disabled={updatingId === l.id}
+                            className="rounded border border-amber-200 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+                          >
+                            {updatingId === l.id ? "…" : "Deactivate"}
+                          </button>
+                        )}
+                        {(l.status === "PAUSED" || l.status === "REJECTED") && (
+                          <button
+                            type="button"
+                            onClick={() => setStatus(l.id, "ACTIVE")}
+                            disabled={updatingId === l.id}
+                            className="rounded border border-brand/30 px-2 py-1 text-xs font-medium text-brand hover:bg-brand/10 disabled:opacity-50"
+                          >
+                            {updatingId === l.id ? "…" : "Reactivate"}
+                          </button>
+                        )}
                         <button
                           type="button"
-                          onClick={() => setStatus(l.id, "PAUSED")}
-                          disabled={updatingId === l.id}
-                          className="rounded border border-amber-200 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+                          onClick={() => deleteListing(l.id, `${l.brand} ${l.model} (${l.year})`)}
+                          disabled={deletingId === l.id}
+                          className="rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
                         >
-                          {updatingId === l.id ? "…" : "Deactivate"}
+                          {deletingId === l.id ? "…" : "Delete"}
                         </button>
-                      )}
-                      {(l.status === "PAUSED" || l.status === "REJECTED") && (
-                        <button
-                          type="button"
-                          onClick={() => setStatus(l.id, "ACTIVE")}
-                          disabled={updatingId === l.id}
-                          className="rounded border border-brand/30 px-2 py-1 text-xs font-medium text-brand hover:bg-brand/10 disabled:opacity-50"
-                        >
-                          {updatingId === l.id ? "…" : "Reactivate"}
-                        </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}

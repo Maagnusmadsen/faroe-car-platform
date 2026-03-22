@@ -356,7 +356,10 @@
     "namePlaceholder": "Your name",
     "additionalDetails": "Address & notes",
     "backToHome": "← Back to home",
-    "notificationPreferences": "Notification preferences"
+    "notificationPreferences": "Notification preferences",
+    "deleteAccount": "Delete account",
+    "deleteAccountWarning": "This permanently removes your account and all your data. This cannot be undone.",
+    "deleteAccountConfirm": "Delete my account"
   },
   "notificationPrefs": {
     "title": "Notification preferences",

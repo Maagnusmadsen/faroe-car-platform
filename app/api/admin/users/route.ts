@@ -8,6 +8,7 @@ import { NextRequest } from "next/server";
 import { requireAuth, requireAdmin } from "@/auth/guards";
 import { jsonSuccess, jsonError, handleApiError } from "@/lib/utils/api-response";
 import { prisma } from "@/db";
+import { env } from "@/config/env";
 
 export async function GET(request: NextRequest) {
   try {
@@ -77,6 +78,9 @@ export async function GET(request: NextRequest) {
       bookingCount: _count.bookingsAsRenter,
     }));
 
+    const superAdminEmail = env.superAdminEmail().toLowerCase();
+    const currentUserEmail = session.user.email?.toLowerCase() ?? "";
+
     return jsonSuccess({
       items: usersWithVerification,
       total,
@@ -84,6 +88,7 @@ export async function GET(request: NextRequest) {
       pageSize,
       hasMore: page * pageSize < total,
       pendingApprovals: pendingCount,
+      isSuperAdmin: currentUserEmail === superAdminEmail,
     });
   } catch (err) {
     const e = err as Error & { statusCode?: number };

@@ -502,3 +502,17 @@ export async function deleteListing(listingId: string, ownerId: string) {
   });
   return true;
 }
+
+/** Soft-delete a listing as admin. No owner check. */
+export async function deleteListingAsAdmin(listingId: string): Promise<boolean> {
+  const car = await prisma.carListing.findFirst({
+    where: { id: listingId, deletedAt: null },
+    select: { id: true },
+  });
+  if (!car) return false;
+  await prisma.carListing.update({
+    where: { id: listingId },
+    data: { deletedAt: new Date() },
+  });
+  return true;
+}

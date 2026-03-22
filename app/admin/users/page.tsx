@@ -24,6 +24,7 @@ type UsersResponse = {
   pageSize: number;
   hasMore: boolean;
   pendingApprovals?: number;
+  isSuperAdmin?: boolean;
 };
 
 export default function AdminUsersPage() {
@@ -32,6 +33,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const page = Math.max(1, Number(searchParams.get("page")) || 1);
   const filter = searchParams.get("filter") ?? "all";
@@ -71,6 +73,22 @@ export default function AdminUsersPage() {
       if (res.ok) fetchUsers();
     } finally {
       setApprovingId(null);
+    }
+  }
+
+  async function deleteUser(userId: string, email: string) {
+    if (!confirm(`Delete user ${email}? This cannot be undone.`)) return;
+    setDeletingId(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
+      const json = await res.json();
+      if (res.ok) {
+        fetchUsers();
+      } else {
+        setError(json.error ?? "Failed to delete");
+      }
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -191,26 +209,38 @@ export default function AdminUsersPage() {
                       {new Date(u.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3">
-                      {u.verificationStatus === "PENDING" && (
-                        <button
-                          type="button"
-                          onClick={() => approveRenter(u.id)}
-                          disabled={approvingId === u.id}
-                          className="rounded bg-brand px-2 py-1 text-xs font-medium text-white hover:bg-brand-hover disabled:opacity-50"
-                        >
-                          {approvingId === u.id ? "…" : "Approve"}
-                        </button>
-                      )}
-                      {u.licenseImageUrl && (
-                        <a
-                          href={u.licenseImageUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-2 text-xs text-slate-500 hover:underline"
-                        >
-                          License
-                        </a>
-                      )}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {u.verificationStatus === "PENDING" && (
+                          <button
+                            type="button"
+                            onClick={() => approveRenter(u.id)}
+                            disabled={approvingId === u.id}
+                            className="rounded bg-brand px-2 py-1 text-xs font-medium text-white hover:bg-brand-hover disabled:opacity-50"
+                          >
+                            {approvingId === u.id ? "…" : "Approve"}
+                          </button>
+                        )}
+                        {u.licenseImageUrl && (
+                          <a
+                            href={u.licenseImageUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-slate-500 hover:underline"
+                          >
+                            License
+                          </a>
+                        )}
+                        {(u.role !== "ADMIN" || data.isSuperAdmin) && (
+                          <button
+                            type="button"
+                            onClick={() => deleteUser(u.id, u.email)}
+                            disabled={deletingId === u.id}
+                            className="rounded border border-red-200 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50"
+                          >
+                            {deletingId === u.id ? "…" : "Delete"}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
