@@ -17,7 +17,8 @@
     "db:studio": "prisma studio",
     "db:delete-all-listings": "tsx scripts/delete-all-listings.ts",
     "db:make-admin": "tsx scripts/make-admin.ts",
-    "db:reset": "tsx scripts/reset-database.ts"
+    "db:reset": "tsx scripts/reset-database.ts",
+    "logo:png": "tsx scripts/convert-logo-to-png.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -53,6 +54,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "prisma": "^6.9.0",
+    "sharp": "^0.34.5",
     "tailwindcss": "^4",
     "tsx": "^4.19.2",
     "typescript": "^5",
