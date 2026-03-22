@@ -16,13 +16,13 @@ Brug **token_hash**-verifikation i stedet for standard PKCE-flow. Verifikationen
 4. **Erstat** `href="{{ .ConfirmationURL }}"` med:
 
    ```
-   href="{{ .SiteURL }}/auth/verify?token_hash={{ .TokenHash }}&type=email"
+   href="{{ .SiteURL }}/auth/verify?token_hash={{ .TokenHash }}&type=signup"
    ```
 
    Hvis du bruger din egen domæne, erstat `{{ .SiteURL }}` med f.eks. `https://rentlocal.fo`:
 
    ```
-   href="https://rentlocal.fo/auth/verify?token_hash={{ .TokenHash }}&type=email"
+   href="https://rentlocal.fo/auth/verify?token_hash={{ .TokenHash }}&type=signup"
    ```
 
 5. Gem skabelonen

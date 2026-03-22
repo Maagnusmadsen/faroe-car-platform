@@ -2,7 +2,7 @@
  * Supabase Auth verify: handles email confirmation via token_hash.
  * Use this URL in the "Confirm signup" email template to avoid PKCE issues on mobile.
  *
- * Email template should use: {{ .SiteURL }}/auth/verify?token_hash={{ .TokenHash }}&type=email
+ * Email template should use: {{ .SiteURL }}/auth/verify?token_hash={{ .TokenHash }}&type=signup
  * instead of {{ .ConfirmationURL }}
  *
  * This works when the link is opened in any browser (including email in-app browsers)
@@ -18,11 +18,13 @@ export async function GET(request: Request) {
   const type = searchParams.get("type");
   const next = searchParams.get("next") ?? "/";
 
-  if (token_hash && type === "email") {
+  // type=signup for "Confirm signup" template; type=email for magic link
+  const validType = type === "signup" || type === "email";
+  if (token_hash && validType) {
     const supabase = await createClient();
     const { error } = await supabase.auth.verifyOtp({
       token_hash,
-      type: "email",
+      type: (type as "signup" | "email") ?? "signup",
     });
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);
