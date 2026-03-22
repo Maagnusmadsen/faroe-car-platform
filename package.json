@@ -16,7 +16,8 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:delete-all-listings": "tsx scripts/delete-all-listings.ts",
-    "db:make-admin": "tsx scripts/make-admin.ts"
+    "db:make-admin": "tsx scripts/make-admin.ts",
+    "db:reset": "tsx scripts/reset-database.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
