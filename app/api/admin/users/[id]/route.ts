@@ -42,7 +42,8 @@ export async function DELETE(
     if (user.supabaseUserId && supabaseUrl && supabaseServiceKey) {
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
       const { error } = await supabase.auth.admin.deleteUser(user.supabaseUserId);
-      if (error) {
+      // "User not found" = already gone from Auth (orphaned Prisma record) – proceed with DB delete
+      if (error && !/user.?not.?found|not_found/i.test(error.message)) {
         return jsonError(`Failed to delete from auth: ${error.message}`, 400);
       }
     }
