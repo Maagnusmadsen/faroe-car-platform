@@ -12,7 +12,7 @@ import { parseOrThrow } from "@/lib/utils/validate";
 import { listingWizardPayloadSchema } from "@/validation/schemas/car";
 import { notFound } from "@/lib/utils/errors";
 import type { ListingWizardData } from "@/components/listing-wizard/types";
-import { notifyListingPublished } from "@/lib/notifications-server";
+import { dispatchNotificationEvent } from "@/lib/notifications";
 import { isStripeConnectReady } from "@/lib/stripe-connect";
 import { prisma } from "@/db";
 
@@ -45,7 +45,13 @@ export async function POST(
     const result = await publishListing(id, session.user.id, wizardData);
 
     if (result.success) {
-      await notifyListingPublished(session.user.id, id);
+      await dispatchNotificationEvent({
+        type: "listing.published",
+        idempotencyKey: `listing-${id}-published`,
+        payload: { userId: session.user.id, ownerId: session.user.id, listingId: id },
+        sourceId: id,
+        sourceType: "listing",
+      });
       return jsonSuccess({ id, status: "ACTIVE" as const });
     }
 

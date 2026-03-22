@@ -9,7 +9,7 @@ import { assertCarAvailableOrThrow } from "@/lib/availability-server";
 import { AppError, HttpStatus } from "@/lib/utils/errors";
 import { calculatePricingForListing } from "@/lib/pricing";
 import { ensureConversationForBooking } from "@/lib/messaging-server";
-import { notifyBookingCreated } from "@/lib/notifications-server";
+import { dispatchNotificationEvent } from "@/lib/notifications";
 import { getProfileByUserId } from "@/lib/profile";
 
 /**
@@ -99,9 +99,14 @@ export async function createBookingWithAvailabilityCheck(input: {
       isolationLevel: "Serializable",
     }
   ).then(async ({ booking, ownerId, carId }) => {
-    // After transaction is committed, create conversation and notify (so they see the booking)
     await ensureConversationForBooking(booking.id);
-    await notifyBookingCreated(ownerId, booking.id, carId);
+    await dispatchNotificationEvent({
+      type: "booking.requested",
+      idempotencyKey: `booking-${booking.id}-requested`,
+      payload: { bookingId: booking.id, ownerId, carId },
+      sourceId: booking.id,
+      sourceType: "booking",
+    });
     return booking;
   });
 }

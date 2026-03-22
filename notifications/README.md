@@ -1,10 +1,9 @@
 # Notifications
 
-In-app (and optional email) notifications (Step G18).
+Event-driven notification system with in-app and email delivery.
 
-**When to add here:**
-- Create notification (type, payload, user_id).
-- List, mark read.
-- Optional: email sender (Resend, SendGrid) for critical events.
+**Implementation:** `lib/notifications/` – see `docs/NOTIFICATION_SYSTEM_DESIGN.md`.
 
-API routes and services will call notification helpers from here.
+- **Dispatch:** `dispatchNotificationEvent({ type, idempotencyKey, payload })`
+- **Channels:** In-app (Notification table), Email (Resend)
+- **API:** `GET /api/notifications`, `PATCH /api/notifications` (list, mark read)

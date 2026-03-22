@@ -527,18 +527,114 @@ model SavedSearch {
 // =============================================================================
 
 model Notification {
-  id        String           @id @default(cuid())
-  userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type      NotificationType
-  title     String
-  body      String?          @db.Text
-  data      Json?            // e.g. { bookingId, conversationId }
-  readAt    DateTime?
-  createdAt DateTime         @default(now())
+  id         String           @id @default(cuid())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type       NotificationType
+  title      String
+  body       String?          @db.Text
+  data       Json?            // e.g. { bookingId, conversationId }
+  readAt     DateTime?
+  eventId    String?          // links to NotificationEvent for traceability
+  deliveryId String?          @unique // idempotency: one in-app notification per delivery
+  createdAt  DateTime         @default(now())
 
   @@index([userId])
   @@index([userId, readAt])
+  @@index([eventId])
+}
+
+// =============================================================================
+// Notification System (event-driven, multi-channel)
+// =============================================================================
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+/// Immutable record of domain events that triggered notifications.
+model NotificationEvent {
+  id              String    @id @default(cuid())
+  eventType       String    // e.g. booking.confirmed, message.received
+  idempotencyKey  String    @unique // prevents duplicate processing
+  payload         Json      // event-specific data
+  sourceId        String?   // e.g. bookingId, conversationId
+  sourceType      String?   // e.g. booking, message
+  createdAt       DateTime  @default(now())
+  enqueuedAt      DateTime? // set when successfully sent to Inngest; null = enqueue failed, needs recovery
+  enqueueError    String?   @db.Text // error message when enqueue failed
+
+  deliveries NotificationDelivery[]
+
+  @@index([eventType])
+  @@index([sourceType, sourceId])
+  @@index([createdAt])
+  @@index([enqueuedAt])
+}
+
+/// Per-recipient, per-channel delivery attempt.
+model NotificationDelivery {
+  id              String          @id @default(cuid())
+  eventId         String
+  event           NotificationEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId          String
+  channel         NotificationChannel
+  status          DeliveryStatus   @default(PENDING)
+  notificationId  String?         // for IN_APP: links to Notification
+  attemptCount    Int             @default(0)
+  lastAttemptAt   DateTime?
+  lastError       String?         @db.Text
+  nextRetryAt     DateTime?       // when to retry (exponential backoff); null = non-retryable or exhausted
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  emailLog        EmailLog?
+
+  @@unique([eventId, userId, channel])
+  @@index([userId, channel])
+  @@index([status])
+  @@index([nextRetryAt])
+}
+
+/// User preferences for optional notifications (channel-level opt-out).
+model NotificationPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  eventType String   // e.g. message.received, review.requested
+  channel   NotificationChannel
+  enabled   Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, eventType, channel])
+  @@index([userId])
+}
+
+/// Audit trail for email sends (provider response, status, etc.).
+model EmailLog {
+  id                String   @id @default(cuid())
+  deliveryId        String   @unique
+  delivery          NotificationDelivery @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  provider          String   @default("RESEND")
+  providerMessageId String?
+  toEmail           String
+  subject           String
+  status            String   // SENT | FAILED | BOUNCED
+  statusCode        Int?
+  rawResponse       Json?
+  sentAt            DateTime?
+  createdAt         DateTime @default(now())
+
+  @@index([providerMessageId])
+  @@index([toEmail])
+  @@index([sentAt])
 }
 
 // =============================================================================
@@ -571,6 +667,17 @@ model PlatformFeeConfig {
   updatedAt     DateTime  @updatedAt
 
   @@index([effectiveFrom, effectiveTo])
+}
+
+/// Pending message digest: when we throttle a message email, we schedule a batched digest.
+model MessageDigestPending {
+  userId          String   // recipient
+  conversationId  String
+  lastTriggeredAt DateTime @default(now()) // last message that triggered throttle
+  createdAt       DateTime @default(now())
+
+  @@id([userId, conversationId])
+  @@index([lastTriggeredAt])
 }
 
 /// Idempotency for Stripe webhooks. Prevents duplicate processing when Stripe retries.

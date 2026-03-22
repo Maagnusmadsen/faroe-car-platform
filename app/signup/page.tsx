@@ -63,9 +63,9 @@ export default function SignupPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="flex min-h-screen flex-col bg-slate-50">
       <Navbar />
-      <section className="mx-auto flex max-w-md flex-col justify-center px-4 py-12 sm:py-16">
+      <section className="mx-auto flex flex-1 max-w-md flex-col justify-center px-4 py-12 sm:py-16">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <h1 className="text-2xl font-bold text-slate-900">{t("auth.signupTitle")}</h1>
           {confirmEmail && (
@@ -121,6 +121,7 @@ export default function SignupPage() {
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
                 required
               />

@@ -9,7 +9,7 @@ import { requireAuth, requireAdmin } from "@/auth/guards";
 import { jsonSuccess, jsonError, handleApiError } from "@/lib/utils/api-response";
 import { prisma } from "@/db";
 import { notFound } from "@/lib/utils/errors";
-import { notifyRenterApproved } from "@/lib/notifications-server";
+import { dispatchNotificationEvent } from "@/lib/notifications";
 
 const ALLOWED = new Set(["VERIFIED", "PENDING", "UNVERIFIED"]);
 
@@ -41,7 +41,13 @@ export async function PATCH(
     });
 
     if (status === "VERIFIED") {
-      await notifyRenterApproved(userId).catch(() => {
+      await dispatchNotificationEvent({
+        type: "renter.approved",
+        idempotencyKey: `renter-approved-${userId}`,
+        payload: { userId },
+        sourceId: userId,
+        sourceType: "user",
+      }).catch(() => {
         // ignore notification failure
       });
     }

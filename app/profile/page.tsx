@@ -464,7 +464,10 @@ export default function ProfilePage() {
             </details>
             </div>
 
-            <div className="mt-8 border-t border-slate-100 pt-6">
+            <div className="mt-8 flex flex-wrap gap-6 border-t border-slate-100 pt-6">
+              <Link href="/profile/notifications" className="text-sm font-medium text-brand hover:underline">
+                {t("profile.notificationPreferences")}
+              </Link>
               <Link href="/" className="text-sm font-medium text-brand hover:underline">
                 {t("profile.backToHome")}
               </Link>

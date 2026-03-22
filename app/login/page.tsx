@@ -19,12 +19,9 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setMagicLinkSent(false);
     setLoading(true);
     try {
       const supabase = createClient();
@@ -49,39 +46,10 @@ function LoginForm() {
     }
   }
 
-  async function handleMagicLink(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email.trim()) {
-      setError(t("auth.emailPlaceholder") || "Enter your email");
-      return;
-    }
-    setError(null);
-    setLoading(true);
-    try {
-      const supabase = createClient();
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: email.trim().toLowerCase(),
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(callbackUrl)}`,
-        },
-      });
-      if (otpError) {
-        setError(otpError.message);
-        setLoading(false);
-        return;
-      }
-      setMagicLinkSent(true);
-    } catch {
-      setError(t("auth.errorGeneric"));
-    } finally {
-      setLoading(false);
-    }
-  }
-
   return (
-    <main className="min-h-screen bg-slate-50">
+    <main className="flex min-h-screen flex-col bg-slate-50">
       <Navbar />
-      <section className="mx-auto flex max-w-md flex-col justify-center px-4 py-12 sm:py-16">
+      <section className="mx-auto flex flex-1 max-w-md flex-col justify-center px-4 py-12 sm:py-16">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <h1 className="text-2xl font-bold text-slate-900">{t("auth.loginTitle")}</h1>
           {registered && (
@@ -95,9 +63,9 @@ function LoginForm() {
             </p>
           )}
           <p className="mt-1 text-sm text-slate-500">
-            {t("auth.hasAccount")}{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/signup" className="font-medium text-brand hover:underline">
-              {t("nav.signUp")}
+              Sign up
             </Link>
           </p>
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -135,25 +103,12 @@ function LoginForm() {
                 {error}
               </p>
             )}
-            {magicLinkSent && (
-              <p className="rounded-lg bg-brand-light px-3 py-2 text-sm text-brand" role="status">
-                {t("auth.magicLinkSent") || "Check your email for the sign-in link."}
-              </p>
-            )}
             <button
               type="submit"
               disabled={loading}
               className="flex min-h-[48px] w-full items-center justify-center rounded-lg bg-brand px-4 py-3 font-semibold text-white hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2 disabled:opacity-50"
             >
               {loading ? "…" : t("auth.loginButton")}
-            </button>
-            <button
-              type="button"
-              onClick={handleMagicLink}
-              disabled={loading}
-              className="flex min-h-[44px] w-full items-center justify-center text-sm font-medium text-slate-600 hover:text-brand disabled:opacity-50"
-            >
-              {t("auth.magicLink") || "Send magic link to email"}
             </button>
           </form>
         </div>
@@ -167,9 +122,9 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-slate-50">
+        <main className="flex min-h-screen flex-col bg-slate-50">
           <Navbar />
-          <section className="mx-auto flex max-w-md flex-col justify-center px-4 py-16">
+          <section className="mx-auto flex flex-1 max-w-md flex-col justify-center px-4 py-16">
             <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
               <div className="h-8 w-48 animate-pulse rounded bg-slate-200" />
               <div className="mt-4 h-4 w-full animate-pulse rounded bg-slate-100" />

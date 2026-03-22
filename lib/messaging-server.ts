@@ -14,7 +14,7 @@
 
 import { prisma } from "@/db";
 import { AppError, HttpStatus } from "@/lib/utils/errors";
-import { notifyNewMessage } from "@/lib/notifications-server";
+import { dispatchNotificationEvent } from "@/lib/notifications";
 
 export async function ensureConversationForBooking(bookingId: string) {
   const booking = await prisma.booking.findUnique({
@@ -114,7 +114,24 @@ export async function sendMessageForBooking(input: {
   });
   const recipient = participants.find((p) => p.userId !== input.senderId);
   if (recipient) {
-    await notifyNewMessage(recipient.userId, conversation.id, input.bookingId);
+    const sender = await prisma.user.findUnique({
+      where: { id: input.senderId },
+      select: { name: true },
+    });
+    await dispatchNotificationEvent({
+      type: "message.received",
+      idempotencyKey: `message-${message.id}-to-${recipient.userId}`,
+      payload: {
+        bookingId: input.bookingId,
+        conversationId: conversation.id,
+        messageId: message.id,
+        recipientId: recipient.userId,
+        senderName: sender?.name ?? "Someone",
+        messagePreview: trimmed.slice(0, 100),
+      },
+      sourceId: conversation.id,
+      sourceType: "conversation",
+    });
   }
 
   return message;

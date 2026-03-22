@@ -4,7 +4,7 @@
  */
 
 import { prisma } from "@/db";
-import { notifyUserSignup } from "@/lib/notifications-server";
+import { dispatchNotificationEvent } from "@/lib/notifications";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import type { UserRole } from "@prisma/client";
 
@@ -76,7 +76,13 @@ export async function syncSupabaseUserToPrisma(supabaseUser: SupabaseUser): Prom
       await prisma.userProfile.create({
         data: { userId: user.id },
       });
-      await notifyUserSignup(user.id);
+      await dispatchNotificationEvent({
+        type: "user.welcome",
+        idempotencyKey: `user-welcome-${user.id}`,
+        payload: { userId: user.id },
+        sourceId: user.id,
+        sourceType: "user",
+      });
     }
   }
 

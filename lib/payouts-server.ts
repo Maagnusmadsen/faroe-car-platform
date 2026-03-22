@@ -11,7 +11,7 @@
 
 import { prisma } from "@/db";
 import { AppError, HttpStatus } from "@/lib/utils/errors";
-import { notifyPayoutCreated } from "@/lib/notifications-server";
+import { dispatchNotificationEvent } from "@/lib/notifications";
 
 export interface OwnerEarning {
   bookingId: string;
@@ -166,7 +166,18 @@ export async function createPayoutForOwner(ownerId: string) {
       data: { payoutId: payout.id },
     });
 
-    await notifyPayoutCreated(ownerId, payout.id, totalAmount);
+    await dispatchNotificationEvent({
+      type: "payout.sent",
+      idempotencyKey: `payout-${payout.id}`,
+      payload: {
+        ownerId,
+        payoutId: payout.id,
+        amount: totalAmount,
+        currency: payout.currency,
+      },
+      sourceId: payout.id,
+      sourceType: "payout",
+    });
 
     return payout;
   });

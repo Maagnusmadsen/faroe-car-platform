@@ -11,7 +11,7 @@ import { parseOrThrow } from "@/lib/utils/validate";
 import { bookingStatusUpdateSchema } from "@/validation";
 import { prisma } from "@/db";
 import { notFound } from "@/lib/utils/errors";
-import { notifyBookingCancelled, notifyReviewReminder } from "@/lib/notifications-server";
+import { dispatchNotificationEvent } from "@/lib/notifications";
 
 const OWNER_ALLOWED_STATUSES = new Set([
   "CONFIRMED",  // approve
@@ -98,21 +98,59 @@ export async function PATCH(
       }),
     ]);
 
-    // Notifications for cancellation and completion
-    if (input.status === "CANCELLED") {
-      // Notify both renter and owner
-      await Promise.all([
-        notifyBookingCancelled(booking.renterId, booking.id, booking.carId),
-        notifyBookingCancelled(booking.car.ownerId, booking.id, booking.carId),
-      ]);
+    // Notifications for cancellation, rejection, approval, and completion
+    if (input.status === "REJECTED") {
+      await dispatchNotificationEvent({
+        type: "booking.rejected",
+        idempotencyKey: `booking-${id}-rejected`,
+        payload: {
+          bookingId: id,
+          renterId: booking.renterId,
+          ownerId: booking.car.ownerId,
+          carId: booking.carId,
+        },
+        sourceId: id,
+        sourceType: "booking",
+      });
+    } else if (input.status === "CANCELLED") {
+      await dispatchNotificationEvent({
+        type: "booking.cancelled",
+        idempotencyKey: `booking-${id}-cancelled`,
+        payload: {
+          bookingId: id,
+          renterId: booking.renterId,
+          ownerId: booking.car.ownerId,
+          carId: booking.carId,
+        },
+        sourceId: id,
+        sourceType: "booking",
+      });
     } else if (statusToWrite === "PENDING_PAYMENT") {
-      // Optional: notify renter that they can now pay (e.g. email "Your booking was approved – complete payment")
+      await dispatchNotificationEvent({
+        type: "booking.approved",
+        idempotencyKey: `booking-${id}-approved`,
+        payload: {
+          bookingId: id,
+          renterId: booking.renterId,
+          ownerId: booking.car.ownerId,
+          carId: booking.carId,
+        },
+        sourceId: id,
+        sourceType: "booking",
+      });
     } else if (input.status === "COMPLETED") {
-      // Review reminders for both parties
-      await Promise.all([
-        notifyReviewReminder(booking.renterId, booking.id, booking.carId),
-        notifyReviewReminder(booking.car.ownerId, booking.id, booking.carId),
-      ]);
+      await dispatchNotificationEvent({
+        type: "review.requested",
+        idempotencyKey: `booking-${id}-review-reminder`,
+        payload: {
+          bookingId: id,
+          renterId: booking.renterId,
+          ownerId: booking.car.ownerId,
+          carId: booking.carId,
+        },
+        sourceId: id,
+        sourceType: "booking",
+      });
     }
 
     return jsonSuccess(updated);

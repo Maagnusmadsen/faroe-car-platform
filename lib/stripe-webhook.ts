@@ -6,10 +6,10 @@
 import type Stripe from "stripe";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/db";
-import { notifyBookingConfirmed, notifyPaymentReceived } from "@/lib/notifications-server";
+import { dispatchNotificationEvent } from "@/lib/notifications";
 
 export type WebhookResult =
-  | { ok: true; alreadyProcessed?: boolean }
+  | { ok: true; alreadyProcessed?: boolean; bookingId?: string; renterId?: string; ownerId?: string; carId?: string; amount?: number; currency?: string }
   | { ok: false; retryable: boolean; reason: string };
 
 /** Structured log for webhook events. Use console for now; swap for pino/winston in production. */
@@ -126,14 +126,11 @@ async function processCheckoutSessionCompleted(
 
     // Only update booking if still PENDING_PAYMENT (idempotent)
     if (booking.status === "PENDING_PAYMENT") {
-      const updated = await tx.booking.update({
+      await tx.booking.update({
         where: { id: booking.id },
         data: { status: "CONFIRMED" },
       });
-      await notifyBookingConfirmed(updated.renterId, updated.id, updated.carId);
     }
-
-    await notifyPaymentReceived(booking.car.ownerId, booking.id, Number(amount));
 
     await recordEventProcessed(
       event.id,
@@ -148,7 +145,15 @@ async function processCheckoutSessionCompleted(
       amount: Number(amount),
     });
 
-    return { ok: true };
+    return {
+      ok: true,
+      bookingId,
+      renterId: booking.renterId,
+      ownerId: booking.car.ownerId,
+      carId: booking.carId,
+      amount: Number(amount),
+      currency: booking.currency,
+    };
   });
 }
 
@@ -285,30 +290,83 @@ async function processAccountUpdated(
 
 /**
  * Route Stripe event to the appropriate handler.
+ * Notifications are dispatched after successful processing (decoupled from transaction).
  */
 export async function handleStripeEvent(event: Stripe.Event): Promise<WebhookResult> {
   try {
+    let result: WebhookResult;
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        return processCheckoutSessionCompleted(event, session);
+        result = await processCheckoutSessionCompleted(event, session);
+        if (result.ok && !result.alreadyProcessed && result.bookingId && result.renterId && result.ownerId && result.carId) {
+          await Promise.all([
+            dispatchNotificationEvent({
+              type: "booking.confirmed",
+              idempotencyKey: `booking-${result.bookingId}-confirmed`,
+              payload: {
+                bookingId: result.bookingId,
+                renterId: result.renterId,
+                ownerId: result.ownerId,
+                carId: result.carId,
+                amount: result.amount,
+                currency: result.currency ?? "DKK",
+              },
+              sourceId: result.bookingId,
+              sourceType: "booking",
+            }),
+            dispatchNotificationEvent({
+              type: "payment.received",
+              idempotencyKey: `payment-${result.bookingId}-received`,
+              payload: {
+                bookingId: result.bookingId,
+                ownerId: result.ownerId,
+                carId: result.carId,
+                amount: result.amount ?? 0,
+                currency: result.currency ?? "DKK",
+              },
+              sourceId: result.bookingId,
+              sourceType: "booking",
+            }),
+            dispatchNotificationEvent({
+              type: "payment.receipt",
+              idempotencyKey: `payment-receipt-${result.bookingId}`,
+              payload: {
+                bookingId: result.bookingId,
+                renterId: result.renterId,
+                carId: result.carId,
+                amount: result.amount ?? 0,
+                currency: result.currency ?? "DKK",
+              },
+              sourceId: result.bookingId,
+              sourceType: "booking",
+            }),
+          ]).catch((err) => {
+            console.error("[Stripe Webhook] Notification dispatch failed (non-fatal)", err);
+          });
+        }
+        return result;
       }
       case "checkout.session.expired": {
         const session = event.data.object as Stripe.Checkout.Session;
-        return processCheckoutSessionExpired(event, session);
+        result = await processCheckoutSessionExpired(event, session);
+        break;
       }
       case "payment_intent.payment_failed": {
         const pi = event.data.object as Stripe.PaymentIntent;
-        return processPaymentIntentFailed(event, pi);
+        result = await processPaymentIntentFailed(event, pi);
+        break;
       }
       case "account.updated": {
         const account = event.data.object as Stripe.Account;
-        return processAccountUpdated(event, account);
+        result = await processAccountUpdated(event, account);
+        break;
       }
       default:
         log("info", "Unhandled event type, acknowledging", { eventId: event.id, type: event.type });
-        return { ok: true };
+        result = { ok: true };
     }
+    return result;
   } catch (err) {
     const error = err as Error;
     log("error", "Webhook processing failed", {

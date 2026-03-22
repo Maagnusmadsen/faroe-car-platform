@@ -50,6 +50,27 @@ export function getSupabaseAnonKey(): string | undefined {
   return getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 }
 
+/** Email/Resend config. Optional – notifications work without it (in-app only). */
+export function getEmailFromAddress(): string {
+  return getEnv("EMAIL_FROM_ADDRESS") ?? "notifications@rentlocal.fo";
+}
+
+export function getEmailFromName(): string {
+  return getEnv("EMAIL_FROM_NAME") ?? "RentLocal";
+}
+
+export function getEmailReplyTo(): string | undefined {
+  return getEnv("EMAIL_REPLY_TO");
+}
+
+export function getSupportEmail(): string {
+  return getEnv("SUPPORT_EMAIL") ?? getEnv("NEXT_PUBLIC_SUPPORT_EMAIL") ?? "support@rentlocal.fo";
+}
+
+export function getResendApiKey(): string | undefined {
+  return getEnv("RESEND_API_KEY");
+}
+
 export const env = {
   nodeEnv: getEnv("NODE_ENV") ?? "development",
   isDev: (getEnv("NODE_ENV") ?? "development") === "development",
@@ -63,4 +84,9 @@ export const env = {
   stripeWebhookSecret: getEnv("STRIPE_WEBHOOK_SECRET"),
   supabaseUrl: getEnv("NEXT_PUBLIC_SUPABASE_URL"),
   supabaseAnonKey: getEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+  resendApiKey: getResendApiKey,
+  emailFromAddress: getEmailFromAddress,
+  emailFromName: getEmailFromName,
+  emailReplyTo: getEmailReplyTo,
+  supportEmail: getSupportEmail,
 };

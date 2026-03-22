@@ -20,6 +20,11 @@ In Vercel: **Project → Settings → Environment Variables**. Add for **Product
 | `UPLOAD_DRIVER` | Optional | `local` (ephemeral on Vercel), `supabase`, or `s3`. For production, use `supabase` or `s3`. |
 | `SUPABASE_SERVICE_ROLE_KEY` | If Supabase storage | For server-side uploads; keep secret. |
 | `SUPABASE_STORAGE_BUCKET` | If Supabase storage | Default `uploads`. |
+| `RESEND_API_KEY` | Optional (emails) | Resend API key for transactional emails. Without it, only in-app notifications. |
+| `EMAIL_FROM_ADDRESS` | If using Resend | Sender email (e.g. `notifications@rentlocal.fo`). |
+| `EMAIL_FROM_NAME` | Optional | Sender display name (default: RentLocal). |
+| `EMAIL_REPLY_TO` | Optional | Reply-to address (e.g. `support@rentlocal.fo`). |
+| `SUPPORT_EMAIL` / `NEXT_PUBLIC_SUPPORT_EMAIL` | Optional | Support contact in email footer. |
 
 Do **not** commit `.env` or `.env.local`. Use Vercel env UI only.
 

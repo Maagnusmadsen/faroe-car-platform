@@ -355,7 +355,26 @@
     "fullName": "Full name",
     "namePlaceholder": "Your name",
     "additionalDetails": "Address & notes",
-    "backToHome": "← Back to home"
+    "backToHome": "← Back to home",
+    "notificationPreferences": "Notification preferences"
+  },
+  "notificationPrefs": {
+    "title": "Notification preferences",
+    "subtitle": "Control optional notifications. Booking confirmations, payments, and security emails are always sent.",
+    "saveSuccess": "Preferences saved.",
+    "saveError": "Could not save. Try again.",
+    "backToProfile": "← Back to profile",
+    "loading": "Loading…",
+    "empty": "No preferences to configure.",
+    "channelEmail": "Email",
+    "channelInApp": "In-app",
+    "bookingRequested": "New booking requests",
+    "bookingReminder": "Trip reminders",
+    "messageReceived": "New messages",
+    "reviewRequested": "Leave a review reminders",
+    "listingPublished": "Listing published",
+    "tripStarted": "Trip started",
+    "tripEnded": "Trip ended"
   },
   "renterApproval": {
     "title": "Get approved to rent",
