@@ -2,9 +2,25 @@
  * Shared email layout.
  * Matches RentLocal branding (logo, green bar, tagline) – same look as Supabase Confirm signup.
  * Table-based for email client compatibility.
+ * Logo: embedded as base64 so it always displays (no external URL needed).
  */
 
+import { readFileSync } from "fs";
+import { join } from "path";
 import { env } from "@/config/env";
+
+function getLogoDataUrl(): string {
+  try {
+    const path = join(process.cwd(), "public", "logo-light.png");
+    const buf = readFileSync(path);
+    return `data:image/png;base64,${buf.toString("base64")}`;
+  } catch {
+    return "";
+  }
+}
+
+// Cache at module load – logo doesn't change at runtime
+const LOGO_DATA_URL = getLogoDataUrl();
 
 export function getAppUrl(): string {
   if (typeof window !== "undefined") return window.location.origin;
@@ -59,12 +75,13 @@ export function secondaryLink(href: string, label: string): string {
 
 /**
  * Full email wrapper – logo, green bar, footer. Same structure as Supabase Confirm signup.
+ * Logo: embedded base64 (works in all email clients; no external URL).
  */
 export function emailLayout(content: string, title?: string): string {
   const appUrl = getAppUrl();
   const supportEmail = env.supportEmail();
   const brandName = "RentLocal";
-  const logoUrl = `${appUrl}/logo-light.png`;
+  const logoSrc = LOGO_DATA_URL || `${appUrl}/logo-light.png`;
 
   return `
 <!DOCTYPE html>
@@ -89,7 +106,7 @@ export function emailLayout(content: string, title?: string): string {
           </tr>
           <tr>
             <td style="padding:32px 40px 24px;text-align:center;border-bottom:1px solid ${BORDER};">
-              <img src="${logoUrl}" alt="${brandName}" style="display:block;margin:0 auto;max-width:180px;height:auto;">
+              <img src="${logoSrc}" alt="${brandName}" style="display:block;margin:0 auto;max-width:180px;height:auto;">
               <p style="margin:16px 0 0;font-size:14px;line-height:1.5;color:${TEXT_MUTED};">
                 Rent cars from locals in the Faroe Islands
               </p>
