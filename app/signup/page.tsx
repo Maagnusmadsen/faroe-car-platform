@@ -72,9 +72,6 @@ export default function SignupPage() {
             <div className="mt-2 space-y-2 rounded-lg bg-brand-light px-3 py-3 text-sm text-brand" role="status">
               <p>Please check your email to confirm your account.</p>
               <p className="text-brand-hover">
-                {t("auth.signupMobileHint")}
-              </p>
-              <p className="text-brand-hover">
                 Didn&apos;t receive it? You can still try{" "}
                 <Link href="/login" className="font-medium underline">
                   logging in

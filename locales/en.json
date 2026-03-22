@@ -308,8 +308,7 @@
     "resetPassword": "Reset password",
     "magicLink": "Send magic link to email",
     "magicLinkSent": "Check your email for the sign-in link.",
-    "confirmEmail": "Check your email to confirm your account, then log in.",
-    "signupMobileHint": "On mobile: if the button doesn't work, long-press the link and choose «Open in Safari» or «Open in Chrome»."
+    "confirmEmail": "Check your email to confirm your account, then log in."
   },
   "profile": {
     "title": "Profile",
