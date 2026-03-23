@@ -282,8 +282,20 @@ export function renderEmailTemplate(
       };
     }
 
+    case "renter.approved": {
+      const content = `
+        <h1 class="headline">You're approved to rent</h1>
+        <p class="body">Great news! Your driving licence has been verified. You can now request to book cars on RentLocal.</p>
+        ${ctaButton(`${appUrl}/rent-a-car`, "Browse cars")}
+      `;
+      return {
+        subject: "You're approved to rent on RentLocal",
+        html: emailLayout(content, "Renter approved"),
+        text: "You're approved to rent on RentLocal. Browse cars and book your trip: " + `${appUrl}/rent-a-car`,
+      };
+    }
+
     case "listing.published":
-    case "renter.approved":
       return null;
 
     default:
