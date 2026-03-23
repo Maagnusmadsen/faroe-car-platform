@@ -146,6 +146,31 @@ function createSupabaseDriver(): StorageDriver {
 
 let _driver: StorageDriver | null = null;
 
+/**
+ * Delete all files under a prefix (e.g. verification/userId).
+ * Supabase only – no-op for other drivers.
+ */
+export async function deleteFilesByPrefix(prefix: string): Promise<void> {
+  const driver = process.env.UPLOAD_DRIVER ?? "local";
+  if (driver !== "supabase") return;
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_ANON_KEY;
+  const bucket = process.env.SUPABASE_STORAGE_BUCKET ?? "uploads";
+  if (!url || !key) return;
+
+  const client = createClient(url, key);
+  const { data } = await client.storage.from(bucket).list(prefix, { limit: 200 });
+  if (!data?.length) return;
+
+  const keys = data
+    .filter((f) => f.name)
+    .map((f) => `${prefix}/${f.name}`);
+  if (keys.length > 0) {
+    await client.storage.from(bucket).remove(keys);
+  }
+}
+
 /** Get the configured storage driver. Uses UPLOAD_DRIVER= local | s3 | supabase (default local if unset). */
 export function getStorage(): StorageDriver {
   if (_driver) return _driver;

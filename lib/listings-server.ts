@@ -16,7 +16,7 @@ import {
   validateStep5,
   validateStep7,
 } from "@/components/listing-wizard/validateSteps";
-import { deleteListingImage } from "@/lib/listing-images";
+import { deleteListingImage, deleteListingImagesFromStorage } from "@/lib/listing-images";
 
 const DEFAULT_TOWN = "Tórshavn";
 const DEFAULT_LAT = 62.0097;
@@ -492,10 +492,11 @@ export async function publishListing(listingId: string, ownerId: string, wizardD
   return { success: true };
 }
 
-/** Soft-delete a listing (set deletedAt). Only owner can delete. */
+/** Soft-delete a listing (set deletedAt). Only owner can delete. Also removes images from Storage. */
 export async function deleteListing(listingId: string, ownerId: string) {
   const car = await getListingForOwner(listingId, ownerId);
   if (!car) return false;
+  await deleteListingImagesFromStorage(listingId);
   await prisma.carListing.update({
     where: { id: listingId },
     data: { deletedAt: new Date() },
@@ -503,13 +504,14 @@ export async function deleteListing(listingId: string, ownerId: string) {
   return true;
 }
 
-/** Soft-delete a listing as admin. No owner check. */
+/** Soft-delete a listing as admin. No owner check. Also removes images from Storage. */
 export async function deleteListingAsAdmin(listingId: string): Promise<boolean> {
   const car = await prisma.carListing.findFirst({
     where: { id: listingId, deletedAt: null },
     select: { id: true },
   });
   if (!car) return false;
+  await deleteListingImagesFromStorage(listingId);
   await prisma.carListing.update({
     where: { id: listingId },
     data: { deletedAt: new Date() },

@@ -59,6 +59,25 @@ export async function addListingImage(
   return { id: image.id, url: image.url, sortOrder: image.sortOrder };
 }
 
+/**
+ * Delete all listing images from Storage (Supabase/S3/local).
+ * Call when a listing is deleted to keep Storage in sync.
+ */
+export async function deleteListingImagesFromStorage(listingId: string): Promise<void> {
+  const images = await prisma.carImage.findMany({
+    where: { carId: listingId },
+    select: { storageKey: true },
+  });
+  const storage = getStorage();
+  for (const img of images) {
+    if (img.storageKey) {
+      await storage.delete(img.storageKey).catch(() => {
+        // Ignore if already deleted or not found
+      });
+    }
+  }
+}
+
 export async function deleteListingImage(
   imageId: string,
   ownerId: string

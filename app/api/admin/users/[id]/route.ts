@@ -11,6 +11,8 @@ import { prisma } from "@/db";
 import { AppError, HttpStatus } from "@/lib/utils/errors";
 import { logAdminAction } from "@/lib/admin-audit";
 import { env } from "@/config/env";
+import { deleteListingImagesFromStorage } from "@/lib/listing-images";
+import { deleteFilesByPrefix } from "@/lib/storage";
 
 export async function DELETE(
   _request: NextRequest,
@@ -48,10 +50,19 @@ export async function DELETE(
       }
     }
 
-    const bookingCount = await prisma.booking.count({ where: { renterId: user.id } });
-    if (bookingCount > 0) {
+    const bookingCountAsRenter = await prisma.booking.count({ where: { renterId: user.id } });
+    if (bookingCountAsRenter > 0) {
       return jsonError(
-        `User has ${bookingCount} booking(s). Remove bookings first.`,
+        `User has ${bookingCountAsRenter} booking(s) as renter. Remove bookings first.`,
+        HttpStatus.BAD_REQUEST
+      );
+    }
+    const bookingCountOnListings = await prisma.booking.count({
+      where: { car: { ownerId: user.id } },
+    });
+    if (bookingCountOnListings > 0) {
+      return jsonError(
+        `User owns listing(s) with ${bookingCountOnListings} booking(s). Remove or reassign bookings first.`,
         HttpStatus.BAD_REQUEST
       );
     }
@@ -62,6 +73,16 @@ export async function DELETE(
         HttpStatus.BAD_REQUEST
       );
     }
+
+    // Delete Storage files before DB: listing images + verification images
+    const userListings = await prisma.carListing.findMany({
+      where: { ownerId: user.id },
+      select: { id: true },
+    });
+    for (const l of userListings) {
+      await deleteListingImagesFromStorage(l.id);
+    }
+    await deleteFilesByPrefix(`verification/${user.id}`);
 
     await prisma.user.delete({ where: { id: user.id } });
 
