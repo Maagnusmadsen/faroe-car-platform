@@ -6,6 +6,34 @@ import type { EventType, Recipient, EventConfig, NotificationEventPayload } from
 import type { NotificationChannel } from "@prisma/client";
 import { prisma } from "@/db";
 
+/** At least one of these must be present for recipient resolution. */
+const RECIPIENT_FIELDS_BY_EVENT: Partial<Record<EventType, string[]>> = {
+  "booking.requested": ["ownerId"],
+  "booking.approved": ["renterId"],
+  "booking.rejected": ["renterId"],
+  "booking.confirmed": ["renterId"],
+  "booking.cancelled": ["ownerId", "renterId"],
+  "booking.reminder": ["ownerId", "renterId"],
+  "payment.received": ["ownerId"],
+  "payment.receipt": ["renterId"],
+  "payout.sent": ["ownerId"],
+  "payout.failed": ["ownerId"],
+  "message.received": ["recipientId"],
+  "message.digest": ["userId"],
+  "review.requested": ["ownerId", "renterId"],
+  "trip.started": ["ownerId", "renterId"],
+  "trip.ended": ["ownerId", "renterId"],
+  "listing.published": ["ownerId", "userId"],
+  "renter.approved": ["userId"],
+  "user.welcome": ["userId"],
+};
+
+export interface PayloadValidationResult {
+  valid: boolean;
+  missingFields?: string[];
+  reason?: string;
+}
+
 const EVENT_CONFIG: Record<
   EventType,
   { channels: NotificationChannel[]; critical: boolean; userCanDisable: boolean }
@@ -34,6 +62,30 @@ export function getEventConfig(type: EventType): EventConfig {
   const cfg = EVENT_CONFIG[type];
   if (!cfg) throw new Error(`Unknown event type: ${type}`);
   return cfg;
+}
+
+/**
+ * Validate that payload has at least one recipient ID for resolution.
+ */
+export function validatePayloadForEvent(
+  type: EventType,
+  payload: NotificationEventPayload
+): PayloadValidationResult {
+  const fields = RECIPIENT_FIELDS_BY_EVENT[type];
+  if (!fields) return { valid: true };
+
+  const hasAny = fields.some((f) => {
+    const v = payload[f as keyof NotificationEventPayload];
+    return v != null && (typeof v !== "string" || v.trim() !== "");
+  });
+  if (!hasAny) {
+    return {
+      valid: false,
+      missingFields: fields,
+      reason: `Missing recipient field for ${type} (need one of: ${fields.join(", ")})`,
+    };
+  }
+  return { valid: true };
 }
 
 function collectRecipientIds(type: EventType, payload: NotificationEventPayload): string[] {

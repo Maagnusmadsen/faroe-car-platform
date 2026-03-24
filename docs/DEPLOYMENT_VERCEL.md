@@ -20,7 +20,10 @@ In Vercel: **Project → Settings → Environment Variables**. Add for **Product
 | `UPLOAD_DRIVER` | Optional | `local` (ephemeral on Vercel), `supabase`, or `s3`. For production, use `supabase` or `s3`. |
 | `SUPABASE_SERVICE_ROLE_KEY` | If Supabase storage | For server-side uploads; keep secret. |
 | `SUPABASE_STORAGE_BUCKET` | If Supabase storage | Default `uploads`. |
-| `RESEND_API_KEY` | Optional (emails) | Resend API key for transactional emails. Without it, only in-app notifications. |
+| `INNGEST_EVENT_KEY` | Yes (notifications) | From Inngest Dashboard. Required in production for notification events. |
+| `INNGEST_SIGNING_KEY` | Yes (notifications) | From Inngest Dashboard. Required for webhook verification. |
+| `APP_URL` / `NEXT_PUBLIC_APP_URL` | Recommended | Production URL (e.g. `https://rentlocal.fo`). Used for email links. Fallback: VERCEL_URL. |
+| `RESEND_API_KEY` | Yes (emails) | Resend API key. Required in production for email notifications. |
 | `EMAIL_FROM_ADDRESS` | If using Resend | Sender email (e.g. `notifications@rentlocal.fo`). |
 | `EMAIL_FROM_NAME` | Optional | Sender display name (default: RentLocal). |
 | `EMAIL_REPLY_TO` | Optional | Reply-to address (e.g. `support@rentlocal.fo`). |
@@ -54,7 +57,7 @@ Do **not** commit `.env` or `.env.local`. Use Vercel env UI only.
 ## 4. Production configuration
 
 - **Build**: The project runs `prisma generate && prisma migrate deploy && next build`. Migrations are applied at build time; ensure `DATABASE_URL` is set in Vercel.
-- **Base URL**: The app uses `VERCEL_URL` (set by Vercel) when `NEXTAUTH_URL` is not set, so Stripe success/cancel and auth callbacks use the correct domain.
+- **Base URL**: Prefer `APP_URL` or `NEXT_PUBLIC_APP_URL` (e.g. `https://rentlocal.fo`) for correct email links. Fallback: `VERCEL_URL`, `NEXTAUTH_URL`.
 - **Images**: `next.config.ts` allows images from `images.unsplash.com` and `**.supabase.co` (Supabase Storage). If you use another image host, add it to `remotePatterns`.
 
 ## 5. Deploy

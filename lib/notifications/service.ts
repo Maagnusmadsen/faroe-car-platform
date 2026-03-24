@@ -10,6 +10,7 @@ import type { Prisma } from "@prisma/client";
 import type { DispatchNotificationEventInput } from "./types";
 import { inngest } from "@/lib/inngest/client";
 import { processNotificationEvent } from "./processor";
+import { requireInngestConfig } from "@/config/env";
 
 function log(level: "info" | "warn" | "error", message: string, ctx?: Record<string, unknown>) {
   const entry = { level, message, ...ctx, timestamp: new Date().toISOString() };
@@ -52,6 +53,7 @@ export async function dispatchNotificationEvent(
   });
 
   try {
+    requireInngestConfig();
     await inngest.send({
       name: "notification/dispatch",
       data: { eventId: event.id },

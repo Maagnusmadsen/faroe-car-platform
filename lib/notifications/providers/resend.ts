@@ -15,6 +15,11 @@ export function getResendClient(): Resend | null {
   return _client;
 }
 
+/** Throws in production if RESEND_API_KEY is missing. Call before attempting email send. */
+export function assertResendConfigured(): void {
+  env.requireResendForProduction();
+}
+
 export interface SendEmailInput {
   to: string;
   subject: string;
@@ -31,9 +36,19 @@ export interface SendEmailResult {
 }
 
 export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
+  assertResendConfigured();
   const client = getResendClient();
   if (!client) {
-    return { success: false, error: "Resend not configured (missing RESEND_API_KEY)" };
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "RESEND_API_KEY is required for email delivery. Add it to Vercel Environment Variables."
+      );
+    }
+    return {
+      success: false,
+      error: "provider_error: RESEND_API_KEY not configured (dev mode)",
+      statusCode: undefined,
+    };
   }
 
   try {

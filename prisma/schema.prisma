@@ -569,8 +569,9 @@ model NotificationEvent {
   sourceId        String?   // e.g. bookingId, conversationId
   sourceType      String?   // e.g. booking, message
   createdAt       DateTime  @default(now())
-  enqueuedAt      DateTime? // set when successfully sent to Inngest; null = enqueue failed, needs recovery
-  enqueueError    String?   @db.Text // error message when enqueue failed
+  enqueuedAt       DateTime? // set when successfully sent to Inngest; null = enqueue failed, needs recovery
+  enqueueError     String?   @db.Text // error message when enqueue failed
+  processingError  String?   @db.Text // structured error when processing fails (e.g. no_recipients, missing payload)
 
   deliveries NotificationDelivery[]
 

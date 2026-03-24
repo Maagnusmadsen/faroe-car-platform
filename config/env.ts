@@ -16,11 +16,13 @@ function getEnvRequired(key: string): string {
   return value;
 }
 
-/** Base URL for the app (used for API client, auth callbacks, Stripe success/cancel). On Vercel, VERCEL_URL is set automatically. */
+/** Base URL for the app (used for API client, auth callbacks, Stripe success/cancel). Prefer APP_URL / NEXT_PUBLIC_APP_URL for prod. */
 export function getBaseUrl(): string {
   if (typeof window !== "undefined") {
     return window.location.origin;
   }
+  const appUrl = getEnv("APP_URL") ?? getEnv("NEXT_PUBLIC_APP_URL");
+  if (appUrl) return appUrl.replace(/\/$/, "");
   const vercelUrl = getEnv("VERCEL_URL");
   if (vercelUrl) return `https://${vercelUrl}`;
   return getEnv("NEXTAUTH_URL") ?? "http://localhost:3000";
@@ -76,6 +78,47 @@ export function getResendApiKey(): string | undefined {
   return getEnv("RESEND_API_KEY");
 }
 
+/** Inngest event key – required in production for sending events to Inngest Cloud. */
+export function getInngestEventKey(): string | undefined {
+  return getEnv("INNGEST_EVENT_KEY");
+}
+
+/** Inngest signing key – required in production for webhook verification. */
+export function getInngestSigningKey(): string | undefined {
+  return getEnv("INNGEST_SIGNING_KEY");
+}
+
+/** Validate Inngest config. In production, both keys are required. Throws if invalid. */
+export function requireInngestConfig(): { eventKey: string; signingKey: string } {
+  const isProd = getEnv("NODE_ENV") === "production";
+  const eventKey = getInngestEventKey();
+  const signingKey = getInngestSigningKey();
+  if (isProd) {
+    if (!eventKey?.trim()) {
+      throw new Error(
+        "INNGEST_EVENT_KEY is required in production. Add it in Vercel Environment Variables."
+      );
+    }
+    if (!signingKey?.trim()) {
+      throw new Error(
+        "INNGEST_SIGNING_KEY is required in production. Add it in Vercel Environment Variables."
+      );
+    }
+  }
+  return { eventKey: eventKey ?? "", signingKey: signingKey ?? "" };
+}
+
+/** Validate Resend config when email delivery is attempted. In production, API key is required. */
+export function requireResendForProduction(): void {
+  const isProd = getEnv("NODE_ENV") === "production";
+  const apiKey = getResendApiKey();
+  if (isProd && (!apiKey || !apiKey.trim())) {
+    throw new Error(
+      "RESEND_API_KEY is required in production for email notifications. Add it in Vercel Environment Variables."
+    );
+  }
+}
+
 export const env = {
   nodeEnv: getEnv("NODE_ENV") ?? "development",
   isDev: (getEnv("NODE_ENV") ?? "development") === "development",
@@ -95,4 +138,7 @@ export const env = {
   emailReplyTo: getEmailReplyTo,
   supportEmail: getSupportEmail,
   superAdminEmail: getSuperAdminEmail,
+  inngestEventKey: getInngestEventKey,
+  inngestSigningKey: getInngestSigningKey,
+  requireResendForProduction,
 };

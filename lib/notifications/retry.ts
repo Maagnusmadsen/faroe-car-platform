@@ -20,16 +20,18 @@ export function nextRetryAt(attemptCount: number): Date {
 
 /**
  * Email failures: 5xx and network/config errors are retryable.
- * 4xx (invalid email, rate limit, etc.) are typically non-retryable.
+ * 4xx (invalid email, rate limit, auth, etc.) are non-retryable – will not resolve on retry.
+ * 429 (rate limit) is retryable with backoff.
  */
 export function isRetryableEmail(error: string | undefined, statusCode?: number | null): boolean {
   if (statusCode != null) {
     if (statusCode >= 500) return true;
-    if (statusCode >= 400 && statusCode < 500) return false;
+    if (statusCode === 429) return true; // rate limit – retry with backoff
+    if (statusCode >= 400 && statusCode < 500) return false; // 4xx except 429
   }
   const msg = (error ?? "").toLowerCase();
   if (msg.includes("network") || msg.includes("timeout") || msg.includes("econnrefused")) return true;
-  if (msg.includes("resend not configured") || msg.includes("fetch")) return true;
+  if (msg.includes("fetch")) return true;
   return false;
 }
 

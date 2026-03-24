@@ -30,7 +30,14 @@ function LoginForm() {
         password,
       });
       if (signInError) {
-        setError(t("auth.errorInvalidCredentials"));
+        const msg = signInError.message?.toLowerCase() ?? "";
+        if (msg.includes("email not confirmed") || msg.includes("confirm your email")) {
+          setError(
+            "Your email is not confirmed yet. Please check your inbox and click the confirmation link. If you don't see it, check your spam folder."
+          );
+        } else {
+          setError(signInError.message || t("auth.errorInvalidCredentials"));
+        }
         setLoading(false);
         return;
       }

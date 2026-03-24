@@ -52,7 +52,11 @@ export async function sendEmailNotification(
   );
 
   if (!template) {
-    return { success: false, error: "No email template for this event type" };
+    return {
+      success: false,
+      error: "template_missing",
+      statusCode: null,
+    };
   }
 
   const result = await sendEmail({

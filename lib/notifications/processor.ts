@@ -6,7 +6,7 @@
 import { prisma } from "@/db";
 import type { NotificationChannel } from "@prisma/client";
 import type { Recipient } from "./types";
-import { getEventConfig, resolveRecipients } from "./events";
+import { getEventConfig, resolveRecipients, validatePayloadForEvent } from "./events";
 import { isChannelEnabledForUser } from "./preferences";
 import { createInAppNotification } from "./channels/in-app";
 import {
@@ -339,10 +339,35 @@ export async function processNotificationEvent(eventId: string): Promise<void> {
 
   const type = event.eventType as import("./types").EventType;
   const payload = event.payload as Record<string, unknown>;
-  const enrichedPayload = await enrichPayload(type, payload);
 
-  const recipients = await resolveRecipients(type, enrichedPayload);
+  const validation = validatePayloadForEvent(type, payload as import("./types").NotificationEventPayload);
+  if (!validation.valid) {
+    const err = JSON.stringify({
+      reason: "payload_validation_failed",
+      message: validation.reason,
+      missingFields: validation.missingFields,
+    });
+    await prisma.notificationEvent.update({
+      where: { id: eventId },
+      data: { processingError: err },
+    });
+    log("warn", "Payload validation failed", { eventId, type, reason: validation.reason });
+    return;
+  }
+
+  const enrichedPayload = await enrichPayload(type, payload);
+  const recipients = await resolveRecipients(type, enrichedPayload as import("./types").NotificationEventPayload);
+
   if (recipients.length === 0) {
+    const err = JSON.stringify({
+      reason: "no_recipients",
+      message: `No recipients resolved for ${type}`,
+      payloadKeys: Object.keys(payload),
+    });
+    await prisma.notificationEvent.update({
+      where: { id: eventId },
+      data: { processingError: err },
+    });
     log("warn", "No recipients resolved", { eventId, type });
     return;
   }
@@ -353,7 +378,15 @@ export async function processNotificationEvent(eventId: string): Promise<void> {
     for (const channel of config.channels) {
       const enabled = await isChannelEnabledForUser(recipient.userId, type, channel);
       if (!enabled) {
-        await createDeliveryRecord(eventId, recipient.userId, channel, "SKIPPED", null, null);
+        await createDeliveryRecord(
+          eventId,
+          recipient.userId,
+          channel,
+          "SKIPPED",
+          null,
+          "preference_disabled",
+          null
+        );
         continue;
       }
 
@@ -378,7 +411,8 @@ export async function processNotificationEvent(eventId: string): Promise<void> {
               "EMAIL",
               "SKIPPED",
               null,
-              "batched (digest pending)"
+              "batched_digest_pending",
+              null
             );
             continue;
           }
@@ -395,7 +429,15 @@ export async function processNotificationEvent(eventId: string): Promise<void> {
           userId: recipient.userId,
           eventType: type,
         });
-        await createDeliveryRecord(eventId, recipient.userId, channel, "SKIPPED", null, "No email");
+        await createDeliveryRecord(
+          eventId,
+          recipient.userId,
+          channel,
+          "SKIPPED",
+          null,
+          "no_email",
+          null
+        );
       }
     }
   }
