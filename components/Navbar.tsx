@@ -236,6 +236,9 @@ function NavLinks({
           <Link href="/bookings" className={getLinkClass("/bookings")} onClick={handleNavigate}>
             {t("nav.bookingsAndListings")}
           </Link>
+          <Link href="/messages" className={getLinkClass("/messages")} onClick={handleNavigate}>
+            {t("nav.messages")}
+          </Link>
           {hasListings === true && (
             <Link href="/owner/dashboard" className={getLinkClass("/owner/dashboard")} onClick={handleNavigate}>
               {t("ownerDashboard.title")}
