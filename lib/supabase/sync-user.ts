@@ -76,13 +76,21 @@ export async function syncSupabaseUserToPrisma(supabaseUser: SupabaseUser): Prom
       await prisma.userProfile.create({
         data: { userId: user.id },
       });
-      await dispatchNotificationEvent({
-        type: "user.welcome",
-        idempotencyKey: `user-welcome-${user.id}`,
-        payload: { userId: user.id },
-        sourceId: user.id,
-        sourceType: "user",
-      });
+      try {
+        await dispatchNotificationEvent({
+          type: "user.welcome",
+          idempotencyKey: `user-welcome-${user.id}`,
+          payload: { userId: user.id },
+          sourceId: user.id,
+          sourceType: "user",
+        });
+      } catch (err) {
+        // Never block auth/session sync on notification failures.
+        console.error("[Auth] user.welcome dispatch failed during user sync", {
+          userId: user.id,
+          error: (err as Error).message,
+        });
+      }
     }
   }
 
