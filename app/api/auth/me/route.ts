@@ -3,16 +3,16 @@
  * Returns 200 + { data: { id, email, name, role } } or 401.
  */
 
-import { jsonError, jsonSuccess } from "@/lib/utils/api-response";
-import { handleApiError } from "@/lib/utils/api-response";
 import { cookies } from "next/headers";
 import { createRouteHandlerClient } from "@/lib/supabase/server";
 import { syncSupabaseUserToPrisma } from "@/lib/supabase/sync-user";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET() {
+  const { supabase, applyCookies } = await createRouteHandlerClient();
   try {
     const debug = process.env.AUTH_DEBUG === "1";
     if (debug) {
@@ -25,8 +25,6 @@ export async function GET() {
       });
     }
 
-    // Important: use route-handler client to read request cookies in API context.
-    const { supabase } = await createRouteHandlerClient();
     const {
       data: { user: supabaseUser },
       error: authError,
@@ -44,7 +42,9 @@ export async function GET() {
       if (debug) {
         console.info("[AuthDebug] /api/auth/me unauthorized from Supabase auth read");
       }
-      return jsonError("Unauthorized", 401);
+      const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      applyCookies(response);
+      return response;
     }
 
     const appUser = await syncSupabaseUserToPrisma(supabaseUser);
@@ -55,7 +55,12 @@ export async function GET() {
           email: supabaseUser.email ?? null,
         });
       }
-      return jsonError("Authenticated user has no valid app profile", 500);
+      const response = NextResponse.json(
+        { error: "Authenticated user has no valid app profile" },
+        { status: 500 }
+      );
+      applyCookies(response);
+      return response;
     }
 
     if (debug) {
@@ -64,16 +69,26 @@ export async function GET() {
         email: appUser.email,
       });
     }
-    return jsonSuccess({
-      id: appUser.id,
-      email: appUser.email,
-      name: appUser.name,
-      role: appUser.role,
-    });
+    const response = NextResponse.json(
+      {
+        data: {
+          id: appUser.id,
+          email: appUser.email,
+          name: appUser.name,
+          role: appUser.role,
+        },
+      },
+      { status: 200 }
+    );
+    applyCookies(response);
+    return response;
   } catch (err) {
     if (process.env.AUTH_DEBUG === "1") {
       console.error("[AuthDebug] /api/auth/me exception", err);
     }
-    return handleApiError(err);
+    const message = err instanceof Error ? err.message : "Internal Server Error";
+    const response = NextResponse.json({ error: message }, { status: 500 });
+    applyCookies(response);
+    return response;
   }
 }
