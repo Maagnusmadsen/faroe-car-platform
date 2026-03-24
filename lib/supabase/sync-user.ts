@@ -6,6 +6,7 @@
 import { prisma } from "@/db";
 import { dispatchNotificationEvent } from "@/lib/notifications";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { Prisma } from "@prisma/client";
 import type { UserRole } from "@prisma/client";
 
 export interface SyncedUser {
@@ -63,18 +64,42 @@ export async function syncSupabaseUserToPrisma(supabaseUser: SupabaseUser): Prom
       });
       user = await prisma.user.findUniqueOrThrow({ where: { id: existingByEmail.id } });
     } else {
-      user = await prisma.user.create({
-        data: {
-          supabaseUserId: supabaseId,
-          email,
-          name,
-          image: image ?? null,
-          emailVerified: supabaseUser.email_confirmed_at ? new Date(supabaseUser.email_confirmed_at) : null,
-          role: "USER",
-        },
-      });
-      await prisma.userProfile.create({
-        data: { userId: user.id },
+      try {
+        user = await prisma.user.create({
+          data: {
+            supabaseUserId: supabaseId,
+            email,
+            name,
+            image: image ?? null,
+            emailVerified: supabaseUser.email_confirmed_at ? new Date(supabaseUser.email_confirmed_at) : null,
+            role: "USER",
+          },
+        });
+      } catch (err) {
+        // Race-safe fallback: another request created the same email between findFirst and create.
+        const isUniqueEmailError =
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === "P2002" &&
+          Array.isArray((err.meta as { target?: unknown })?.target) &&
+          ((err.meta as { target?: unknown[] }).target ?? []).includes("email");
+
+        if (!isUniqueEmailError) throw err;
+
+        const existingAfterRace = await prisma.user.findFirst({
+          where: { email: { equals: email, mode: "insensitive" }, deletedAt: null },
+        });
+        if (!existingAfterRace) throw err;
+
+        await prisma.user.update({
+          where: { id: existingAfterRace.id },
+          data: { supabaseUserId: supabaseId },
+        });
+        user = await prisma.user.findUniqueOrThrow({ where: { id: existingAfterRace.id } });
+      }
+      await prisma.userProfile.upsert({
+        where: { userId: user.id },
+        create: { userId: user.id },
+        update: {},
       });
       try {
         await dispatchNotificationEvent({
