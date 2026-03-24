@@ -76,15 +76,12 @@ export async function syncSupabaseUserToPrisma(supabaseUser: SupabaseUser): Prom
           },
         });
       } catch (err) {
-        // Race-safe fallback: another request created the same email between findFirst and create.
-        const isUniqueEmailError =
-          err instanceof Prisma.PrismaClientKnownRequestError &&
-          err.code === "P2002" &&
-          Array.isArray((err.meta as { target?: unknown })?.target) &&
-          ((err.meta as { target?: unknown[] }).target ?? []).includes("email");
+        // Race-safe fallback: another request may have created same user between read and create.
+        const isUniqueConstraintError =
+          err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
+        if (!isUniqueConstraintError) throw err;
 
-        if (!isUniqueEmailError) throw err;
-
+        // For auth sync reliability, recover by binding the Supabase user to an existing app user by email.
         const existingAfterRace = await prisma.user.findFirst({
           where: { email: { equals: email, mode: "insensitive" }, deletedAt: null },
         });
