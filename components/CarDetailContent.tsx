@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/context/LanguageContext";
@@ -16,9 +16,11 @@ interface CarDetailContentProps {
 
 export default function CarDetailContent({ car }: CarDetailContentProps) {
   const { t } = useLanguage();
-  const { user: sessionUser } = useAuth();
+  const { user: sessionUser, status: authStatus, refetch: refetchAuth } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const bookingCallbackPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
   const [bookingState, setBookingState] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [bookingMessage, setBookingMessage] = useState<string | null>(null);
   const [bookingErrorCode, setBookingErrorCode] = useState<string | null>(null);
@@ -195,6 +197,7 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
     try {
       const res = await fetch("/api/bookings", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           listingId: car.id,
@@ -208,8 +211,17 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
         if (json?.code === "RENTER_NOT_VERIFIED") {
           setBookingMessage(t("rent.renterNotApproved"));
           setBookingErrorCode("RENTER_NOT_VERIFIED");
+        } else if (
+          res.status === 401 ||
+          json?.code === "UNAUTHENTICATED" ||
+          (typeof json?.error === "string" && json.error.toLowerCase() === "unauthorized")
+        ) {
+          setBookingMessage(t("rent.mustSignInToBook"));
+          setBookingErrorCode("UNAUTHENTICATED");
+          void refetchAuth();
         } else {
-          setBookingMessage(json?.error ?? t("rent.bookingError"));
+          const raw = typeof json?.error === "string" ? json.error : "";
+          setBookingMessage(raw || t("rent.bookingError"));
           setBookingErrorCode(null);
         }
         return;
@@ -322,6 +334,56 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                     </button>
                   </div>
                 </div>
+              ) : authStatus === "loading" ? (
+                <p className="text-sm text-slate-500">{t("rent.checkingAccount")}</p>
+              ) : !sessionUser ? (
+                <div className="flex max-w-md flex-col gap-3">
+                  <p className="text-sm text-slate-600">{t("rent.signInToBookHint")}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label htmlFor="booking-pickup-guest" className="mb-1 block text-xs font-medium text-slate-600">
+                        {t("rent.searchLabelPickup")}
+                      </label>
+                      <input
+                        id="booking-pickup-guest"
+                        type="date"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        min={pickupMin || undefined}
+                        max={pickupMax || undefined}
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="booking-dropoff-guest" className="mb-1 block text-xs font-medium text-slate-600">
+                        {t("rent.searchLabelDropoff")}
+                      </label>
+                      <input
+                        id="booking-dropoff-guest"
+                        type="date"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        min={dropoffMin || undefined}
+                        max={pickupMax || undefined}
+                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Link
+                      href={`/login?callbackUrl=${encodeURIComponent(bookingCallbackPath)}`}
+                      className="inline-flex flex-1 items-center justify-center rounded-xl bg-brand px-5 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-brand-hover min-[380px]:flex-none"
+                    >
+                      {t("nav.login")}
+                    </Link>
+                    <Link
+                      href="/signup"
+                      className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 min-[380px]:flex-none"
+                    >
+                      {t("nav.signUp")}
+                    </Link>
+                  </div>
+                </div>
               ) : renterVerificationStatus !== null && renterVerificationStatus !== "VERIFIED" ? (
                 <div className="rounded-xl border border-amber-200 bg-amber-50 px-6 py-4">
                   <p className="text-sm font-medium text-amber-800">{t("rent.renterNotApproved")}</p>
@@ -385,6 +447,22 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
                     <Link href="/renter-approval" className="mt-2 inline-block text-sm font-medium text-brand hover:underline">
                       {t("rent.getApprovedFirst")}
                     </Link>
+                  )}
+                  {bookingErrorCode === "UNAUTHENTICATED" && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        href={`/login?callbackUrl=${encodeURIComponent(bookingCallbackPath)}`}
+                        className="inline-flex rounded-lg bg-brand px-3 py-2 text-sm font-medium text-white hover:bg-brand-hover"
+                      >
+                        {t("nav.login")}
+                      </Link>
+                      <Link
+                        href="/signup"
+                        className="inline-flex rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
+                      >
+                        {t("nav.signUp")}
+                      </Link>
+                    </div>
                   )}
                 </div>
               )}

@@ -5,22 +5,25 @@
  * Owner/renter checks are resource-level (e.g. resource.ownerId === session.user.id), not role-based.
  */
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createRouteHandlerClient } from "@/lib/supabase/server";
 import { syncSupabaseUserToPrisma } from "@/lib/supabase/sync-user";
 import type { SessionUser } from "@/types";
+import type { NextResponse } from "next/server";
 
 export interface AuthSession {
   user: SessionUser;
   expires?: string;
 }
 
+type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
+
 /**
- * Get current session. Returns null if not authenticated.
- * Uses Supabase Auth: getUser() then syncs to Prisma User.
+ * Resolve app session from a Supabase server client (shared by getSession and route handlers).
  */
-export async function getSession(): Promise<AuthSession | null> {
+export async function resolveSessionFromSupabase(
+  supabase: ServerSupabaseClient
+): Promise<AuthSession | null> {
   try {
-    const supabase = await createClient();
     const {
       data: { user: supabaseUser },
       error,
@@ -41,6 +44,32 @@ export async function getSession(): Promise<AuthSession | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Get current session. Returns null if not authenticated.
+ * Uses Supabase Auth: getUser() then syncs to Prisma User.
+ */
+export async function getSession(): Promise<AuthSession | null> {
+  try {
+    const supabase = await createClient();
+    return await resolveSessionFromSupabase(supabase);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Session for Route Handlers: uses the same Supabase client as /api/auth/me so refreshed
+ * auth cookies are applied to the response (avoids 401 after token refresh).
+ */
+export async function getSessionRouteHandler(): Promise<{
+  session: AuthSession | null;
+  applyCookies: (response: NextResponse) => void;
+}> {
+  const { supabase, applyCookies } = await createRouteHandlerClient();
+  const session = await resolveSessionFromSupabase(supabase);
+  return { session, applyCookies };
 }
 
 /**
