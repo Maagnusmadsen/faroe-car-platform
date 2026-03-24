@@ -22,14 +22,27 @@ export function useAuth(): UseAuthResult {
   const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
 
   const fetchAppUser = useCallback(async () => {
-    const res = await fetch("/api/auth/me");
+    const res = await fetch("/api/auth/me", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    });
+    if (process.env.NEXT_PUBLIC_AUTH_DEBUG === "1") {
+      console.info("[AuthDebug] /api/auth/me status", res.status);
+    }
     if (res.ok) {
       const json = await res.json();
       setUser(json.data ?? null);
       setStatus("authenticated");
+      if (process.env.NEXT_PUBLIC_AUTH_DEBUG === "1") {
+        console.info("[AuthDebug] Authenticated user from /api/auth/me", json?.data?.id ?? null);
+      }
     } else {
       setUser(null);
       setStatus("unauthenticated");
+      if (process.env.NEXT_PUBLIC_AUTH_DEBUG === "1") {
+        console.info("[AuthDebug] /api/auth/me returned unauthenticated");
+      }
     }
   }, []);
 
@@ -40,12 +53,15 @@ export function useAuth(): UseAuthResult {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (session) {
-        await fetchAppUser();
-      } else {
-        setUser(null);
-        setStatus("unauthenticated");
+      if (process.env.NEXT_PUBLIC_AUTH_DEBUG === "1") {
+        console.info("[AuthDebug] supabase.auth.getSession() on init", {
+          hasSession: !!session,
+          userId: session?.user?.id ?? null,
+        });
       }
+      // Important: always ask server who is authenticated.
+      // After email-confirm redirect, cookie session may exist even when browser client session is empty.
+      await fetchAppUser();
     };
 
     init();
@@ -53,11 +69,18 @@ export function useAuth(): UseAuthResult {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session) {
-        await fetchAppUser();
-      } else {
+      if (process.env.NEXT_PUBLIC_AUTH_DEBUG === "1") {
+        console.info("[AuthDebug] onAuthStateChange", {
+          event,
+          hasSession: !!session,
+          userId: session?.user?.id ?? null,
+        });
+      }
+      if (event === "SIGNED_OUT") {
         setUser(null);
         setStatus("unauthenticated");
+      } else {
+        await fetchAppUser();
       }
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
         router.refresh();
