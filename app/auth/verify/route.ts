@@ -9,7 +9,7 @@
  * because verification is done server-side with the token_hash - no code_verifier needed.
  */
 
-import { createClient } from "@/lib/supabase/server";
+import { createRouteHandlerClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
@@ -21,13 +21,15 @@ export async function GET(request: Request) {
   // type=signup for "Confirm signup" template; type=email for magic link
   const validType = type === "signup" || type === "email";
   if (token_hash && validType) {
-    const supabase = await createClient();
+    const { supabase, applyCookies } = await createRouteHandlerClient();
     const { error } = await supabase.auth.verifyOtp({
       token_hash,
       type: (type as "signup" | "email") ?? "signup",
     });
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      const response = NextResponse.redirect(`${origin}${next}`);
+      applyCookies(response);
+      return response;
     }
   }
 
