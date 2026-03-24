@@ -83,13 +83,21 @@ export async function syncSupabaseUserToPrisma(supabaseUser: SupabaseUser): Prom
 
         // For auth sync reliability, recover by binding the Supabase user to an existing app user by email.
         const existingAfterRace = await prisma.user.findFirst({
-          where: { email: { equals: email, mode: "insensitive" }, deletedAt: null },
+          where: { email: { equals: email, mode: "insensitive" } },
         });
         if (!existingAfterRace) throw err;
 
         await prisma.user.update({
           where: { id: existingAfterRace.id },
-          data: { supabaseUserId: supabaseId },
+          data: {
+            supabaseUserId: supabaseId,
+            deletedAt: null,
+            emailVerified: supabaseUser.email_confirmed_at
+              ? new Date(supabaseUser.email_confirmed_at)
+              : existingAfterRace.emailVerified,
+            name: name ?? existingAfterRace.name,
+            image: image ?? existingAfterRace.image,
+          },
         });
         user = await prisma.user.findUniqueOrThrow({ where: { id: existingAfterRace.id } });
       }
