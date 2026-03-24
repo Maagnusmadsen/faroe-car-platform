@@ -18,6 +18,7 @@
     "db:delete-all-listings": "tsx scripts/delete-all-listings.ts",
     "db:make-admin": "tsx scripts/make-admin.ts",
     "db:reset": "tsx scripts/reset-database.ts",
+    "db:dev-reset-app-data": "tsx scripts/dev-reset-app-data.ts",
     "logo:png": "tsx scripts/convert-logo-to-png.ts",
     "logo:base64": "tsx scripts/logo-base64-for-email.ts"
   },
