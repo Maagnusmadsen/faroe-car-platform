@@ -148,6 +148,8 @@ export async function listConversationsForUser(userId: string) {
         select: {
           id: true,
           status: true,
+          renterId: true,
+          renter: { select: { name: true } },
           car: {
             select: {
               id: true,
@@ -155,6 +157,8 @@ export async function listConversationsForUser(userId: string) {
               model: true,
               town: true,
               island: true,
+              ownerId: true,
+              owner: { select: { name: true } },
             },
           },
         },
@@ -199,11 +203,17 @@ export async function listConversationsForUser(userId: string) {
   return conversations.map((conv) => {
     const lastMessage = conv.messages[0] ?? null;
     const unreadCount = unreadMap.get(conv.id) ?? 0;
+    const b = conv.booking;
+    const counterpartyName =
+      userId === b.renterId
+        ? b.car.owner?.name?.trim() || null
+        : b.renter?.name?.trim() || null;
     return {
       id: conv.id,
       booking: conv.booking,
       lastMessage,
       unreadCount,
+      counterpartyName,
     };
   });
 }

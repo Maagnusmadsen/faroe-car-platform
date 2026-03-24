@@ -7,6 +7,7 @@ type Props = {
   placeholder: string;
   sendLabel: string;
   sendingLabel: string;
+  keyboardHint?: string;
   onSend: (body: string) => Promise<void>;
 };
 
@@ -15,6 +16,7 @@ export default function MessageComposer({
   placeholder,
   sendLabel,
   sendingLabel,
+  keyboardHint,
   onSend,
 }: Props) {
   const [text, setText] = useState("");
@@ -57,11 +59,14 @@ export default function MessageComposer({
           type="button"
           onClick={() => void submit()}
           disabled={disabled || sending || !text.trim()}
-          className="h-11 shrink-0 self-end rounded-lg bg-brand px-4 text-sm font-semibold text-white transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-11 shrink-0 self-end rounded-lg bg-brand px-4 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-40"
         >
           {sending ? sendingLabel : sendLabel}
         </button>
       </div>
+      {keyboardHint && (
+        <p className="mt-2 text-center text-[11px] text-slate-400 sm:text-left">{keyboardHint}</p>
+      )}
     </div>
   );
 }

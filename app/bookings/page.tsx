@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { useLanguage } from "@/context/LanguageContext";
-import { BOOKING_STATUS_LABELS } from "@/constants/booking-status";
+import { BOOKING_STATUS_LABELS, bookingStatusPillClass } from "@/constants/booking-status";
 import { formatPrice } from "@/lib/utils/price";
 
 type BookingItem = {
@@ -69,6 +69,7 @@ function BookingsContent() {
   const paymentCancelled = searchParams.get("payment") === "cancelled";
   const stripeSuccess = searchParams.get("stripe") === "success";
   const publishedParam = searchParams.get("published") === "1";
+  const highlightBookingId = searchParams.get("booking");
 
   const tabParam = searchParams.get("tab");
   const initialTab = tabParam === "listings" ? "listings" : tabParam === "owner" ? "owner" : "renter";
@@ -101,6 +102,16 @@ function BookingsContent() {
     if (tabParam === "owner" && tab !== "owner") setTab("owner");
     if (!tabParam && tab !== "renter") setTab("renter");
   }, [tabParam]);
+
+  useEffect(() => {
+    if (!highlightBookingId || loading || tab === "listings") return;
+    const t = window.setTimeout(() => {
+      document
+        .getElementById(`booking-row-${highlightBookingId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 150);
+    return () => window.clearTimeout(t);
+  }, [highlightBookingId, loading, tab, items.length]);
 
   useEffect(() => {
     if (authStatus === "unauthenticated") {
@@ -541,7 +552,12 @@ function BookingsContent() {
               return (
                 <li
                   key={booking.id}
-                  className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                  id={`booking-row-${booking.id}`}
+                  className={`flex flex-col gap-4 rounded-xl border bg-white p-4 shadow-sm ${
+                    highlightBookingId === booking.id
+                      ? "border-brand ring-2 ring-brand/25"
+                      : "border-slate-200"
+                  }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="min-w-0 flex-1">
@@ -557,17 +573,7 @@ function BookingsContent() {
                     )}
                     <p className="mt-1">
                       <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                          booking.status === "PENDING_APPROVAL"
-                            ? "bg-amber-100 text-amber-800"
-                            : booking.status === "PENDING_PAYMENT"
-                              ? "bg-sky-100 text-sky-800"
-                              : booking.status === "CONFIRMED" || booking.status === "COMPLETED" || booking.status === "PAID"
-                                ? "bg-brand-light text-slate-800"
-                                : booking.status === "REJECTED" || booking.status === "CANCELLED"
-                                  ? "bg-slate-100 text-slate-700"
-                                  : "bg-slate-100 text-slate-700"
-                        }`}
+                        className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${bookingStatusPillClass(booking.status)}`}
                       >
                         {BOOKING_STATUS_LABELS[booking.status] ?? booking.status}
                       </span>
@@ -579,6 +585,12 @@ function BookingsContent() {
                       className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
                     >
                       View listing
+                    </Link>
+                    <Link
+                      href={`/messages/booking/${booking.id}`}
+                      className="rounded-lg border border-brand/40 bg-brand/5 px-3 py-1.5 text-sm font-medium text-brand hover:bg-brand/10"
+                    >
+                      {t("bookings.message")}
                     </Link>
                     {canPay && (
                       <button

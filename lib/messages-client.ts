@@ -7,12 +7,16 @@ export type ConversationListItem = {
   booking: {
     id: string;
     status: string;
+    renterId: string;
+    renter: { name: string | null } | null;
     car: {
       id: string;
       brand: string;
       model: string;
       town: string;
       island: string;
+      ownerId: string;
+      owner: { name: string | null } | null;
     };
   };
   lastMessage: {
@@ -23,6 +27,7 @@ export type ConversationListItem = {
     readAt: string | null;
   } | null;
   unreadCount: number;
+  counterpartyName: string | null;
 };
 
 export type ApiMessage = {
@@ -47,6 +52,7 @@ export type BookingForMessageContext = {
     town: string;
     island: string;
     ownerId: string;
+    owner: { id: string; name: string | null } | null;
   };
   renter?: {
     id: string;
@@ -88,19 +94,29 @@ export async function sendBookingMessage(bookingId: string, body: string): Promi
   return json.data;
 }
 
-/** Resolves a booking the user can access (renter or owner) for labels and status. */
-export async function fetchBookingForMessaging(
-  bookingId: string
-): Promise<BookingForMessageContext | null> {
-  const [renterRes, ownerRes] = await Promise.all([
-    fetch("/api/bookings?role=renter&pageSize=100", { credentials: "include", cache: "no-store" }),
-    fetch("/api/bookings?role=owner&pageSize=100", { credentials: "include", cache: "no-store" }),
-  ]);
-  const renterJson = renterRes.ok ? await renterRes.json() : {};
-  const ownerJson = ownerRes.ok ? await ownerRes.json() : {};
-  const items: BookingForMessageContext[] = [
-    ...(renterJson?.data?.items ?? []),
-    ...(ownerJson?.data?.items ?? []),
-  ];
-  return items.find((b) => b.id === bookingId) ?? null;
+/** Single booking for the current user (renter or owner); includes owner + renter names. */
+export async function fetchBookingById(bookingId: string): Promise<BookingForMessageContext | null> {
+  const res = await fetch(`/api/bookings/${encodeURIComponent(bookingId)}`, {
+    credentials: "include",
+    cache: "no-store",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) return null;
+  const json = await res.json();
+  return json?.data ?? null;
+}
+
+export async function openConversationForBooking(bookingId: string): Promise<string> {
+  const res = await fetch("/api/conversations/ensure", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ bookingId }),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = typeof json?.error === "string" ? json.error : "Failed to open conversation";
+    throw new Error(err);
+  }
+  return json.data.conversationId as string;
 }

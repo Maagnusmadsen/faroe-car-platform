@@ -11,7 +11,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import {
   fetchConversations,
   fetchMessages,
-  fetchBookingForMessaging,
+  fetchBookingById,
   sendBookingMessage,
   type ApiMessage,
   type ConversationListItem,
@@ -22,7 +22,7 @@ import {
   formatMessageTimestamp,
   dayHeadingLabel,
 } from "@/lib/utils/messages-ui";
-import { BOOKING_STATUS_LABELS } from "@/constants/booking-status";
+import { BOOKING_STATUS_LABELS, bookingStatusPillClass } from "@/constants/booking-status";
 
 function renterFirstName(renter?: { name: string | null } | null): string {
   const n = renter?.name?.trim();
@@ -73,7 +73,7 @@ export default function ConversationThreadPage() {
     setConv(c);
     const [msgs, book] = await Promise.all([
       fetchMessages(conversationId),
-      fetchBookingForMessaging(c.booking.id),
+      fetchBookingById(c.booking.id),
     ]);
     setMessages(msgs);
     setBooking(book);
@@ -186,6 +186,16 @@ export default function ConversationThreadPage() {
     (booking?.status && BOOKING_STATUS_LABELS[booking.status]) ||
     BOOKING_STATUS_LABELS[conv.booking.status] ||
     conv.booking.status;
+  const statusForPill = booking?.status ?? conv.booking.status;
+  const isRenter =
+    booking?.renterId && user?.id ? user.id === booking.renterId : false;
+  const peerDisplayName = !booking
+    ? t("messages.otherParty")
+    : isRenter
+      ? booking.car.owner?.name?.trim() || t("messages.host")
+      : guestName || t("messages.guest");
+  const bookingsTab = isRenter ? "renter" : "owner";
+  const bookingHref = `/bookings?tab=${bookingsTab}&booking=${encodeURIComponent(conv.booking.id)}`;
 
   return (
     <main className="flex min-h-screen flex-col bg-slate-50">
@@ -193,7 +203,7 @@ export default function ConversationThreadPage() {
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col min-h-0 px-0 sm:px-6">
         <header className="shrink-0 border-b border-slate-200 bg-white px-4 py-3 sm:rounded-t-xl sm:border sm:border-b-0 sm:border-slate-200">
           <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
+            <div className="min-w-0 flex-1">
               <Link
                 href="/messages"
                 className="text-sm font-medium text-brand hover:underline"
@@ -205,11 +215,20 @@ export default function ConversationThreadPage() {
                 {car.town}, {car.island}
               </p>
               <p className="mt-1 text-xs text-slate-600">
-                {t("messages.bookingLabel")}: {bookingStatusText}
+                {t("messages.conversationWith")}{" "}
+                <span className="font-medium text-slate-800">{peerDisplayName}</span>
+              </p>
+              <p className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="text-xs text-slate-500">{t("messages.bookingLabel")}</span>
+                <span
+                  className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${bookingStatusPillClass(statusForPill)}`}
+                >
+                  {bookingStatusText}
+                </span>
               </p>
             </div>
             <Link
-              href="/bookings"
+              href={bookingHref}
               className="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 hover:bg-slate-50"
             >
               {t("messages.viewBooking")}
@@ -225,7 +244,10 @@ export default function ConversationThreadPage() {
           )}
           <div className="flex-1 overflow-y-auto px-4 py-4 sm:px-5">
             {messages.length === 0 && (
-              <p className="text-center text-sm text-slate-500">{t("messages.previewFallback")}</p>
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/80 px-4 py-8 text-center">
+                <p className="text-sm font-medium text-slate-700">{t("messages.threadEmptyTitle")}</p>
+                <p className="mt-1 text-sm text-slate-500">{t("messages.threadEmptyHint")}</p>
+              </div>
             )}
             {groups.map((g) => (
               <div key={g.dayKey} className="mb-6 last:mb-0">
@@ -244,9 +266,13 @@ export default function ConversationThreadPage() {
                         key={m.id}
                         className={`flex flex-col gap-0.5 ${mine ? "items-end" : "items-start"}`}
                       >
-                        <span className="text-xs font-medium text-slate-600">{label}</span>
+                        <span
+                          className={`text-xs font-medium text-slate-600 ${mine ? "text-right" : ""}`}
+                        >
+                          {label}
+                        </span>
                         <div
-                          className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm ${
+                          className={`max-w-[min(85%,20rem)] rounded-2xl px-3 py-2 text-sm ${
                             mine
                               ? "bg-brand text-white"
                               : "border border-slate-200 bg-slate-50 text-slate-900"
@@ -256,7 +282,7 @@ export default function ConversationThreadPage() {
                         </div>
                         <time
                           dateTime={m.createdAt}
-                          className="text-[11px] text-slate-400"
+                          className={`text-[11px] text-slate-500 ${mine ? "text-right" : ""}`}
                         >
                           {formatMessageTimestamp(m.createdAt, "en")}
                         </time>
@@ -273,6 +299,7 @@ export default function ConversationThreadPage() {
             placeholder={t("messages.placeholder")}
             sendLabel={t("messages.send")}
             sendingLabel={t("messages.sending")}
+            keyboardHint={t("messages.keyboardHint")}
             onSend={handleSend}
           />
         </div>

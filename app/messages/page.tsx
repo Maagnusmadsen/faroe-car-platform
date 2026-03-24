@@ -50,6 +50,17 @@ export default function MessagesInboxPage() {
     };
   }, [status, user, router, t]);
 
+  useEffect(() => {
+    if (status !== "authenticated" || !user) return;
+    const onFocus = () => {
+      fetchConversations()
+        .then(setItems)
+        .catch(() => {});
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [status, user]);
+
   if (status === "loading" || (status === "authenticated" && loading && items.length === 0 && !error)) {
     return (
       <main className="min-h-screen bg-slate-50">
@@ -100,12 +111,16 @@ export default function MessagesInboxPage() {
               const time =
                 row.lastMessage?.createdAt &&
                 formatMessageListTime(row.lastMessage.createdAt, "en", t("messages.dayYesterday"));
+              const withName = row.counterpartyName?.trim();
               return (
                 <li key={row.id}>
                   <Link
                     href={`/messages/${row.id}`}
                     className="flex gap-3 px-4 py-4 transition-colors hover:bg-slate-50 sm:px-5"
                   >
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand/10 text-sm font-semibold text-brand">
+                      {(withName ? withName.slice(0, 1) : "?").toUpperCase()}
+                    </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
                         <p className="font-medium text-slate-900">{title}</p>
@@ -118,6 +133,12 @@ export default function MessagesInboxPage() {
                           </time>
                         )}
                       </div>
+                      {withName && (
+                        <p className="mt-0.5 text-xs text-slate-600">
+                          {t("messages.conversationWith")}{" "}
+                          <span className="font-medium text-slate-800">{withName}</span>
+                        </p>
+                      )}
                       <p className="mt-0.5 text-xs text-slate-500">{sub}</p>
                       <p className="mt-1 line-clamp-2 text-sm text-slate-600">
                         {previewText(row.lastMessage, t("messages.previewFallback"))}
