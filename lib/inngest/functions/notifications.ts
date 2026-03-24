@@ -5,7 +5,6 @@
 import { inngest } from "../client";
 import { processNotificationEvent } from "@/lib/notifications/processor";
 import { recoverFailedEnqueues, retryFailedDeliveries } from "@/lib/notifications/recovery";
-import { processMessageDigests } from "@/lib/notifications/message-batching";
 
 export const processNotificationEventFn = inngest.createFunction(
   {
@@ -38,18 +37,5 @@ export const notificationRecoveryFn = inngest.createFunction(
       enqueue: enqueueResult,
       delivery: deliveryResult,
     };
-  }
-);
-
-export const messageDigestFn = inngest.createFunction(
-  {
-    id: "message-digest",
-    retries: 2,
-    concurrency: { limit: 1 },
-    triggers: [{ cron: "*/3 * * * *" }],
-  },
-  async () => {
-    const result = await processMessageDigests();
-    return result;
   }
 );

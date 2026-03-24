@@ -121,6 +121,9 @@ export function emailLayout(content: string, title?: string): string {
           </tr>
           <tr>
             <td style="padding:24px 40px;text-align:center;background-color:#f8fafc;border-top:1px solid ${BORDER};">
+              <p style="margin:0 0 8px;font-size:12px;line-height:1.6;color:${TEXT_MUTED};">
+                Do not reply to this email. View details in your RentLocal account.
+              </p>
               <p style="margin:0 0 6px;font-size:12px;line-height:1.6;color:${TEXT_MUTED};">
                 You're receiving this email because you use RentLocal.
               </p>

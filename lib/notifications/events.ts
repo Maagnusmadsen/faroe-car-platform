@@ -50,8 +50,9 @@ const EVENT_CONFIG: Record<
   "payment.receipt": { channels: ["IN_APP", "EMAIL"], critical: true, userCanDisable: false },
   "payout.sent": { channels: ["IN_APP", "EMAIL"], critical: true, userCanDisable: false },
   "payout.failed": { channels: ["IN_APP", "EMAIL"], critical: true, userCanDisable: false },
-  "message.received": { channels: ["IN_APP", "EMAIL"], critical: false, userCanDisable: true },
-  "message.digest": { channels: ["EMAIL"], critical: false, userCanDisable: false },
+  "message.received": { channels: ["IN_APP"], critical: false, userCanDisable: true },
+  /** Disabled: digest emails removed (in-app is primary for messages). */
+  "message.digest": { channels: [], critical: false, userCanDisable: false },
   "review.requested": { channels: ["IN_APP", "EMAIL"], critical: false, userCanDisable: true },
   "listing.published": { channels: ["IN_APP"], critical: false, userCanDisable: true },
   "renter.approved": { channels: ["IN_APP", "EMAIL"], critical: true, userCanDisable: false },

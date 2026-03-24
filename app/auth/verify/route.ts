@@ -12,6 +12,23 @@
 import { createRouteHandlerClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
+/** Path-only redirect target; blocks open redirects. */
+function safeNextPath(next: string): string {
+  const path = next.trim() || "/";
+  if (!path.startsWith("/") || path.startsWith("//")) return "/";
+  return path;
+}
+
+/** Redirect after verify; append ?welcome=1 only for signup confirmation (not magic-link login). */
+function postVerifyRedirectUrl(origin: string, next: string, showWelcome: boolean): string {
+  const path = safeNextPath(next);
+  const url = new URL(path, origin);
+  if (showWelcome) {
+    url.searchParams.set("welcome", "1");
+  }
+  return url.toString();
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const token_hash = searchParams.get("token_hash");
@@ -27,7 +44,8 @@ export async function GET(request: Request) {
       type: (type as "signup" | "email") ?? "signup",
     });
     if (!error) {
-      const response = NextResponse.redirect(`${origin}${next}`);
+      const target = postVerifyRedirectUrl(origin, next, type === "signup");
+      const response = NextResponse.redirect(target);
       applyCookies(response);
       return response;
     }

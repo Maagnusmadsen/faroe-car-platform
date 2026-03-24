@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { LanguageProvider } from "@/context/LanguageContext";
 import Providers from "@/components/Providers";
+import WelcomeAfterSignupBanner from "@/components/WelcomeAfterSignupBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -47,7 +49,12 @@ export default function RootLayout({
           }}
         />
         <Providers>
-          <LanguageProvider>{children}</LanguageProvider>
+          <LanguageProvider>
+            <Suspense fallback={null}>
+              <WelcomeAfterSignupBanner />
+            </Suspense>
+            {children}
+          </LanguageProvider>
         </Providers>
       </body>
     </html>

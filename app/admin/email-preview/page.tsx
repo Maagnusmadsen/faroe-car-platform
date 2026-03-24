@@ -14,8 +14,7 @@ const TEMPLATES = [
   { value: "payment.receipt", label: "Payment receipt (til lejer)" },
   { value: "payout.sent", label: "Payout sent" },
   { value: "payout.failed", label: "Payout failed" },
-  { value: "message.received", label: "New message" },
-  { value: "message.digest", label: "Message digest" },
+  { value: "message.received", label: "New message (in-app only; preview)" },
   { value: "review.requested", label: "Review requested" },
 ];
 

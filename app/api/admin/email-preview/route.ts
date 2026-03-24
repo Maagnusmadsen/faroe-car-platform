@@ -23,7 +23,6 @@ const EVENT_TYPES: EventType[] = [
   "payout.sent",
   "payout.failed",
   "message.received",
-  "message.digest",
   "review.requested",
 ];
 
@@ -91,12 +90,6 @@ const SAMPLE_PAYLOAD: Record<string, Record<string, unknown>> = {
     conversationId: "preview-conv-1",
     senderName: "Kari",
     messagePreview: "Hej, kan jeg hente bilen kl. 10 ved lufthavnen?",
-  },
-  "message.digest": {
-    bookingId: "preview-booking-1",
-    conversationId: "preview-conv-1",
-    senderName: "Kari",
-    unreadCount: 3,
   },
   "review.requested": {
     bookingId: "preview-booking-1",

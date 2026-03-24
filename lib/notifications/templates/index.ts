@@ -1,16 +1,11 @@
 /**
  * Email template registry.
- * Marketplace-grade transactional emails: hierarchy, readability, trust signals.
+ * Notification-only: short copy, link-first, no message/conversation body in email.
  * Each template returns { subject, html, text }.
  */
 
 import type { EventType, NotificationEventPayload } from "../types";
-import {
-  emailLayout,
-  getAppUrl,
-  infoBlock,
-  ctaButton,
-} from "./layout";
+import { emailLayout, getAppUrl, ctaButton } from "./layout";
 
 export interface TemplateOutput {
   subject: string;
@@ -22,90 +17,69 @@ function bookingUrl(bookingId: string): string {
   return `${getAppUrl()}/bookings?highlight=${bookingId}`;
 }
 
-function carUrl(carId: string): string {
-  return `${getAppUrl()}/rent-a-car/${carId}`;
-}
-
 export function renderEmailTemplate(
   eventType: EventType,
   payload: NotificationEventPayload,
   recipientRole: "owner" | "renter" | "user"
 ): TemplateOutput | null {
+  void recipientRole;
   const appUrl = getAppUrl();
   const carTitle = (payload.carTitle as string) ?? "your car";
   const amount = payload.amount != null ? `${payload.amount} ${payload.currency ?? "DKK"}` : "";
-  const startDate = payload.startDate ?? "";
-  const endDate = payload.endDate ?? "";
-  const dateRange = startDate && endDate ? `${startDate} – ${endDate}` : startDate || endDate || "—";
 
   switch (eventType) {
     case "booking.requested": {
       const bookingLink = bookingUrl(payload.bookingId!);
-      const info = infoBlock([
-        { label: "Car", value: carTitle },
-        { label: "Dates", value: dateRange },
-      ]);
       const content = `
         <h1 class="headline">New booking request</h1>
-        <p class="body">Someone wants to rent your car. Review the request and approve or decline.</p>
-        ${info}
+        <p class="body">Someone wants to rent your car. Open RentLocal to approve or decline.</p>
         ${ctaButton(bookingLink, "View request")}
       `;
       return {
-        subject: `New booking request for ${carTitle}`,
+        subject: `New booking request: ${carTitle}`,
         html: emailLayout(content, "New booking request"),
-        text: `New booking request for ${carTitle}.\nDates: ${dateRange}\n\nView request: ${bookingLink}`,
+        text: `New booking request for ${carTitle}.\n\nView in RentLocal: ${bookingLink}`,
       };
     }
 
     case "booking.approved": {
       const bookingLink = bookingUrl(payload.bookingId!);
-      const info = infoBlock([
-        { label: "Car", value: carTitle },
-        { label: "Dates", value: dateRange },
-      ]);
       const content = `
-        <h1 class="headline">Booking approved – complete payment</h1>
-        <p class="body">The owner has approved your booking. Complete your payment to confirm.</p>
-        ${info}
+        <h1 class="headline">Booking approved</h1>
+        <p class="body">Complete payment in RentLocal to confirm your trip.</p>
         ${ctaButton(bookingLink, "Pay now")}
       `;
       return {
-        subject: `Booking approved – complete payment for ${carTitle}`,
+        subject: `Complete payment: ${carTitle}`,
         html: emailLayout(content, "Booking approved"),
-        text: `Your booking for ${carTitle} has been approved.\nDates: ${dateRange}\n\nComplete payment: ${bookingLink}`,
+        text: `Your booking for ${carTitle} was approved. Pay in RentLocal: ${bookingLink}`,
       };
     }
 
     case "booking.rejected": {
       const content = `
         <h1 class="headline">Booking request declined</h1>
-        <p class="body">Unfortunately, your booking request for ${carTitle} (${dateRange}) was declined by the owner.</p>
-        ${ctaButton(`${appUrl}/rent-a-car`, "Find another car")}
+        <p class="body">The owner declined this request. You can search for other cars in RentLocal.</p>
+        ${ctaButton(`${appUrl}/rent-a-car`, "Browse cars")}
       `;
       return {
-        subject: `Booking request declined for ${carTitle}`,
+        subject: `Booking request declined: ${carTitle}`,
         html: emailLayout(content, "Booking declined"),
-        text: `Your booking request for ${carTitle} was declined. Find another car: ${appUrl}/rent-a-car`,
+        text: `Your booking request for ${carTitle} was declined. Browse cars: ${appUrl}/rent-a-car`,
       };
     }
 
     case "booking.confirmed": {
       const bookingLink = bookingUrl(payload.bookingId!);
-      const info = infoBlock([
-        { label: "Car", value: carTitle },
-        { label: "Dates", value: dateRange },
-      ]);
       const content = `
         <h1 class="headline">Booking confirmed</h1>
-        <p class="body">Your booking is confirmed. You’re all set for your trip.</p>
-        ${info}
+        <p class="body">Your rental is confirmed. See pickup details in RentLocal.</p>
         ${ctaButton(bookingLink, "View booking")}
       `;
       return {
         subject: `Booking confirmed: ${carTitle}`,
         html: emailLayout(content, "Booking confirmed"),
-        text: `Your booking for ${carTitle} is confirmed.\nDates: ${dateRange}\n\nView booking: ${bookingLink}`,
+        text: `Your booking for ${carTitle} is confirmed.\n\nView booking: ${bookingLink}`,
       };
     }
 
@@ -113,185 +87,142 @@ export function renderEmailTemplate(
       const bookingLink = bookingUrl(payload.bookingId!);
       const content = `
         <h1 class="headline">Booking cancelled</h1>
-        <p class="body">A booking for ${carTitle} (${dateRange}) has been cancelled.</p>
+        <p class="body">A booking for ${carTitle} was cancelled. Open RentLocal for details.</p>
         ${ctaButton(bookingLink, "View details")}
       `;
       return {
         subject: `Booking cancelled: ${carTitle}`,
         html: emailLayout(content, "Booking cancelled"),
-        text: `A booking for ${carTitle} has been cancelled.\n\nView details: ${bookingLink}`,
+        text: `A booking for ${carTitle} was cancelled.\n\nDetails: ${bookingLink}`,
       };
     }
 
     case "booking.reminder": {
       const bookingLink = bookingUrl(payload.bookingId!);
-      const info = infoBlock([
-        { label: "Car", value: carTitle },
-        { label: "Start date", value: startDate },
-      ]);
       const content = `
-        <h1 class="headline">Upcoming trip</h1>
-        <p class="body">Your rental starts soon. Here’s a quick reminder of your booking.</p>
-        ${info}
+        <h1 class="headline">Trip reminder</h1>
+        <p class="body">Your rental starts soon. Check times and pickup in RentLocal.</p>
         ${ctaButton(bookingLink, "View booking")}
       `;
       return {
-        subject: `Reminder: ${carTitle} – trip starts ${startDate}`,
+        subject: `Reminder: ${carTitle}`,
         html: emailLayout(content, "Trip reminder"),
-        text: `Your rental for ${carTitle} starts on ${startDate}.\n\nView booking: ${bookingLink}`,
+        text: `Reminder: your rental for ${carTitle} starts soon.\n\n${bookingLink}`,
       };
     }
 
     case "payment.received": {
       const bookingLink = bookingUrl(payload.bookingId!);
-      const info = infoBlock([
-        { label: "Amount", value: amount },
-        { label: "Booking", value: carTitle },
-      ]);
       const content = `
         <h1 class="headline">Payment received</h1>
-        <p class="body">You’ve received a payment for a booking on ${carTitle}.</p>
-        ${info}
+        <p class="body">A payment (${amount}) was received for a booking. Details are in RentLocal.</p>
         ${ctaButton(bookingLink, "View booking")}
       `;
       return {
         subject: `Payment received: ${amount}`,
         html: emailLayout(content, "Payment received"),
-        text: `You received ${amount} for a booking on ${carTitle}.\n\nView booking: ${bookingLink}`,
+        text: `Payment received (${amount}). View in RentLocal: ${bookingLink}`,
       };
     }
 
     case "payment.receipt": {
       const bookingLink = bookingUrl(payload.bookingId!);
-      const info = infoBlock([
-        { label: "Amount", value: amount },
-        { label: "Car", value: carTitle },
-      ]);
       const content = `
-        <h1 class="headline">Payment confirmation</h1>
-        <p class="body">Your payment has been confirmed. Your booking is secured.</p>
-        ${info}
+        <h1 class="headline">Payment confirmed</h1>
+        <p class="body">Your payment (${amount}) went through. Your booking is secured.</p>
         ${ctaButton(bookingLink, "View booking")}
       `;
       return {
-        subject: `Payment confirmation: ${carTitle}`,
+        subject: `Payment confirmed: ${carTitle}`,
         html: emailLayout(content, "Payment confirmation"),
-        text: `Your payment of ${amount} for ${carTitle} is confirmed.\n\nView booking: ${bookingLink}`,
+        text: `Payment of ${amount} for ${carTitle} is confirmed.\n\n${bookingLink}`,
       };
     }
 
     case "payout.sent": {
-      const info = infoBlock([{ label: "Amount", value: amount }]);
       const content = `
         <h1 class="headline">Payout sent</h1>
-        <p class="body">A payout has been sent to your connected bank account. It may take a few business days to appear.</p>
-        ${info}
-        ${ctaButton(`${appUrl}/owner/dashboard`, "View dashboard")}
+        <p class="body">A payout of ${amount} was sent to your bank. Full details are in RentLocal.</p>
+        ${ctaButton(`${appUrl}/owner/dashboard`, "Open dashboard")}
       `;
       return {
         subject: `Payout sent: ${amount}`,
         html: emailLayout(content, "Payout sent"),
-        text: `Your payout of ${amount} has been sent.\n\nView dashboard: ${appUrl}/owner/dashboard`,
+        text: `Payout of ${amount} sent. Dashboard: ${appUrl}/owner/dashboard`,
       };
     }
 
     case "payout.failed": {
-      const info = infoBlock([{ label: "Amount", value: amount }]);
       const content = `
         <h1 class="headline">Payout failed</h1>
-        <p class="body">We couldn’t process your payout. Please check your bank details in your account settings and try again.</p>
-        ${info}
-        ${ctaButton(`${appUrl}/owner/dashboard`, "Update bank details")}
+        <p class="body">We could not send your payout. Update your bank details in RentLocal.</p>
+        ${ctaButton(`${appUrl}/owner/dashboard`, "Update details")}
       `;
       return {
         subject: `Payout failed: ${amount}`,
         html: emailLayout(content, "Payout failed"),
-        text: `Your payout of ${amount} failed. Update bank details: ${appUrl}/owner/dashboard`,
+        text: `Payout of ${amount} failed. Update details: ${appUrl}/owner/dashboard`,
       };
     }
 
+    /** In-app only for live traffic; kept for admin preview of notification-style ping. */
     case "message.received": {
-      const sender = (payload.senderName as string) ?? "Someone";
-      const preview = (payload.messagePreview as string)?.slice(0, 100) ?? "New message";
-      const ellipsis = (payload.messagePreview as string)?.length > 100 ? "…" : "";
       const convUrl = payload.conversationId
         ? `${appUrl}/bookings?conversation=${payload.conversationId}`
         : bookingUrl(payload.bookingId!);
       const content = `
-        <h1 class="headline">New message from ${sender}</h1>
-        <p class="body">You have a new message about a booking.</p>
-        <div style="margin:20px 0;padding:16px;background:#f8fafc;border-radius:10px;border-left:4px solid #3F8F4F;">
-          <p class="body body-muted" style="margin:0;font-style:italic;">"${preview}${ellipsis}"</p>
-        </div>
-        ${ctaButton(convUrl, "Reply")}
-      `;
-      return {
-        subject: `New message from ${sender}`,
-        html: emailLayout(content, "New message"),
-        text: `${sender} sent you a message:\n\n"${preview}${ellipsis}"\n\nReply: ${convUrl}`,
-      };
-    }
-
-    case "message.digest": {
-      const sender = (payload.senderName as string) ?? "Someone";
-      const unreadCount = (payload.unreadCount as number) ?? 1;
-      const plural = unreadCount > 1 ? "s" : "";
-      const convUrl = payload.conversationId
-        ? `${appUrl}/bookings?conversation=${payload.conversationId}`
-        : payload.bookingId
-          ? bookingUrl(payload.bookingId)
-          : `${appUrl}/bookings`;
-      const content = `
-        <h1 class="headline">${unreadCount} new message${plural} from ${sender}</h1>
-        <p class="body">You have ${unreadCount} unread message${plural} in your conversation about a booking.</p>
+        <h1 class="headline">New message</h1>
+        <p class="body">You have a new message in RentLocal. Open the app to read and reply.</p>
         ${ctaButton(convUrl, "View messages")}
       `;
       return {
-        subject: `${unreadCount} new message${plural} from ${sender}`,
-        html: emailLayout(content, "New messages"),
-        text: `You have ${unreadCount} new message${plural} from ${sender}. View: ${convUrl}`,
+        subject: "New message on RentLocal",
+        html: emailLayout(content, "New message"),
+        text: `You have a new message in RentLocal.\n\nOpen: ${convUrl}`,
       };
     }
 
+    /** Digest emails disabled — no template sent. */
+    case "message.digest":
+      return null;
+
     case "review.requested": {
       const bookingLink = bookingUrl(payload.bookingId!);
-      const info = infoBlock([{ label: "Car", value: carTitle }]);
       const content = `
-        <h1 class="headline">How was your trip?</h1>
-        <p class="body">Share your experience to help other travellers discover great cars.</p>
-        ${info}
+        <h1 class="headline">Leave a review</h1>
+        <p class="body">How was your trip? Leave a review to help other travellers.</p>
         ${ctaButton(bookingLink, "Leave a review")}
       `;
       return {
-        subject: `Leave a review for ${carTitle}`,
+        subject: `Review your trip: ${carTitle}`,
         html: emailLayout(content, "Leave a review"),
-        text: `How was your trip? Leave a review for ${carTitle}: ${bookingLink}`,
+        text: `Leave a review for ${carTitle}: ${bookingLink}`,
       };
     }
 
     case "user.welcome": {
       const content = `
         <h1 class="headline">Welcome to RentLocal</h1>
-        <p class="body">Thanks for signing up! You can now browse cars, make bookings, and rent vehicles in the Faroe Islands.</p>
+        <p class="body">You're signed up. Browse cars and book your next trip in the app.</p>
         ${ctaButton(`${appUrl}/rent-a-car`, "Browse cars")}
       `;
       return {
         subject: "Welcome to RentLocal",
         html: emailLayout(content, "Welcome"),
-        text: "Welcome to RentLocal! Browse cars and start your rental: " + `${appUrl}/rent-a-car`,
+        text: `Welcome to RentLocal. Browse cars: ${appUrl}/rent-a-car`,
       };
     }
 
     case "renter.approved": {
       const content = `
         <h1 class="headline">You're approved to rent</h1>
-        <p class="body">Great news! Your driving licence has been verified. You can now request to book cars on RentLocal.</p>
+        <p class="body">Your licence is verified. You can request bookings in RentLocal.</p>
         ${ctaButton(`${appUrl}/rent-a-car`, "Browse cars")}
       `;
       return {
         subject: "You're approved to rent on RentLocal",
         html: emailLayout(content, "Renter approved"),
-        text: "You're approved to rent on RentLocal. Browse cars and book your trip: " + `${appUrl}/rent-a-car`,
+        text: `You're approved to rent. Browse cars: ${appUrl}/rent-a-car`,
       };
     }
 

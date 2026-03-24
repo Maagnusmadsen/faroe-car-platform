@@ -19,12 +19,6 @@ import {
   isRetryableEmail,
   isRetryableInApp,
 } from "./retry";
-import {
-  shouldThrottleMessageEmail,
-  recordDigestPending,
-  clearDigestPending,
-} from "./message-batching";
-
 function log(level: "info" | "warn" | "error", message: string, ctx?: Record<string, unknown>) {
   const entry = { level, message, ...ctx, timestamp: new Date().toISOString() };
   if (level === "error") console.error("[Notification]", JSON.stringify(entry));
@@ -398,26 +392,6 @@ export async function processNotificationEvent(eventId: string): Promise<void> {
           enrichedPayload as import("./types").NotificationEventPayload
         );
       } else if (channel === "EMAIL" && recipient.email) {
-        if (type === "message.received" && payload.conversationId) {
-          const throttled = await shouldThrottleMessageEmail(
-            recipient.userId,
-            payload.conversationId as string
-          );
-          if (throttled) {
-            await recordDigestPending(recipient.userId, payload.conversationId as string);
-            await createDeliveryRecord(
-              eventId,
-              recipient.userId,
-              "EMAIL",
-              "SKIPPED",
-              null,
-              "batched_digest_pending",
-              null
-            );
-            continue;
-          }
-          await clearDigestPending(recipient.userId, payload.conversationId as string);
-        }
         await deliverEmail(
           event,
           recipient,

@@ -17,7 +17,6 @@ import { prisma } from "@/db";
 const OPTIONAL_PREFERENCES: Array<{ eventType: string; channel: "EMAIL" | "IN_APP" }> = [
   { eventType: "booking.reminder", channel: "EMAIL" },
   { eventType: "booking.reminder", channel: "IN_APP" },
-  { eventType: "message.received", channel: "EMAIL" },
   { eventType: "message.received", channel: "IN_APP" },
   { eventType: "review.requested", channel: "EMAIL" },
   { eventType: "review.requested", channel: "IN_APP" },

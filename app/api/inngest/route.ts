@@ -5,13 +5,9 @@
 
 import { serve } from "inngest/next";
 import { inngest } from "@/lib/inngest/client";
-import {
-  processNotificationEventFn,
-  notificationRecoveryFn,
-  messageDigestFn,
-} from "@/lib/inngest/functions/notifications";
+import { processNotificationEventFn, notificationRecoveryFn } from "@/lib/inngest/functions/notifications";
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [processNotificationEventFn, notificationRecoveryFn, messageDigestFn],
+  functions: [processNotificationEventFn, notificationRecoveryFn],
 });

@@ -295,6 +295,8 @@
     "namePlaceholder": "Your name",
     "firstName": "First name",
     "lastName": "Last name",
+    "welcomeAfterSignup": "Welcome — you're now logged in.",
+    "dismissWelcome": "Dismiss",
     "loginButton": "Log in",
     "signupButton": "Create account",
     "noAccount": "Don't have an account?",

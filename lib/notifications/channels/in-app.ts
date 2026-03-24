@@ -21,7 +21,7 @@ const EVENT_TO_LEGACY_TYPE: Record<EventType, NotificationType> = {
   "payout.sent": "PAYOUT_SENT",
   "payout.failed": "PAYOUT_SENT",
   "message.received": "MESSAGE",
-  "message.digest": "MESSAGE", // email-only; never creates in-app
+  "message.digest": "MESSAGE", // digest delivery disabled; kept for EventType exhaustiveness
   "review.requested": "REVIEW_RECEIVED",
   "listing.published": "SYSTEM",
   "renter.approved": "SYSTEM",
