@@ -155,16 +155,6 @@ function NavLinks({
   const [hasListings, setHasListings] = useState(false);
   const isTransparent = variant === "transparent";
 
-  useEffect(() => {
-    if (process.env.NEXT_PUBLIC_AUTH_DEBUG === "1") {
-      console.info("[AuthDebug] Navbar auth render", {
-        status,
-        userId: user?.id ?? null,
-        pathname,
-      });
-    }
-  }, [status, user, pathname]);
-
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
