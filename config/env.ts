@@ -28,9 +28,14 @@ export function getBaseUrl(): string {
   return getEnv("NEXTAUTH_URL") ?? "http://localhost:3000";
 }
 
-/** Only required when using DB (Step A1) */
+/** Pooled connection URL for serverless runtime (Transaction pooler, port 6543, ?pgbouncer=true). */
 export function getDatabaseUrl(): string {
   return getEnvRequired("DATABASE_URL");
+}
+
+/** Direct connection URL for Prisma migrations (port 5432, no pooler). Read by prisma/schema.prisma directUrl. */
+export function getDirectDatabaseUrl(): string | undefined {
+  return getEnv("DIRECT_DATABASE_URL");
 }
 
 /** Only required when using NextAuth (Step A2) */
