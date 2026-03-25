@@ -41,12 +41,12 @@ export default function WelcomeAfterSignupBanner() {
       role="status"
       aria-live="polite"
     >
-      <div className="pointer-events-auto flex max-w-lg items-center gap-3 rounded-xl border border-brand/30 bg-white/95 px-4 py-3 text-sm text-slate-900 shadow-lg backdrop-blur dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-50">
+      <div className="pointer-events-auto flex max-w-lg items-center gap-3 rounded-xl border border-brand/30 bg-brand-light px-4 py-3 text-sm text-brand shadow-lg">
         <span className="font-medium">{t("auth.welcomeAfterSignup")}</span>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="shrink-0 rounded-lg px-2 py-1 text-slate-600 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+          className="shrink-0 rounded-lg px-2 py-1 text-brand-hover hover:bg-brand/10"
           aria-label={t("auth.dismissWelcome")}
         >
           ×

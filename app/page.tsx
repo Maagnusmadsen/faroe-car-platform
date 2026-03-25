@@ -17,21 +17,9 @@ export default function HomePage() {
         style={{ backgroundImage: "url('/hero-faroe.jpg')" }}
         aria-hidden
       >
-        {/* Balanced premium overlay: readable text on top of scenic imagery */}
+        <div className="absolute inset-0" style={{ backgroundColor: "var(--overlay)" }} aria-hidden />
         <div
-          className="absolute inset-0 bg-gradient-to-b from-black/78 via-black/35 to-black/75"
-          aria-hidden
-        />
-        <div
-          className="absolute inset-0"
-          aria-hidden
-          style={{
-            background:
-              "radial-gradient(circle at 50% 10%, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.55) 55%, rgba(0,0,0,0.80) 100%)",
-          }}
-        />
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/70 via-black/25 to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/40 to-transparent"
           aria-hidden
         />
       </div>
@@ -41,61 +29,43 @@ export default function HomePage() {
 
       {/* Centered hero content: headline → subtitle → buttons → trust */}
       <section className="flex min-h-[85dvh] min-h-screen flex-col items-center justify-center px-4 pb-16 pt-20 text-center sm:min-h-[100dvh] sm:pb-20 sm:pt-24 sm:px-6 lg:pt-28 lg:px-8">
-        <div className="mx-auto flex w-full max-w-3xl flex-col items-center">
-          {/* Premium readability “glass” container */}
-          <div className="w-full rounded-2xl bg-black/20 px-4 py-8 shadow-[0_20px_80px_rgba(0,0,0,0.35)] ring-1 ring-white/10 backdrop-blur-sm sm:px-8 sm:py-10">
-            <h1 className="text-2xl font-bold leading-tight tracking-tight text-white drop-shadow-lg max-sm:text-balance sm:text-5xl lg:text-6xl">
-              {t("home.headline")}
-            </h1>
-            <p className="mt-4 text-base text-white/92 drop-shadow-md max-sm:text-balance sm:mt-6 sm:text-xl lg:text-2xl">
-              {t("home.subheadline")}
-            </p>
+        <div className="mx-auto flex max-w-2xl flex-col items-center">
+          <h1 className="text-2xl font-bold leading-tight tracking-tight text-white drop-shadow-lg max-sm:text-balance sm:text-5xl lg:text-6xl">
+            {t("home.headline")}
+          </h1>
+          <p className="mt-3 text-base text-white drop-shadow-md max-sm:text-balance sm:mt-6 sm:text-xl lg:text-2xl">
+            {t("home.subheadline")}
+          </p>
 
-            <div className="mt-6 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
-              <Link
-                href="/rent-a-car"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-brand px-6 py-4 text-base font-semibold text-white shadow-lg shadow-slate-900/20 transition-colors hover:bg-brand-hover active:bg-brand-dark focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent max-sm:w-full sm:px-8 sm:text-lg"
-              >
-                {t("nav.rentACar")}
-              </Link>
-              <Link
-                href="/list-your-car"
-                className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-white/35 bg-white/10 px-6 py-4 text-base font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/15 hover:border-white/55 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent max-sm:w-full sm:px-8 sm:text-lg"
-              >
-                {t("nav.listYourCar")}
-              </Link>
-            </div>
-
-            <ul className="mt-8 grid w-full max-w-[520px] grid-cols-1 gap-3 text-sm text-white/92 sm:mt-10 sm:grid-cols-3">
-              <li className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/15" aria-hidden>
-                  <svg className="h-5 w-5 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s-6-4.35-6-10a6 6 0 1112 0c0 5.65-6 10-6 10z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 11a2 2 0 100-4 2 2 0 000 4z" />
-                  </svg>
-                </span>
-                <span className="font-medium">{t("home.trustLocal")}</span>
-              </li>
-              <li className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/15" aria-hidden>
-                  <svg className="h-5 w-5 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18l-2 10H5L3 10z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 10V6a5 5 0 0110 0v4" />
-                  </svg>
-                </span>
-                <span className="font-medium">{t("home.trustAirport")}</span>
-              </li>
-              <li className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/15" aria-hidden>
-                  <svg className="h-5 w-5 text-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-5" />
-                  </svg>
-                </span>
-                <span className="font-medium">{t("home.trustInsurance")}</span>
-              </li>
-            </ul>
+          <div className="mt-6 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:gap-4">
+            <Link
+              href="/rent-a-car"
+              className="inline-flex min-h-[48px] items-center justify-center rounded-xl bg-brand px-6 py-4 text-base font-semibold text-white shadow-lg shadow-slate-900/20 transition-colors hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent max-sm:w-full sm:px-8 sm:text-lg"
+            >
+              {t("nav.rentACar")}
+            </Link>
+            <Link
+              href="/list-your-car"
+              className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-white/90 bg-white/5 px-6 py-4 text-base font-semibold text-white backdrop-blur-sm transition-colors hover:bg-white/10 hover:border-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent max-sm:w-full sm:px-8 sm:text-lg"
+            >
+              {t("nav.listYourCar")}
+            </Link>
           </div>
+
+          <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-white/90 drop-shadow-sm max-sm:max-w-[280px] sm:mt-10 sm:gap-x-8 sm:gap-y-1">
+            <li className="flex items-center gap-1.5">
+              <span className="h-1 w-1 shrink-0 rounded-full bg-brand" />
+              {t("home.trustLocal")}
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="h-1 w-1 shrink-0 rounded-full bg-brand" />
+              {t("home.trustAirport")}
+            </li>
+            <li className="flex items-center gap-1.5">
+              <span className="h-1 w-1 shrink-0 rounded-full bg-brand" />
+              {t("home.trustInsurance")}
+            </li>
+          </ul>
         </div>
       </section>
 
