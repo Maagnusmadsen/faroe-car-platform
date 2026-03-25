@@ -93,7 +93,7 @@ export default function Navbar({ variant = "light" }: NavbarProps) {
       className={`sticky top-0 z-50 w-full transition-[background-color,border-color] duration-300 ease-out ${
         isSolid
           ? "border-b border-border bg-white"
-          : "bg-transparent backdrop-blur-sm max-sm:bg-black/25 max-sm:backdrop-blur-md"
+          : "bg-black/25 backdrop-blur-xl border-b border-white/10 max-sm:bg-black/35 max-sm:backdrop-blur-md"
       }`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">

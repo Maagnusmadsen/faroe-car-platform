@@ -10,6 +10,7 @@ const PROTECTED_PREFIXES = [
   "/list-your-car",
   "/profile",
   "/bookings",
+  "/messages",
   "/owner",
   "/admin",
   "/renter-approval",
