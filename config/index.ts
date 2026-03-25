@@ -1,1 +1,1 @@
-export { env, getBaseUrl, getApiBaseUrl, getDatabaseUrl, getNextAuthSecret } from "./env";
+export { env, getBaseUrl, getApiBaseUrl, getDatabaseUrl } from "./env";

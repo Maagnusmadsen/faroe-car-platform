@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import StatusBadge from "@/components/admin/StatusBadge";
 import { formatCurrency } from "@/lib/utils/price";
 
 type IssuesData = {
@@ -98,7 +97,7 @@ export default function AdminIssuesPage() {
     );
   }
 
-  const { issues, pendingRenters, pendingListings, failedPayouts, disputedBookings } = data;
+  const { issues, pendingRenters, failedPayouts, disputedBookings } = data;
   const hasIssues =
     issues.pendingRenterApprovals > 0 ||
     issues.failedPayouts > 0 ||

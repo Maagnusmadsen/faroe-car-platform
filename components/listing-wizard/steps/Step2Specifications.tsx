@@ -3,7 +3,7 @@
 import { useLanguage } from "@/context/LanguageContext";
 import type { ListingWizardData, StepErrors } from "../types";
 import type { Transmission, FuelType, VehicleType } from "@/lib/cars";
-import { inputClass, inputErrorClass, labelClass } from "../styles";
+import { inputClass, labelClass } from "../styles";
 
 const TRANSMISSIONS: { value: Transmission; labelKey: string }[] = [
   { value: "automatic", labelKey: "rent.automatic" },

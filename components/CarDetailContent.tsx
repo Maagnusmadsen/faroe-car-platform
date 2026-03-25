@@ -28,8 +28,6 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
   const [endDate, setEndDate] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [claiming, setClaiming] = useState(false);
-  const [claimDone, setClaimDone] = useState(false);
   const [reviews, setReviews] = useState<{ id: string; rating: number; comment: string | null; createdAt: string; reviewer: { name: string | null } }[]>([]);
   const [renterVerificationStatus, setRenterVerificationStatus] = useState<"UNVERIFIED" | "PENDING" | "VERIFIED" | null>(null);
   const name = car.title?.trim() || `${car.brand} ${car.model}`;
@@ -110,29 +108,6 @@ export default function CarDetailContent({ car }: CarDetailContentProps) {
       .catch(() => {});
     return () => { cancelled = true; };
   }, [car.id]);
-
-  async function handleClaimForMyListings() {
-    if (!sessionUser) return;
-    setClaiming(true);
-    setClaimDone(false);
-    try {
-      const res = await fetch("/api/listings/claim-ownership", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ listingId: car.id }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (res.ok) {
-        setClaimDone(true);
-      } else {
-        setBookingMessage(json?.error ?? "Could not add to My listings");
-      }
-    } catch {
-      setBookingMessage("Could not add to My listings");
-    } finally {
-      setClaiming(false);
-    }
-  }
 
   async function handleDeleteListing() {
     if (!confirm("Are you sure you want to remove this listing? It will no longer be visible to renters.")) return;

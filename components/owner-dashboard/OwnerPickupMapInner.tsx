@@ -29,7 +29,6 @@ export function OwnerPickupMapInner({ points, className = "" }: OwnerPickupMapIn
 
   const initialViewState = useMemo(() => {
     if (bounds && points.length > 0) {
-      const padding = 0.05;
       return {
         longitude: (bounds.minLng + bounds.maxLng) / 2,
         latitude: (bounds.minLat + bounds.maxLat) / 2,

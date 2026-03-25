@@ -6,7 +6,7 @@
  */
 
 import { prisma } from "@/db";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import type { DispatchNotificationEventInput } from "./types";
 import { inngest } from "@/lib/inngest/client";
 import { processNotificationEvent } from "./processor";
@@ -42,15 +42,27 @@ export async function dispatchNotificationEvent(
     return { eventId: existing.id, alreadyExisted: true };
   }
 
-  const event = await prisma.notificationEvent.create({
-    data: {
-      eventType: type,
-      idempotencyKey,
-      payload: payload as Prisma.InputJsonValue,
-      sourceId: sourceId ?? payload.bookingId ?? payload.conversationId ?? null,
-      sourceType: sourceType ?? (payload.bookingId ? "booking" : payload.conversationId ? "conversation" : null),
-    },
-  });
+  let event;
+  try {
+    event = await prisma.notificationEvent.create({
+      data: {
+        eventType: type,
+        idempotencyKey,
+        payload: payload as Prisma.InputJsonValue,
+        sourceId: sourceId ?? payload.bookingId ?? payload.conversationId ?? null,
+        sourceType: sourceType ?? (payload.bookingId ? "booking" : payload.conversationId ? "conversation" : null),
+      },
+    });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      const raced = await prisma.notificationEvent.findUnique({ where: { idempotencyKey } });
+      if (raced) {
+        log("info", "Event already processed (race, idempotent)", { idempotencyKey, eventId: raced.id });
+        return { eventId: raced.id, alreadyExisted: true };
+      }
+    }
+    throw err;
+  }
 
   try {
     requireInngestConfig();

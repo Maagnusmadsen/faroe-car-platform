@@ -1,5 +1,4 @@
 import type { ListingWizardData, StepErrors } from "./types";
-import type { Transmission, FuelType, VehicleType } from "@/lib/cars";
 
 const MIN_PHOTOS = 3;
 

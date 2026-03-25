@@ -6,7 +6,7 @@
 
 import { requireAuth } from "@/auth/guards";
 import { jsonSuccess, jsonError, handleApiError } from "@/lib/utils/api-response";
-import { getOwnerListings, getOwnerRecentBookings, getOwnerReviews } from "@/lib/owner-dashboard-server";
+import { getOwnerRecentBookings, getOwnerReviews } from "@/lib/owner-dashboard-server";
 import { prisma } from "@/db";
 import { previewPayoutForOwner } from "@/lib/payouts-server";
 import { isStripeConnectReady } from "@/lib/stripe-connect";

@@ -8,7 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 import { requireAuth, requireAdmin } from "@/auth/guards";
 import { jsonSuccess, jsonError, handleApiError } from "@/lib/utils/api-response";
 import { prisma } from "@/db";
-import { AppError, HttpStatus } from "@/lib/utils/errors";
+import { HttpStatus } from "@/lib/utils/errors";
 import { logAdminAction } from "@/lib/admin-audit";
 import { env } from "@/config/env";
 import { deleteListingImagesFromStorage } from "@/lib/listing-images";

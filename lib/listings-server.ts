@@ -19,9 +19,6 @@ import {
 import { deleteListingImage, deleteListingImagesFromStorage } from "@/lib/listing-images";
 
 const DEFAULT_TOWN = "Tórshavn";
-const DEFAULT_LAT = 62.0097;
-const DEFAULT_LONG = -6.7716;
-const DEFAULT_ISLAND = "Streymoy";
 
 /** All step validators for publish */
 const ALL_VALIDATORS = [
@@ -36,7 +33,7 @@ const ALL_VALIDATORS = [
 
 export function validateAllWizardSteps(data: ListingWizardData): Record<string, string> {
   const errors: Record<string, string> = {};
-  ALL_VALIDATORS.forEach((fn, i) => {
+  ALL_VALIDATORS.forEach((fn) => {
     const stepErrors = fn(data);
     Object.assign(errors, stepErrors);
   });

@@ -4,7 +4,7 @@
  */
 
 import { prisma } from "@/db";
-import type { NotificationType, Prisma } from "@prisma/client";
+import { Prisma, type NotificationType } from "@prisma/client";
 import type { EventType, NotificationEventPayload } from "../types";
 
 const EVENT_TO_LEGACY_TYPE: Record<EventType, NotificationType> = {
@@ -158,6 +158,17 @@ export async function createInAppNotification(
     return notification.id;
   }
 
-  const notification = await prisma.notification.create({ data });
-  return notification.id;
+  try {
+    const notification = await prisma.notification.create({ data });
+    return notification.id;
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      const existing = await prisma.notification.findFirst({
+        where: { userId: input.userId, eventId: input.eventId },
+        select: { id: true },
+      });
+      return existing?.id ?? "duplicate";
+    }
+    throw err;
+  }
 }

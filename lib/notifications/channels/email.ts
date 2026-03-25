@@ -7,7 +7,6 @@ import { prisma } from "@/db";
 import type { EventType, NotificationEventPayload } from "../types";
 import { renderEmailTemplate } from "../templates";
 import { sendEmail } from "../providers/resend";
-import type { Recipient } from "../types";
 
 export interface SendEmailNotificationInput {
   userId: string;

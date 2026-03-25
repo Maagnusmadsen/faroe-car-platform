@@ -17,8 +17,6 @@ const BOOKING_STATUSES_BLOCKING = [
   "DISPUTED",
 ] as const;
 
-type BlockingBookingStatus = (typeof BOOKING_STATUSES_BLOCKING)[number];
-
 export interface DateRange {
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD

@@ -3,8 +3,8 @@
  * GET /api/bookings – list bookings for current user (renter or owner).
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { getSessionRouteHandler } from "@/auth/guards";
+import { NextRequest } from "next/server";
+import { requireAuth } from "@/auth/guards";
 import { jsonCreated, jsonSuccess, handleApiError } from "@/lib/utils/api-response";
 import { parseOrThrow, parseQueryOrThrow } from "@/lib/utils/validate";
 import {
@@ -15,20 +15,8 @@ import { createBookingForListing } from "@/lib/bookings-server";
 import { prisma } from "@/db";
 
 export async function POST(request: NextRequest) {
-  const { session, applyCookies } = await getSessionRouteHandler();
-  if (!session) {
-    const res = NextResponse.json(
-      {
-        error: "You need to sign in to book a car.",
-        code: "UNAUTHENTICATED",
-      },
-      { status: 401 }
-    );
-    applyCookies(res);
-    return res;
-  }
-
   try {
+    const session = await requireAuth();
     const body = await request.json();
     const input = parseOrThrow(bookingCreateSchema, body);
 
@@ -39,42 +27,20 @@ export async function POST(request: NextRequest) {
       endDate: input.endDate,
     });
 
-    const res = jsonCreated({
+    return jsonCreated({
       id: booking.id,
       status: booking.status,
       startDate: booking.startDate,
       endDate: booking.endDate,
     });
-    applyCookies(res);
-    return res;
   } catch (err) {
-    const e = err as Error & { statusCode?: number };
-    if (e.statusCode === 401) {
-      const res = NextResponse.json(
-        { error: e.message, code: "UNAUTHENTICATED" },
-        { status: 401 }
-      );
-      applyCookies(res);
-      return res;
-    }
-    const res = handleApiError(err);
-    applyCookies(res);
-    return res;
+    return handleApiError(err);
   }
 }
 
 export async function GET(request: NextRequest) {
-  const { session, applyCookies } = await getSessionRouteHandler();
-  if (!session) {
-    const res = NextResponse.json(
-      { error: "Unauthorized", code: "UNAUTHENTICATED" },
-      { status: 401 }
-    );
-    applyCookies(res);
-    return res;
-  }
-
   try {
+    const session = await requireAuth();
     const { searchParams } = new URL(request.url);
     const query = parseQueryOrThrow(
       bookingListQuerySchema,
@@ -148,7 +114,7 @@ export async function GET(request: NextRequest) {
       hasRenterReviewed: userReviewedSet.has(b.id),
     }));
 
-    const res = jsonSuccess(
+    return jsonSuccess(
       {
         items,
         total,
@@ -162,20 +128,7 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-    applyCookies(res);
-    return res;
   } catch (err) {
-    const e = err as Error & { statusCode?: number };
-    if (e.statusCode === 401) {
-      const res = NextResponse.json(
-        { error: e.message, code: "UNAUTHENTICATED" },
-        { status: 401 }
-      );
-      applyCookies(res);
-      return res;
-    }
-    const res = handleApiError(err);
-    applyCookies(res);
-    return res;
+    return handleApiError(err);
   }
 }

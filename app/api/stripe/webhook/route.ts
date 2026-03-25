@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     logWebhookError("Webhook not configured: missing secret or signature");
     return new Response(
       JSON.stringify({ error: "Webhook not configured" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 400, headers: { "Content-Type": "application/json" } }
     );
   }
 

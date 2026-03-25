@@ -1,11 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import "mapbox-gl/dist/mapbox-gl.css";
-
-const FAROE_CENTER = { longitude: -6.95, latitude: 62.0 };
-const DEFAULT_ZOOM = 9;
 
 const MapboxMap = dynamic(
   () => import("./MapboxLocationPickerInner").then((m) => m.MapboxLocationPickerInner),

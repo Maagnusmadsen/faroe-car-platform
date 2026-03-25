@@ -25,7 +25,7 @@ export function getBaseUrl(): string {
   if (appUrl) return appUrl.replace(/\/$/, "");
   const vercelUrl = getEnv("VERCEL_URL");
   if (vercelUrl) return `https://${vercelUrl}`;
-  return getEnv("NEXTAUTH_URL") ?? "http://localhost:3000";
+  return "http://localhost:3000";
 }
 
 /** Pooled connection URL for serverless runtime (Transaction pooler, port 6543, ?pgbouncer=true). */
@@ -36,11 +36,6 @@ export function getDatabaseUrl(): string {
 /** Direct connection URL for Prisma migrations (port 5432, no pooler). Read by prisma/schema.prisma directUrl. */
 export function getDirectDatabaseUrl(): string | undefined {
   return getEnv("DIRECT_DATABASE_URL");
-}
-
-/** Only required when using NextAuth (Step A2) */
-export function getNextAuthSecret(): string {
-  return getEnvRequired("NEXTAUTH_SECRET");
 }
 
 /** Optional; used by API client to point to same origin or external API */
@@ -131,8 +126,6 @@ export const env = {
   baseUrl: getBaseUrl,
   apiBaseUrl: getApiBaseUrl,
   databaseUrl: getEnv("DATABASE_URL"),
-  nextAuthUrl: getEnv("NEXTAUTH_URL"),
-  nextAuthSecret: getEnv("NEXTAUTH_SECRET"),
   stripeSecretKey: getEnv("STRIPE_SECRET_KEY"),
   stripeWebhookSecret: getEnv("STRIPE_WEBHOOK_SECRET"),
   supabaseUrl: getEnv("NEXT_PUBLIC_SUPABASE_URL"),

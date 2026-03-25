@@ -1,5 +1,6 @@
 /**
- * Middleware: refresh Supabase session and protect /list-your-car, /profile.
+ * Middleware: refresh Supabase session and protect routes.
+ * Fail-closed: any auth error on a protected route redirects to /login.
  */
 
 import { updateSession } from "@/lib/supabase/middleware";
@@ -20,14 +21,34 @@ function isProtected(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
-export async function middleware(request: NextRequest) {
-  try {
-    const response = await updateSession(request);
+function redirectToLogin(request: NextRequest, pathname: string): NextResponse {
+  const login = new URL("/login", request.url);
+  login.searchParams.set("callbackUrl", pathname);
+  return NextResponse.redirect(login);
+}
 
-    const pathname = request.nextUrl.pathname;
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    if (url && key && isProtected(pathname)) {
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const isProtectedRoute = isProtected(pathname);
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key) {
+    if (isProtectedRoute) return redirectToLogin(request, pathname);
+    return NextResponse.next({ request: { headers: request.headers } });
+  }
+
+  let response: NextResponse;
+  try {
+    response = await updateSession(request);
+  } catch {
+    if (isProtectedRoute) return redirectToLogin(request, pathname);
+    return NextResponse.next({ request: { headers: request.headers } });
+  }
+
+  if (isProtectedRoute) {
+    try {
       const supabase = createServerClient(url, key, {
         cookies: {
           getAll() {
@@ -43,17 +64,13 @@ export async function middleware(request: NextRequest) {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) {
-        const login = new URL("/login", request.url);
-        login.searchParams.set("callbackUrl", pathname);
-        return NextResponse.redirect(login);
-      }
+      if (!user) return redirectToLogin(request, pathname);
+    } catch {
+      return redirectToLogin(request, pathname);
     }
-
-    return response;
-  } catch (_err) {
-    return NextResponse.next({ request: { headers: request.headers } });
   }
+
+  return response;
 }
 
 export const config = {

@@ -14,7 +14,6 @@ export interface UseAuthResult {
 
 /**
  * Client-side auth: Supabase session + app user from /api/auth/me.
- * Use in place of useSession() from NextAuth.
  */
 export function useAuth(): UseAuthResult {
   const router = useRouter();

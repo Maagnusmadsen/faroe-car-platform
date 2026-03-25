@@ -106,7 +106,6 @@ function applyChip(
 export default function FilterChips({
   filters,
   onFiltersChange,
-  sort = "relevant",
   onSortChange,
   activeSortChip = null,
   onSortChipChange,
