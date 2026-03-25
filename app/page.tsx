@@ -17,7 +17,8 @@ export default function HomePage() {
         style={{ backgroundImage: "url('/hero-faroe.jpg')" }}
         aria-hidden
       >
-        <div className="absolute inset-0" style={{ backgroundColor: "var(--overlay)" }} aria-hidden />
+        {/* Slightly stronger overlay for WCAG-friendly readability on the hero */}
+        <div className="absolute inset-0" style={{ backgroundColor: "rgba(0,0,0,0.42)" }} aria-hidden />
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/40 to-transparent"
           aria-hidden
