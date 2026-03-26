@@ -1,1 +1,1 @@
-export { getSession, requireAuth, requireRole, type AuthSession } from "./guards";
+export { getSession, requireAuth, requireRole, requireAdmin, type AuthSession } from "./guards";

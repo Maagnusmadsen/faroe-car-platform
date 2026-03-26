@@ -1,34 +1,35 @@
 /**
  * Auth guards for API routes and server components.
- * Uses Supabase Auth: getSession() returns app user synced from Supabase user.
- * requireAuth/requireRole throw on failure.
- * Owner/renter checks are resource-level (e.g. resource.ownerId === session.user.id), not role-based.
+ *
+ * Auth resolution happens ONCE per request, in middleware (updateSession).
+ * The validated Supabase user is serialized into a request header. Guards
+ * here read that header, sync the user to Prisma, and return the app session.
+ * No second getUser() call is ever made — this avoids the double refresh-token
+ * consumption that caused intermittent logouts.
  */
 
-import { createClient, createRouteHandlerClient } from "@/lib/supabase/server";
+import { SUPABASE_USER_HEADER } from "@/lib/supabase/middleware";
 import { syncSupabaseUserToPrisma } from "@/lib/supabase/sync-user";
 import type { SessionUser } from "@/types";
-import type { NextResponse } from "next/server";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { headers } from "next/headers";
 
 export interface AuthSession {
   user: SessionUser;
   expires?: string;
 }
 
-type ServerSupabaseClient = Awaited<ReturnType<typeof createClient>>;
-
 /**
- * Resolve app session from a Supabase server client (shared by getSession and route handlers).
+ * Get current session from the middleware-provided header.
+ * Returns null if not authenticated (header absent or invalid).
  */
-export async function resolveSessionFromSupabase(
-  supabase: ServerSupabaseClient
-): Promise<AuthSession | null> {
+export async function getSession(): Promise<AuthSession | null> {
   try {
-    const {
-      data: { user: supabaseUser },
-      error,
-    } = await supabase.auth.getUser();
-    if (error || !supabaseUser) return null;
+    const headerStore = await headers();
+    const raw = headerStore.get(SUPABASE_USER_HEADER);
+    if (!raw) return null;
+
+    const supabaseUser: SupabaseUser = JSON.parse(raw);
 
     const appUser = await syncSupabaseUserToPrisma(supabaseUser);
     if (!appUser) return null;
@@ -42,38 +43,11 @@ export async function resolveSessionFromSupabase(
       },
     };
   } catch (err) {
-    console.error("[Auth] resolveSessionFromSupabase failed — returning null session", {
+    console.error("[Auth] getSession failed — returning null session", {
       error: (err as Error).message,
-      stack: (err as Error).stack,
     });
     return null;
   }
-}
-
-/**
- * Get current session. Returns null if not authenticated.
- * Uses Supabase Auth: getUser() then syncs to Prisma User.
- */
-export async function getSession(): Promise<AuthSession | null> {
-  try {
-    const supabase = await createClient();
-    return await resolveSessionFromSupabase(supabase);
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Session for Route Handlers: uses the same Supabase client as /api/auth/me so refreshed
- * auth cookies are applied to the response (avoids 401 after token refresh).
- */
-export async function getSessionRouteHandler(): Promise<{
-  session: AuthSession | null;
-  applyCookies: (response: NextResponse) => void;
-}> {
-  const { supabase, applyCookies } = await createRouteHandlerClient();
-  const session = await resolveSessionFromSupabase(supabase);
-  return { session, applyCookies };
 }
 
 /**
