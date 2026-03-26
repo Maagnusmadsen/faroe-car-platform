@@ -112,7 +112,7 @@ export async function createPayoutForOwner(ownerId: string) {
     );
   }
 
-  return prisma.$transaction(async (tx) => {
+  const payout = await prisma.$transaction(async (tx) => {
     // Re-check inside TX to avoid race conditions
     const freshBookings = await tx.booking.findMany({
       where: {
@@ -149,37 +149,45 @@ export async function createPayoutForOwner(ownerId: string) {
       0
     );
 
-    const payout = await tx.payout.create({
+    const created = await tx.payout.create({
       data: {
         userId: ownerId,
         amount: totalAmount,
         currency,
-        status: "PENDING", // later: mark COMPLETED when Stripe transfer settles
+        status: "PENDING",
       },
     });
 
-    // Attach bookings to this payout
     await tx.booking.updateMany({
       where: {
         id: { in: freshBookings.map((b) => b.id) },
       },
-      data: { payoutId: payout.id },
+      data: { payoutId: created.id },
     });
 
+    return created;
+  });
+
+  try {
     await dispatchNotificationEvent({
       type: "payout.sent",
       idempotencyKey: `payout-${payout.id}`,
       payload: {
         ownerId,
         payoutId: payout.id,
-        amount: totalAmount,
+        amount: Number(payout.amount),
         currency: payout.currency,
       },
       sourceId: payout.id,
       sourceType: "payout",
     });
+  } catch (err) {
+    console.error("[Payout] Notification dispatch failed (non-fatal)", {
+      payoutId: payout.id,
+      error: (err as Error).message,
+    });
+  }
 
-    return payout;
-  });
+  return payout;
 }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { SessionUser } from "@/types";
@@ -19,34 +19,37 @@ export function useAuth(): UseAuthResult {
   const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
+  // Prevents concurrent /api/auth/me fetches triggered by rapid auth events.
+  const fetchInFlight = useRef(false);
 
   const fetchAppUser = useCallback(async () => {
-    const res = await fetch("/api/auth/me", {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    });
-    if (res.ok) {
-      const json = await res.json();
-      setUser(json.data ?? null);
-      setStatus("authenticated");
-    } else {
-      setUser(null);
-      setStatus("unauthenticated");
+    if (fetchInFlight.current) return;
+    fetchInFlight.current = true;
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setUser(json.data ?? null);
+        setStatus("authenticated");
+      } else {
+        setUser(null);
+        setStatus("unauthenticated");
+      }
+    } finally {
+      fetchInFlight.current = false;
     }
   }, []);
 
   useEffect(() => {
     const supabase = createClient();
 
-    const init = async () => {
-      await supabase.auth.getSession();
-      // Always ask server who is authenticated (cookie session may exist without client session).
-      await fetchAppUser();
-    };
-
-    init();
-
+    // onAuthStateChange fires INITIAL_SESSION immediately on registration,
+    // which replaces the old init() + getSession() pattern and eliminates
+    // the duplicate fetchAppUser() call that caused the race condition.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event) => {
@@ -54,6 +57,9 @@ export function useAuth(): UseAuthResult {
         setUser(null);
         setStatus("unauthenticated");
       } else {
+        // Covers INITIAL_SESSION, SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED.
+        // Cookie-only server sessions are resolved via /api/auth/me regardless
+        // of whether the client-side session is null.
         await fetchAppUser();
       }
       if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {

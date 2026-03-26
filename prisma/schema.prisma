@@ -99,7 +99,7 @@ enum NotificationType {
 }
 
 // =============================================================================
-// User & Auth (NextAuth-compatible)
+// User & Auth (Supabase Auth)
 // =============================================================================
 
 model User {
@@ -109,15 +109,12 @@ model User {
   emailVerified         DateTime?
   name                  String?
   image                 String?
-  passwordHash          String?   // legacy NextAuth credentials; unused when using Supabase Auth
   role                  UserRole  @default(USER)
   stripeConnectAccountId String?  @unique // Stripe Connect Express account (acct_xxx) for receiving payouts
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
   deletedAt             DateTime? // soft delete
 
-  accounts         Account[]
-  sessions         Session[]
   profile          UserProfile?
   carListings      CarListing[]       @relation("CarOwner")
   bookingsAsRenter Booking[]         @relation("BookingRenter")
@@ -158,45 +155,6 @@ model UserProfile {
   verificationStatus   VerificationStatus @default(UNVERIFIED)
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
-}
-
-// NextAuth.js / Auth.js standard models
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  @@unique([provider, providerAccountId])
-  @@index([userId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expires      DateTime
-
-  @@index([userId])
-}
-
-model VerificationToken {
-  id         String   @id @default(cuid())
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
 }
 
 // =============================================================================

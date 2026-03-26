@@ -41,7 +41,11 @@ export async function resolveSessionFromSupabase(
         role: appUser.role,
       },
     };
-  } catch {
+  } catch (err) {
+    console.error("[Auth] resolveSessionFromSupabase failed — returning null session", {
+      error: (err as Error).message,
+      stack: (err as Error).stack,
+    });
     return null;
   }
 }

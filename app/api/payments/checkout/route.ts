@@ -14,6 +14,7 @@ import { getStripeClient } from "@/payments";
 import { prisma } from "@/db";
 import { getBaseUrl } from "@/config/env";
 import { createPendingPaymentForCheckout } from "@/lib/payments-server";
+import { isStripeConnectReady } from "@/lib/stripe-connect";
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,6 +55,15 @@ export async function POST(request: NextRequest) {
         "The car owner has not set up payouts yet. Payment is temporarily unavailable.",
         HttpStatus.CONFLICT,
         "OWNER_STRIPE_NOT_CONNECTED"
+      );
+    }
+
+    const connectReady = await isStripeConnectReady(ownerStripeAccountId);
+    if (!connectReady) {
+      throw new AppError(
+        "The car owner's payment account is temporarily unavailable. Please try again later or contact support.",
+        HttpStatus.CONFLICT,
+        "OWNER_STRIPE_SUSPENDED"
       );
     }
 

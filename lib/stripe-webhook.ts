@@ -7,9 +7,10 @@ import type Stripe from "stripe";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/db";
 import { dispatchNotificationEvent } from "@/lib/notifications";
+import { getStripeClient } from "@/payments";
 
 export type WebhookResult =
-  | { ok: true; alreadyProcessed?: boolean; bookingId?: string; renterId?: string; ownerId?: string; carId?: string; amount?: number; currency?: string }
+  | { ok: true; alreadyProcessed?: boolean; bookingId?: string; renterId?: string; ownerId?: string; carId?: string; amount?: number; currency?: string; refundRequired?: { paymentIntentId: string; bookingId: string; reason: string } }
   | { ok: false; retryable: boolean; reason: string };
 
 /** Structured log for webhook events. Use console for now; swap for pino/winston in production. */
@@ -124,18 +125,33 @@ async function processCheckoutSessionCompleted(
       },
     });
 
-    // Only update booking if still PENDING_PAYMENT (idempotent)
+    let refundRequired: { paymentIntentId: string; bookingId: string; reason: string } | undefined;
+
     if (booking.status === "PENDING_PAYMENT") {
       await tx.booking.update({
         where: { id: booking.id },
         data: { status: "CONFIRMED" },
+      });
+    } else if (booking.status !== "CONFIRMED" && booking.status !== "COMPLETED") {
+      // Booking was cancelled/rejected between checkout initiation and payment completion.
+      // Mark payment for refund — the actual Stripe refund happens outside this transaction.
+      refundRequired = {
+        paymentIntentId,
+        bookingId: booking.id,
+        reason: `Payment succeeded but booking is ${booking.status}; auto-refund required`,
+      };
+      log("error", "Payment succeeded on non-payable booking — scheduling refund", {
+        eventId: event.id,
+        bookingId,
+        bookingStatus: booking.status,
+        paymentIntentId,
       });
     }
 
     await recordEventProcessed(
       event.id,
       event.type,
-      { bookingId, paymentIntentId },
+      { bookingId, paymentIntentId, refundRequired: !!refundRequired },
       tx
     );
 
@@ -143,6 +159,7 @@ async function processCheckoutSessionCompleted(
       eventId: event.id,
       bookingId,
       amount: Number(amount),
+      refundRequired: !!refundRequired,
     });
 
     return {
@@ -153,6 +170,7 @@ async function processCheckoutSessionCompleted(
       carId: booking.carId,
       amount: Number(amount),
       currency: booking.currency,
+      refundRequired,
     };
   });
 }
@@ -248,6 +266,8 @@ async function processPaymentIntentFailed(
 
 /**
  * Process account.updated (Stripe Connect).
+ * Also pauses all ACTIVE listings if the account loses charges_enabled,
+ * preventing checkout against a suspended Connect account.
  */
 async function processAccountUpdated(
   event: Stripe.Event,
@@ -275,10 +295,27 @@ async function processAccountUpdated(
       data: { stripeConnectAccountId: account.id },
     });
 
+    if (account.charges_enabled === false || account.details_submitted === false) {
+      const paused = await tx.carListing.updateMany({
+        where: { ownerId: userId, status: "ACTIVE" },
+        data: { status: "PAUSED" },
+      });
+      if (paused.count > 0) {
+        log("warn", "Paused listings due to Connect account losing charges_enabled", {
+          eventId: event.id,
+          userId,
+          accountId: account.id,
+          pausedCount: paused.count,
+          chargesEnabled: account.charges_enabled,
+          detailsSubmitted: account.details_submitted,
+        });
+      }
+    }
+
     await recordEventProcessed(
       event.id,
       event.type,
-      { userId, accountId: account.id },
+      { userId, accountId: account.id, chargesEnabled: account.charges_enabled },
       tx
     );
 
@@ -299,51 +336,79 @@ export async function handleStripeEvent(event: Stripe.Event): Promise<WebhookRes
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         result = await processCheckoutSessionCompleted(event, session);
-        if (result.ok && !result.alreadyProcessed && result.bookingId && result.renterId && result.ownerId && result.carId) {
-          await Promise.all([
-            dispatchNotificationEvent({
-              type: "booking.confirmed",
-              idempotencyKey: `booking-${result.bookingId}-confirmed`,
-              payload: {
-                bookingId: result.bookingId,
-                renterId: result.renterId,
-                ownerId: result.ownerId,
-                carId: result.carId,
-                amount: result.amount,
-                currency: result.currency ?? "DKK",
-              },
-              sourceId: result.bookingId,
-              sourceType: "booking",
-            }),
-            dispatchNotificationEvent({
-              type: "payment.received",
-              idempotencyKey: `payment-${result.bookingId}-received`,
-              payload: {
-                bookingId: result.bookingId,
-                ownerId: result.ownerId,
-                carId: result.carId,
-                amount: result.amount ?? 0,
-                currency: result.currency ?? "DKK",
-              },
-              sourceId: result.bookingId,
-              sourceType: "booking",
-            }),
-            dispatchNotificationEvent({
-              type: "payment.receipt",
-              idempotencyKey: `payment-receipt-${result.bookingId}`,
-              payload: {
-                bookingId: result.bookingId,
-                renterId: result.renterId,
-                carId: result.carId,
-                amount: result.amount ?? 0,
-                currency: result.currency ?? "DKK",
-              },
-              sourceId: result.bookingId,
-              sourceType: "booking",
-            }),
-          ]).catch((err) => {
-            console.error("[Stripe Webhook] Notification dispatch failed (non-fatal)", err);
-          });
+        if (result.ok && !result.alreadyProcessed) {
+          // Auto-refund if payment succeeded but booking was already cancelled/rejected
+          if (result.refundRequired) {
+            try {
+              const stripe = getStripeClient();
+              await stripe.refunds.create({
+                payment_intent: result.refundRequired.paymentIntentId,
+              });
+              await prisma.payment.updateMany({
+                where: { stripePaymentIntentId: result.refundRequired.paymentIntentId },
+                data: { status: "REFUNDED" },
+              });
+              log("info", "Auto-refund issued for payment on non-payable booking", {
+                eventId: event.id,
+                bookingId: result.refundRequired.bookingId,
+                paymentIntentId: result.refundRequired.paymentIntentId,
+              });
+            } catch (refundErr) {
+              log("error", "Auto-refund FAILED — manual intervention required", {
+                eventId: event.id,
+                bookingId: result.refundRequired.bookingId,
+                paymentIntentId: result.refundRequired.paymentIntentId,
+                error: (refundErr as Error).message,
+              });
+            }
+          }
+
+          if (!result.refundRequired && result.bookingId && result.renterId && result.ownerId && result.carId) {
+            await Promise.all([
+              dispatchNotificationEvent({
+                type: "booking.confirmed",
+                idempotencyKey: `booking-${result.bookingId}-confirmed`,
+                payload: {
+                  bookingId: result.bookingId,
+                  renterId: result.renterId,
+                  ownerId: result.ownerId,
+                  carId: result.carId,
+                  amount: result.amount,
+                  currency: result.currency ?? "DKK",
+                },
+                sourceId: result.bookingId,
+                sourceType: "booking",
+              }),
+              dispatchNotificationEvent({
+                type: "payment.received",
+                idempotencyKey: `payment-${result.bookingId}-received`,
+                payload: {
+                  bookingId: result.bookingId,
+                  ownerId: result.ownerId,
+                  carId: result.carId,
+                  amount: result.amount ?? 0,
+                  currency: result.currency ?? "DKK",
+                },
+                sourceId: result.bookingId,
+                sourceType: "booking",
+              }),
+              dispatchNotificationEvent({
+                type: "payment.receipt",
+                idempotencyKey: `payment-receipt-${result.bookingId}`,
+                payload: {
+                  bookingId: result.bookingId,
+                  renterId: result.renterId,
+                  carId: result.carId,
+                  amount: result.amount ?? 0,
+                  currency: result.currency ?? "DKK",
+                },
+                sourceId: result.bookingId,
+                sourceType: "booking",
+              }),
+            ]).catch((err) => {
+              console.error("[Stripe Webhook] Notification dispatch failed (non-fatal)", err);
+            });
+          }
         }
         return result;
       }

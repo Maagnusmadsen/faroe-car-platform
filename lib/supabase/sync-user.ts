@@ -1,6 +1,11 @@
 /**
  * Sync Supabase Auth user to Prisma User.
  * Call after sign-in/sign-up so our app has a User record (id, role) for API guards.
+ *
+ * Security invariants:
+ * - Email fallback only claims unclaimed users (supabaseUserId IS NULL).
+ * - Listings are never transferred between users automatically.
+ * - All read-then-write sequences run inside a serializable transaction.
  */
 
 import { prisma } from "@/db";
@@ -23,104 +28,120 @@ export async function syncSupabaseUserToPrisma(supabaseUser: SupabaseUser): Prom
 
   const name = (supabaseUser.user_metadata?.name as string)?.trim() || null;
   const image = (supabaseUser.user_metadata?.avatar_url as string) || supabaseUser.user_metadata?.picture;
+  const emailVerifiedAt = supabaseUser.email_confirmed_at ? new Date(supabaseUser.email_confirmed_at) : null;
 
-  let user = await prisma.user.findFirst({
-    where: { supabaseUserId: supabaseId, deletedAt: null },
-  });
-
-  if (user) {
-    user = await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        email,
-        name: name ?? user.name,
-        image: image ?? user.image,
-        emailVerified: supabaseUser.email_confirmed_at ? new Date(supabaseUser.email_confirmed_at) : user.emailVerified,
-      },
+  const { user, isNewUser } = await prisma.$transaction(async (tx) => {
+    // 1. Canonical lookup: find by Supabase identity (idempotent path)
+    const existing = await tx.user.findFirst({
+      where: { supabaseUserId: supabaseId, deletedAt: null },
     });
-    // If another user with same email has listings, move those listings to this user (merge duplicates)
-    const otherWithSameEmail = await prisma.user.findFirst({
+
+    if (existing) {
+      const updated = await tx.user.update({
+        where: { id: existing.id },
+        data: {
+          email,
+          name: name ?? existing.name,
+          image: image ?? existing.image,
+          emailVerified: emailVerifiedAt ?? existing.emailVerified,
+        },
+      });
+      return { user: updated, isNewUser: false };
+    }
+
+    // 2. Email fallback: ONLY claim an unclaimed user (no Supabase identity yet)
+    const unclaimed = await tx.user.findFirst({
       where: {
-        id: { not: user.id },
         email: { equals: email, mode: "insensitive" },
+        supabaseUserId: null,
         deletedAt: null,
       },
-      select: { id: true },
     });
-    if (otherWithSameEmail) {
-      await prisma.carListing.updateMany({
-        where: { ownerId: otherWithSameEmail.id },
-        data: { ownerId: user.id },
+
+    if (unclaimed) {
+      const claimed = await tx.user.update({
+        where: { id: unclaimed.id },
+        data: {
+          supabaseUserId: supabaseId,
+          name: name ?? unclaimed.name,
+          image: image ?? unclaimed.image,
+          emailVerified: emailVerifiedAt ?? unclaimed.emailVerified,
+        },
       });
+      return { user: claimed, isNewUser: false };
     }
-  } else {
-    const existingByEmail = await prisma.user.findFirst({
-      where: { email: { equals: email, mode: "insensitive" }, deletedAt: null },
-    });
-    if (existingByEmail) {
-      await prisma.user.update({
-        where: { id: existingByEmail.id },
-        data: { supabaseUserId: supabaseId },
+
+    // 3. Create new user
+    try {
+      const created = await tx.user.create({
+        data: {
+          supabaseUserId: supabaseId,
+          email,
+          name,
+          image: image ?? null,
+          emailVerified: emailVerifiedAt,
+          role: "USER",
+        },
       });
-      user = await prisma.user.findUniqueOrThrow({ where: { id: existingByEmail.id } });
-    } else {
-      try {
-        user = await prisma.user.create({
-          data: {
-            supabaseUserId: supabaseId,
-            email,
-            name,
-            image: image ?? null,
-            emailVerified: supabaseUser.email_confirmed_at ? new Date(supabaseUser.email_confirmed_at) : null,
-            role: "USER",
-          },
-        });
-      } catch (err) {
-        // Race-safe fallback: another request may have created same user between read and create.
-        const isUniqueConstraintError =
-          err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002";
-        if (!isUniqueConstraintError) throw err;
 
-        // For auth sync reliability, recover by binding the Supabase user to an existing app user by email.
-        const existingAfterRace = await prisma.user.findFirst({
-          where: { email: { equals: email, mode: "insensitive" } },
-        });
-        if (!existingAfterRace) throw err;
-
-        await prisma.user.update({
-          where: { id: existingAfterRace.id },
-          data: {
-            supabaseUserId: supabaseId,
-            deletedAt: null,
-            emailVerified: supabaseUser.email_confirmed_at
-              ? new Date(supabaseUser.email_confirmed_at)
-              : existingAfterRace.emailVerified,
-            name: name ?? existingAfterRace.name,
-            image: image ?? existingAfterRace.image,
-          },
-        });
-        user = await prisma.user.findUniqueOrThrow({ where: { id: existingAfterRace.id } });
-      }
-      await prisma.userProfile.upsert({
-        where: { userId: user.id },
-        create: { userId: user.id },
+      await tx.userProfile.upsert({
+        where: { userId: created.id },
+        create: { userId: created.id },
         update: {},
       });
-      try {
-        await dispatchNotificationEvent({
-          type: "user.welcome",
-          idempotencyKey: `user-welcome-${user.id}`,
-          payload: { userId: user.id },
-          sourceId: user.id,
-          sourceType: "user",
-        });
-      } catch (err) {
-        // Never block auth/session sync on notification failures.
-        console.error("[Auth] user.welcome dispatch failed during user sync", {
-          userId: user.id,
-          error: (err as Error).message,
-        });
+
+      return { user: created, isNewUser: true };
+    } catch (err) {
+      if (
+        !(err instanceof Prisma.PrismaClientKnownRequestError) ||
+        err.code !== "P2002"
+      )
+        throw err;
+
+      // Race: another request created the user between our read and write.
+      // Only recover if the conflicting record is still unclaimed.
+      const raceUser = await tx.user.findFirst({
+        where: {
+          email: { equals: email, mode: "insensitive" },
+          supabaseUserId: null,
+          deletedAt: null,
+        },
+      });
+
+      if (!raceUser) {
+        // The existing user already belongs to another Supabase identity — refuse to hijack.
+        throw new Error(
+          `[Auth] Cannot sync: email "${email}" is already bound to another identity`
+        );
       }
+
+      const claimed = await tx.user.update({
+        where: { id: raceUser.id },
+        data: {
+          supabaseUserId: supabaseId,
+          name: name ?? raceUser.name,
+          image: image ?? raceUser.image,
+          emailVerified: emailVerifiedAt ?? raceUser.emailVerified,
+        },
+      });
+      return { user: claimed, isNewUser: false };
+    }
+  });
+
+  if (isNewUser) {
+    try {
+      await dispatchNotificationEvent({
+        type: "user.welcome",
+        idempotencyKey: `user-welcome-${user.id}`,
+        payload: { userId: user.id },
+        sourceId: user.id,
+        sourceType: "user",
+      });
+    } catch (err) {
+      console.error("[Auth] user.welcome dispatch failed during user sync", {
+        userId: user.id,
+        error: (err as Error).message,
+      });
     }
   }
 

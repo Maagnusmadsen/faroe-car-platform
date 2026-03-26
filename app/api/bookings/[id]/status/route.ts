@@ -82,6 +82,13 @@ export async function PATCH(
       }
     }
 
+    // Owner can only dispute a CONFIRMED booking (payment already taken)
+    if (isOwner && input.status === "DISPUTED") {
+      if (booking.status !== "CONFIRMED") {
+        return jsonError("Only confirmed (paid) bookings can be disputed", 409);
+      }
+    }
+
     // When owner approves, set PENDING_PAYMENT so renter must pay before booking is confirmed
     const statusToWrite =
       isOwner && input.status === "CONFIRMED"
@@ -98,58 +105,67 @@ export async function PATCH(
       }),
     ]);
 
-    // Notifications for cancellation, rejection, approval, and completion
-    if (input.status === "REJECTED") {
-      await dispatchNotificationEvent({
-        type: "booking.rejected",
-        idempotencyKey: `booking-${id}-rejected`,
-        payload: {
-          bookingId: id,
-          renterId: booking.renterId,
-          ownerId: booking.car.ownerId,
-          carId: booking.carId,
-        },
-        sourceId: id,
-        sourceType: "booking",
-      });
-    } else if (input.status === "CANCELLED") {
-      await dispatchNotificationEvent({
-        type: "booking.cancelled",
-        idempotencyKey: `booking-${id}-cancelled`,
-        payload: {
-          bookingId: id,
-          renterId: booking.renterId,
-          ownerId: booking.car.ownerId,
-          carId: booking.carId,
-        },
-        sourceId: id,
-        sourceType: "booking",
-      });
-    } else if (statusToWrite === "PENDING_PAYMENT") {
-      await dispatchNotificationEvent({
-        type: "booking.approved",
-        idempotencyKey: `booking-${id}-approved`,
-        payload: {
-          bookingId: id,
-          renterId: booking.renterId,
-          ownerId: booking.car.ownerId,
-          carId: booking.carId,
-        },
-        sourceId: id,
-        sourceType: "booking",
-      });
-    } else if (input.status === "COMPLETED") {
-      await dispatchNotificationEvent({
-        type: "review.requested",
-        idempotencyKey: `booking-${id}-review-reminder`,
-        payload: {
-          bookingId: id,
-          renterId: booking.renterId,
-          ownerId: booking.car.ownerId,
-          carId: booking.carId,
-        },
-        sourceId: id,
-        sourceType: "booking",
+    // Notifications are non-fatal: the status change is the primary action.
+    // If dispatch fails, the recovery cron will pick it up.
+    try {
+      if (input.status === "REJECTED") {
+        await dispatchNotificationEvent({
+          type: "booking.rejected",
+          idempotencyKey: `booking-${id}-rejected`,
+          payload: {
+            bookingId: id,
+            renterId: booking.renterId,
+            ownerId: booking.car.ownerId,
+            carId: booking.carId,
+          },
+          sourceId: id,
+          sourceType: "booking",
+        });
+      } else if (input.status === "CANCELLED") {
+        await dispatchNotificationEvent({
+          type: "booking.cancelled",
+          idempotencyKey: `booking-${id}-cancelled`,
+          payload: {
+            bookingId: id,
+            renterId: booking.renterId,
+            ownerId: booking.car.ownerId,
+            carId: booking.carId,
+          },
+          sourceId: id,
+          sourceType: "booking",
+        });
+      } else if (statusToWrite === "PENDING_PAYMENT") {
+        await dispatchNotificationEvent({
+          type: "booking.approved",
+          idempotencyKey: `booking-${id}-approved`,
+          payload: {
+            bookingId: id,
+            renterId: booking.renterId,
+            ownerId: booking.car.ownerId,
+            carId: booking.carId,
+          },
+          sourceId: id,
+          sourceType: "booking",
+        });
+      } else if (input.status === "COMPLETED") {
+        await dispatchNotificationEvent({
+          type: "review.requested",
+          idempotencyKey: `booking-${id}-review-reminder`,
+          payload: {
+            bookingId: id,
+            renterId: booking.renterId,
+            ownerId: booking.car.ownerId,
+            carId: booking.carId,
+          },
+          sourceId: id,
+          sourceType: "booking",
+        });
+      }
+    } catch (notifErr) {
+      console.error("[Booking Status] Notification dispatch failed (non-fatal)", {
+        bookingId: id,
+        status: statusToWrite,
+        error: (notifErr as Error).message,
       });
     }
 

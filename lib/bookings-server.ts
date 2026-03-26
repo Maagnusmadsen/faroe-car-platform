@@ -99,14 +99,22 @@ export async function createBookingWithAvailabilityCheck(input: {
       isolationLevel: "Serializable",
     }
   ).then(async ({ booking, ownerId, carId }) => {
-    await ensureConversationForBooking(booking.id);
-    await dispatchNotificationEvent({
-      type: "booking.requested",
-      idempotencyKey: `booking-${booking.id}-requested`,
-      payload: { bookingId: booking.id, ownerId, carId },
-      sourceId: booking.id,
-      sourceType: "booking",
-    });
+    try {
+      await ensureConversationForBooking(booking.id);
+    } catch (err) {
+      console.error("[Booking] Failed to create conversation (non-fatal)", { bookingId: booking.id, error: (err as Error).message });
+    }
+    try {
+      await dispatchNotificationEvent({
+        type: "booking.requested",
+        idempotencyKey: `booking-${booking.id}-requested`,
+        payload: { bookingId: booking.id, ownerId, carId },
+        sourceId: booking.id,
+        sourceType: "booking",
+      });
+    } catch (err) {
+      console.error("[Booking] Notification dispatch failed (non-fatal)", { bookingId: booking.id, error: (err as Error).message });
+    }
     return booking;
   });
 }
